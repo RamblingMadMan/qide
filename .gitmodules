@@ -1,0 +1,9 @@
+[submodule "deps/fmt"]
+	path = deps/fmt
+	url = https://github.com/fmtlib/fmt.git
+[submodule "deps/gmqcc"]
+	path = deps/gmqcc
+	url = https://github.com/RamblingMadMan/gmqcc.git
+[submodule "deps/utfcpp"]
+	path = deps/utfcpp
+	url = https://github.com/nemtrif/utfcpp.git

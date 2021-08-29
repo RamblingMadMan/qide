@@ -1,0 +1,29 @@
+warning: subs.qc:25:SetMovedir: not all control paths return a value
+warning: fight.qc:199:Equation may require intermediate variable
+warning: fight.qc:220:Equation may require intermediate variable
+warning: ai.qc:368:FindTarget must return a value
+warning: ai.qc:588:CheckAnyAttack must return a value
+warning: items.qc:22:Composite function call may require -allownest
+warning: items.qc:47:droptofloor: Too few parameters
+warning: items.qc:50:Composite function call may require -allownest
+warning: client.qc:134:FindIntermission: not all control paths return a value
+warning: client.qc:1184:Composite function call may require -allownest
+warning: monsters.qc:75:droptofloor: Too few parameters
+warning: monsters.qc:80:Composite function call may require -allownest
+warning: monsters.qc:101:Composite function call may require -allownest
+warning: monsters.qc:149:Composite function call may require -allownest
+warning: monsters.qc:159:Composite function call may require -allownest
+warning: monsters.qc:211:Composite function call may require -allownest
+warning: misc.qc:179:No operation performed
+warning: misc.qc:249:droptofloor: Too few parameters
+warning: misc.qc:253:Composite function call may require -allownest
+warning: misc.qc:281:droptofloor: Too few parameters
+warning: misc.qc:285:Composite function call may require -allownest
+warning: misc.qc:536:makestatic: Too few parameters
+warning: ogre.qc:153:Equation may require intermediate variable
+warning: ogre.qc:249:ai_charge: Too few parameters
+warning: shambler.qc:108:Equation may require intermediate variable
+warning: shambler.qc:134:Equation may require intermediate variable
+warning: wizard.qc:180:WizardAttackFinished: not all control paths return a value
+warning: dog.qc:61:Equation may require intermediate variable
+warning: fish.qc:88:Equation may require intermediate variable
