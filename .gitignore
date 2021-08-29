@@ -6,8 +6,9 @@
 *.so
 *.exe
 *.out
-build
-cmake-build*
+build/
+build-*/
+cmake-build*/
 
 # Mod files
 *.pak
