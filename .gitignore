@@ -10,6 +10,9 @@ build/
 build-*/
 cmake-build*/
 
+# IDE / Build system related files
+CMakeLists.txt.user
+
 # Mod files
 *.pak
 progs.dat
