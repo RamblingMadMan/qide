@@ -1,0 +1,14 @@
+# Build related files
+*.o
+*.a
+*.lib
+*.dll
+*.so
+*.exe
+*.out
+build
+cmake-build*
+
+# Mod files
+*.pak
+progs.dat
