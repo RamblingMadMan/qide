@@ -8,7 +8,7 @@
 class QCLexer: public QObject{
 	Q_OBJECT
 
-	Q_PROPERTY(QString src READ src WRITE setSrc NOTIFY srcChanged)
+	Q_PROPERTY(QVector<QCToken> tokens READ tokens NOTIFY tokensChanged)
 
 	public:
 		enum Mode{
@@ -17,48 +17,37 @@ class QCLexer: public QObject{
 
 		Q_ENUM(Mode)
 
-		explicit QCLexer(const QString &src = QString(), QCToken::Location loc = { 0, 0 })
-			: QObject(), m_curLoc{loc}, m_src(src), m_rem(m_src){}
+		using StrIter = QStringView::const_iterator;
+
+		explicit QCLexer(QCToken::Location loc = { 0, 0 })
+			: QObject(), m_curLoc{loc}{}
 
 		void reset();
 
-		QCToken lex();
+		int lex(StrIter beg, StrIter end);
 
-		bool hasTokens() const noexcept{ return !m_rem.isEmpty(); }
-
-		const QString &src() const noexcept{
-			return m_src;
-		}
+		int lex(QStringView src){ return lex(std::cbegin(src), std::cend(src)); }
 
 		QCToken::Location curLocation() const noexcept{
 			return m_curLoc;
-		}
-
-		void setSrc(const QString &src, bool resetLocation = true){
-			m_src = src;
-			m_rem = m_src;
-			emit srcChanged();
-
-			if(resetLocation){
-				m_curLoc = { 0, 0 };
-			}
 		}
 
 		void setCurLocation(QCToken::Location loc){
 			m_curLoc = loc;
 		}
 
+		const QVector<QCToken> &tokens() const noexcept{ return m_tokens; }
+
 	signals:
-		void srcChanged();
+		void tokensChanged();
 
 	private:
-		QCToken lexNormal(QStringView::iterator it, QStringView::iterator end);
-		QCToken lexMultilineComment(QStringView::iterator it, QStringView::iterator end);
+		QCToken lexNormal(StrIter it, StrIter end);
+		QCToken lexMultilineComment(StrIter it, StrIter end);
 
 		QCToken::Location m_curLoc;
-		QString m_src;
-		QStringView m_rem;
 		Mode m_mode = Normal;
+		QVector<QCToken> m_tokens;
 };
 
 #endif // !QIDE_QCLEXER_HPP

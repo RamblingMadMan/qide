@@ -10,57 +10,51 @@ QCHighlighter::QCHighlighter(QTextDocument *doc, QCParser *parser)
 	: QSyntaxHighlighter(doc)
 	, m_parser(parser)
 {
-	QObject::connect(parser, &QCParser::resultsChanged, this, &QCHighlighter::rehighlight);
+	m_tokenFmt[QCToken::Id].setForeground(Qt::magenta);
+	m_tokenFmt[QCToken::Type].setForeground(QColor(224, 109, 0));
+	m_tokenFmt[QCToken::Keyword].setForeground(QColor(99, 173, 242));
+	m_tokenFmt[QCToken::Number].setForeground(QColor(228, 255, 26));
+	m_tokenFmt[QCToken::Comment].setForeground(Qt::darkGray);
+	m_tokenFmt[QCToken::String].setForeground(Qt::yellow);
+	m_tokenFmt[QCToken::GlobalId].setForeground(Qt::cyan);
 }
 
 void QCHighlighter::highlightBlock(const QString &text){
-	QTextCharFormat idFormat;
-	idFormat.setForeground(Qt::white);
+	if(currentBlock().blockNumber() == 1){
+		m_lexer.reset();
+	}
 
-	QTextCharFormat tyFormat;
-	tyFormat.setFontWeight(QFont::Bold);
-	tyFormat.setForeground(QColor(224, 109, 6));
+	int startIdx = m_lexer.tokens().size();
 
-	QTextCharFormat kwFormat;
-	kwFormat.setForeground(QColor(99, 173, 242));
+	int n = m_lexer.lex(text);
 
-	QTextCharFormat numFormat;
-	numFormat.setForeground(QColor(228, 255, 26));
+	if(n <= 0) return;
 
-	QTextCharFormat commentFormat;
-	commentFormat.setForeground(Qt::darkGray);
+	auto it = &m_lexer.tokens()[startIdx];
+	const auto end = m_lexer.tokens().end();
 
-	m_lexer.setSrc(text);
+	while(it != end){
+		const auto &tok = *it;
 
-	while(m_lexer.hasTokens()){
-		auto tok = m_lexer.lex();
+		const auto tokStart = std::distance(text.begin(), tok.str().begin());
 
-		auto srcLoc = QCToken::Location{ currentBlock().lineCount(), tok.location().col };
-
-		auto expr = m_parser->atLocation(srcLoc);
-		if(expr){
-			highlightParsed(tok.location(), expr);
+		/*if(auto expr = m_parser->atLocation(tok.location());){
+			highlightParsed(tokStart, expr);
+			it = expr->end();
+		}
+		else */if(tok.kind() < QCToken::count){
+			auto tokLen = tok.str().length();
+			setFormat(tokStart, tokLen, m_tokenFmt[tok.kind()]);
+			++it;
 		}
 		else{
-			QTextCharFormat *fmt = [&]() -> QTextCharFormat*{
-				switch(tok.kind()){
-					case QCToken::Id: return qcKeywords.contains(tok.str().toString()) ? &kwFormat : &idFormat;
-					case QCToken::Type: return &tyFormat;
-					case QCToken::Number: return &numFormat;
-					case QCToken::Comment: return &commentFormat;
-					default: return nullptr;
-				}
-			}();
-
-			if(fmt){
-				auto tokStart = std::distance(text.begin(), tok.str().begin());
-				auto tokLen = tok.str().length();
-				setFormat(tokStart, tokLen, *fmt);
-			}
+			break;
 		}
 	}
 }
 
-void QCHighlighter::highlightParsed(QCToken::Location blockLoc, const QCExpr *expr){
-
+void QCHighlighter::highlightParsed(int startIdx, const QCExpr *expr){
+	QTextCharFormat format;
+	format.setForeground(Qt::blue);
+	setFormat(startIdx, expr->str().length(), format);
 }

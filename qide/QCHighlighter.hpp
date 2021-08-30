@@ -7,10 +7,6 @@
 #include "QCLexer.hpp"
 #include "QCParser.hpp"
 
-inline const QVector<QString> qcKeywords = {
-	"var", "return", "typedef", "for", "if", "else"
-};
-
 class QCHighlighter: public QSyntaxHighlighter{
 	Q_OBJECT
 
@@ -20,11 +16,13 @@ class QCHighlighter: public QSyntaxHighlighter{
 		void highlightBlock(const QString &text) override;
 
 	private:
-		void highlightParsed(QCToken::Location blockLoc, const QCExpr *expr);
+		void highlightParsed(int startIdx, const QCExpr *expr);
 
 		QCParser *m_parser;
 		QCLexer m_lexer;
 		QCToken::Location m_curLoc;
+
+		QTextCharFormat m_tokenFmt[QCToken::Kind::count];
 };
 
 #endif // !QIDE_QCHIGHLIGHTER_HPP

@@ -32,6 +32,7 @@ class QCExpr: public QObject{
 			, m_kind(other.m_kind)
 			, m_tokStart(other.m_tokStart)
 			, m_tokEnd(other.m_tokEnd)
+			, m_values(other.m_values)
 		{}
 
 		static QCExpr makeEOF(const QCToken *eof){ return QCExpr(EndOfFile, eof, eof); }
@@ -42,6 +43,9 @@ class QCExpr: public QObject{
 
 		QCExpr &operator=(const QCExpr &other){
 			m_kind = other.m_kind;
+			m_tokStart = other.m_tokStart;
+			m_tokEnd = other.m_tokEnd;
+			m_values = other.m_values;
 			return *this;
 		}
 
@@ -49,6 +53,10 @@ class QCExpr: public QObject{
 
 		const QCToken *begin() const noexcept{ return m_tokStart; }
 		const QCToken *end() const noexcept{ return m_tokEnd; }
+
+		QStringView str() const noexcept{
+			return QStringView(m_tokStart->str().cbegin(), (m_tokEnd - 1)->str().cend());
+		}
 
 	private:
 		QCExpr(Kind kind_, const QCToken *tokStart, const QCToken *tokEnd)

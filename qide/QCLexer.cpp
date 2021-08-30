@@ -5,11 +5,15 @@
 
 void QCLexer::reset(){
 	m_curLoc = { 0, 0 };
-	m_rem = m_src;
 	m_mode = Normal;
+
+	if(!m_tokens.empty()){
+		m_tokens.clear();
+		emit tokensChanged();
+	}
 }
 
-QCToken QCLexer::lexNormal(QStringView::iterator it, QStringView::iterator end){
+QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 	const auto tokLoc = m_curLoc;
 	const auto tokStart = it;
 
@@ -18,6 +22,7 @@ QCToken QCLexer::lexNormal(QStringView::iterator it, QStringView::iterator end){
 	if(*it == u';'){
 		tokKind = QCToken::Term;
 		++it;
+		++m_curLoc.col;
 	}
 	else if(*it == u'"'){
 		tokKind = QCToken::String;
@@ -26,14 +31,23 @@ QCToken QCLexer::lexNormal(QStringView::iterator it, QStringView::iterator end){
 			++it;
 			++m_curLoc.col;
 
-			if(*it == u'\\'){
+			if(it == end){
+				break;
+			}
+			else if(*it == u'\\'){
 				++it;
-				if(*it == u'\n'){
+				if(it == end){
+					break;
+				}
+				else if(*it == u'\n'){
 					++m_curLoc.line;
 					m_curLoc.col = 0;
 				}
+				else{
+					++m_curLoc.col;
+				}
 			}
-		} while(*it != u'"');
+		} while(it != end && *it != u'"');
 	}
 	else if(*it == u'#'){
 		tokKind = QCToken::GlobalId;
@@ -41,7 +55,7 @@ QCToken QCLexer::lexNormal(QStringView::iterator it, QStringView::iterator end){
 		do {
 			++it;
 			++m_curLoc.col;
-		} while((*it == u'_') || it->isLetterOrNumber());
+		} while(it != end && ((*it == u'_') || it->isLetterOrNumber()));
 	}
 	else if(*it == u'_' || it->isLetter()){
 		tokKind = QCToken::Id;
@@ -49,7 +63,7 @@ QCToken QCLexer::lexNormal(QStringView::iterator it, QStringView::iterator end){
 		do {
 			++it;
 			++m_curLoc.col;
-		} while((*it == u'_') || it->isLetterOrNumber());
+		} while(it != end && ((*it == u'_') || it->isLetterOrNumber()));
 
 		auto view = QStringView(tokStart, it);
 		auto ty = QCType::fromStr(view);
@@ -62,7 +76,7 @@ QCToken QCLexer::lexNormal(QStringView::iterator it, QStringView::iterator end){
 		do {
 			++it;
 			++m_curLoc.col;
-		} while(it->isPunct());
+		} while(it != end && it->isPunct());
 
 		auto view = QStringView(tokStart, it);
 
@@ -74,7 +88,10 @@ QCToken QCLexer::lexNormal(QStringView::iterator it, QStringView::iterator end){
 				while(it != end && !view.endsWith(u"*/")){
 					++it;
 
-					if(*it == u'\n'){
+					if(it == end){
+						break;
+					}
+					else if(*it == u'\n'){
 						++m_curLoc.line;
 						m_curLoc.col = 0;
 					}
@@ -107,7 +124,7 @@ QCToken QCLexer::lexNormal(QStringView::iterator it, QStringView::iterator end){
 		do {
 			++it;
 			++m_curLoc.col;
-		} while(it->isLetterOrNumber());
+		} while(it != end && it->isLetterOrNumber());
 	}
 	else{
 		tokKind = QCToken::Unknown;
@@ -115,15 +132,13 @@ QCToken QCLexer::lexNormal(QStringView::iterator it, QStringView::iterator end){
 		do {
 			++it;
 			++m_curLoc.col;
-		} while(!it->isSpace());
+		} while(it != end && !it->isSpace());
 	}
-
-	m_rem = QStringView(it, end);
 
 	return QCToken(tokKind, QStringView(tokStart, it), tokLoc);
 }
 
-QCToken QCLexer::lexMultilineComment(QStringView::iterator it, QStringView::iterator end){
+QCToken QCLexer::lexMultilineComment(StrIter it, StrIter end){
 	const auto tokLoc = m_curLoc;
 	const auto tokStart = it++;
 
@@ -132,49 +147,60 @@ QCToken QCLexer::lexMultilineComment(QStringView::iterator it, QStringView::iter
 	while(it != end){
 		++it;
 
-		if(*it == u'\n'){
-			++m_curLoc.line;
-			m_curLoc.col = 0;
-		}
-		else{
-			++m_curLoc.col;
-		}
-
 		view = QStringView(tokStart, it);
+
 		if(view.endsWith(u"*/")){
 			m_mode = Mode::Normal;
 			break;
 		}
-	}
-
-	m_rem = QStringView(it, end);
-
-	return QCToken(QCToken::Comment, view, tokLoc);
-}
-
-QCToken QCLexer::lex(){
-	auto it = std::begin(m_rem);
-	const auto end = std::end(m_rem);
-
-	if(it == end) return QCToken(QCToken::EndOfFile, QStringView(), m_curLoc);
-
-	while(it->isSpace()){
-		if(*it == u'\n'){
+		else if(it != end && *it == u'\n'){
 			++m_curLoc.line;
 			m_curLoc.col = 0;
 		}
 		else{
 			++m_curLoc.col;
 		}
-
-		++it;
 	}
 
-	if(it == end || *it == u'\0'){
-		m_rem = QStringView(end, end);
-		return QCToken(QCToken::EndOfFile, m_rem, m_curLoc);
+	return QCToken(QCToken::Comment, view, tokLoc);
+}
+
+int QCLexer::lex(StrIter beg, StrIter end){
+	auto it = beg;
+
+	if(it == end) return 0;
+
+	const int origLen = m_tokens.size();
+
+	do {
+		while(it != end && it->isSpace()){
+			if(*it == u'\n'){
+				++m_curLoc.line;
+				m_curLoc.col = 0;
+			}
+			else{
+				++m_curLoc.col;
+			}
+
+			++it;
+		}
+
+		if(it == end) break;
+
+		m_tokens.append(m_mode == Mode::MultilineComment ? lexMultilineComment(it, end) : lexNormal(it, end));
+		it += m_tokens.back().str().length();
+	} while(it != end);
+
+	int numTokens = m_tokens.size() - origLen;
+
+	if(numTokens > 0){
+		emit tokensChanged();
 	}
 
-	if(m_mode == Mode::MultilineComment) return lexMultilineComment(it, end);
-	else return lexNormal(it, end);
+	if(it == end){
+		return numTokens;
+	}
+	else{
+		return -numTokens;
+	}
 }

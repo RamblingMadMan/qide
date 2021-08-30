@@ -5,6 +5,10 @@
 #include <QMetaEnum>
 #include <QString>
 
+inline const QVector<QString> qcKeywords = {
+	"var", "return", "typedef", "for", "if", "else"
+};
+
 class QCToken: public QObject{
 	Q_OBJECT
 
@@ -16,10 +20,18 @@ class QCToken: public QObject{
 				if(lhs.line == rhs.line) return lhs.col < rhs.col;
 				else return lhs.line < rhs.line;
 			}
+
+			inline friend bool operator==(const Location &lhs, const Location &rhs) noexcept{
+				return (lhs.line == rhs.line) && (lhs.col == rhs.col);
+			}
+
+			inline friend bool operator!=(const Location &lhs, const Location &rhs) noexcept{
+				return (lhs.line != rhs.line) || (lhs.col != rhs.col);
+			}
 		};
 
 		enum Kind{
-			Type, Id, Number, String, Term, GlobalId, Comment, Op, EndOfFile, Unknown,
+			Type, Keyword, Id, Number, String, Term, GlobalId, Comment, Op, EndOfFile, Unknown,
 			count
 		};
 
@@ -34,7 +46,6 @@ class QCToken: public QObject{
 			, m_str(other.m_str)
 			, m_loc(other.m_loc)
 		{}
-		//QCToken(QCToken&&) noexcept = default;
 
 		QCToken &operator=(const QCToken &other){
 			m_kind = other.m_kind;
@@ -42,8 +53,6 @@ class QCToken: public QObject{
 			m_loc = other.m_loc;
 			return *this;
 		}
-
-		//QCToken &operator=(QCToken&&) noexcept = default;
 
 		Kind kind() const noexcept{ return m_kind; }
 		QStringView str() const noexcept{ return m_str; }

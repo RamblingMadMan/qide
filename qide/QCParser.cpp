@@ -21,30 +21,52 @@ QCParser::QCParser(): QObject(){}
 
 void QCParser::reset(){
 	m_results.clear();
+	m_locMap.clear();
 	m_parseFn = std::bind_front(&QCParser::parseToplevel, this);
 }
 
-bool QCParser::parse(const QCToken *beg, const QCToken *const end){
+void QCParser::setTitle(QString str){
+	m_title = std::move(str);
+	emit titleChanged();
+}
+
+static inline const QCToken *skipComments(const QCToken *it, const QCToken *end){
+	while(it != end && (it->kind() == QCToken::Comment)){
+		++it;
+	}
+
+	return it;
+}
+
+int QCParser::parse(const QCToken *beg, const QCToken *const end){
 	if(!beg || !end) return true;
 
-	auto res = m_parseFn(beg, end);
+	beg = skipComments(beg, end);
 
-	return std::visit(
-		overload(
-			[](bool res){ return res; },
-			[this](const QCExpr &expr){
-				m_results.push_back(expr);
-				return true;
-			}
-		),
-		res
-	);
+	int origLen = m_results.size();
+
+	while(beg != end){
+		auto res = m_parseFn(beg, end);
+
+		if(auto expr = std::get_if<QCExpr>(&res)){
+			m_locMap[expr->begin()->location()] = m_results.size();
+			beg = expr->end();
+			m_results.push_back(*expr);
+		}
+		else{
+			break;
+		}
+	}
+
+	auto res = m_results.size() - origLen;
+
+	if(res > 0) emit resultsChanged();
+
+	return res;
 }
 
 std::variant<bool, QCExpr> QCParser::parseDef(QCType ty, const QCToken *exprStart, const QCToken *beg, const QCToken *end){
-	while(beg != end && (beg->kind() == QCToken::Comment)){
-		++beg;
-	}
+	beg = skipComments(beg, end);
 
 	if(beg == end){
 		m_parseFn = std::bind_front(&QCParser::parseDef, this, ty, exprStart);
@@ -61,12 +83,36 @@ std::variant<bool, QCExpr> QCParser::parseDef(QCType ty, const QCToken *exprStar
 		);
 		return false;
 	}
-	else if(it->kind() == QCToken::Term){
-		++it;
 
+	const auto name = it->str();
+
+	++it;
+
+	auto parseNamedDef = [ty, exprStart, name](const QCToken *beg_, const QCToken *end_) -> ParseResult{
+		while(beg_ != end_ && (beg_->kind() == QCToken::Comment)){
+			++beg_;
+		}
+
+		if(beg_ == end_){
+			return true;
+		}
+
+		auto it = beg_;
+
+		if(it->kind() == QCToken::Term){
+			return QCExpr::makeVarDef(ty, name.toString(), exprStart, ++it);
+		}
+
+		return false;
+	};
+
+	if(it == end){
+		m_parseFn = std::move(parseNamedDef);
+		return true;
 	}
-
-	return false;
+	else{
+		return parseNamedDef(it, end);
+	}
 }
 
 std::variant<bool, QCExpr> QCParser::parseToplevel(const QCToken *beg, const QCToken *end){
@@ -89,13 +135,15 @@ std::variant<bool, QCExpr> QCParser::parseToplevel(const QCToken *beg, const QCT
 				return false;
 			}
 
+			auto start = beg_;
+
 			return parseDef(
 				QCType(
 					QCType::Field,
-					*QCType::fromStr(beg_->str())
+					*QCType::fromStr(start->str())
 				),
 				beg,
-				beg_ + 1,
+				++beg_,
 				end_
 			);
 		};
@@ -109,7 +157,8 @@ std::variant<bool, QCExpr> QCParser::parseToplevel(const QCToken *beg, const QCT
 		}
 	}
 	else if(it->kind() == QCToken::Type){
-		return parseDef(*QCType::fromStr(it->str()), it, it + 1, end);
+		auto ty = *QCType::fromStr(it->str());
+		return parseDef(ty, beg, ++it, end);
 	}
 
 	return false;
