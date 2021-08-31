@@ -18,9 +18,13 @@ void LineNumberArea::paintEvent(QPaintEvent *event) {
 
 QCEdit::QCEdit(QWidget *parent)
 	: QPlainTextEdit(parent)
-	, m_lineNumArea(this)
+	, m_fileDir()
+	, m_plainStr()
+	, m_lexer()
 	, m_parser()
 	, m_highlighter(document(), &m_parser)
+	, m_completer(nullptr, this)
+	, m_lineNumArea(this)
 {
 	auto newPalette = palette();
 	newPalette.setColor(QPalette::Window, Qt::darkGray);
@@ -38,6 +42,13 @@ QCEdit::QCEdit(QWidget *parent)
 
 	updateLineNumberAreaWidth(0);
 	highlightCurrentLine();
+
+	QStringList completerChoices;
+	completerChoices << qcKeywords;
+	completerChoices << qcBasicTypes;
+
+	m_completer.setQcEdit(this);
+	m_completer.setChoices(completerChoices);
 }
 
 int QCEdit::lineNumberAreaWidth(){
@@ -124,26 +135,29 @@ bool QCEdit::loadFile(const QDir &dir){
 		return false;
 	}
 
-	setPlainText(file.readAll());
 	m_fileDir = dir;
-
+	m_parser.setTitle(dir.path());
 	document()->setMetaInformation(QTextDocument::DocumentTitle, dir.path());
 
-	emit fileChanged();
+	emit fileDirChanged();
+
+	setPlainText(file.readAll());
 
 	return true;
 }
 
 void QCEdit::reparse(){
+	m_plainStr = toPlainText();
+
+	m_lexer.reset();
+	auto numToks = m_lexer.lex(m_plainStr);
+
+	if(numToks < 0){
+		return; // lexing error
+	}
+
 	m_parser.reset();
-	m_parser.setTitle(m_fileDir.path());
-
-	const auto plainStr = toPlainText();
-
-	QCLexer lexer;
-	lexer.lex(plainStr);
-
-	m_parser.parse(lexer.tokens().begin(), lexer.tokens().end());
+	m_parser.parse(m_lexer.tokens().begin(), m_lexer.tokens().end());
 }
 
 void QCEdit::setDefaultFont(){

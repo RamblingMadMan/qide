@@ -38,6 +38,21 @@ class QCLexer: public QObject{
 
 		const QVector<QCToken> &tokens() const noexcept{ return m_tokens; }
 
+		const QCToken *closest(QCToken::Location loc) const{
+			for(auto &&tok : m_tokens){
+				auto &&tokLoc = tok.location();
+				if(tokLoc.line != loc.line) continue;
+
+				const auto tokLen = tok.str().length();
+
+				if((loc.col >= tokLoc.col) && (loc.col <= (tokLoc.col + tokLen))){
+					return &tok;
+				}
+			}
+
+			return nullptr;
+		}
+
 	signals:
 		void tokensChanged();
 

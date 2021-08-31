@@ -5,6 +5,7 @@
 #include <QPlainTextEdit>
 
 #include "QCHighlighter.hpp"
+#include "QCCompleter.hpp"
 #include "QCParser.hpp"
 
 class QCEdit;
@@ -27,34 +28,43 @@ class LineNumberArea : public QWidget{
 class QCEdit: public QPlainTextEdit{
 	Q_OBJECT
 
+	Q_PROPERTY(QDir fileDir READ fileDir NOTIFY fileDirChanged)
+	Q_PROPERTY(QCLexer lexer READ lexer)
+	Q_PROPERTY(QCParser parser READ parser)
+
 	public:
 		explicit QCEdit(QWidget *parent = nullptr);
 
 		bool loadFile(const QDir &dir);
 
-		QDir fileDir() const noexcept{ return m_fileDir; }
+		const QDir &fileDir() const noexcept{ return m_fileDir; }
+		const QCLexer *lexer() const noexcept{ return &m_lexer; }
+		const QCParser *parser() const noexcept{ return &m_parser; }
 
 		void lineNumberAreaPaintEvent(QPaintEvent *event);
 		int lineNumberAreaWidth();
 
-	protected:
-		void resizeEvent(QResizeEvent *event) override;
+	signals:
+		void fileDirChanged();
 
 	private slots:
 		void updateLineNumberAreaWidth(int newBlockCount);
 		void highlightCurrentLine();
 		void updateLineNumberArea(const QRect &rect, int dy);
 
-	signals:
-		void fileChanged();
+	protected:
+		void resizeEvent(QResizeEvent *event) override;
 
 	private:
 		void reparse();
 
-		LineNumberArea m_lineNumArea;
 		QDir m_fileDir;
+		QString m_plainStr;
+		QCLexer m_lexer;
 		QCParser m_parser;
 		QCHighlighter m_highlighter;
+		QCCompleter m_completer;
+		LineNumberArea m_lineNumArea;
 
 		void setDefaultFont();
 };

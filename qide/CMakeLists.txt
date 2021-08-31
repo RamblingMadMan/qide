@@ -12,8 +12,12 @@ set(
 	QCParser.cpp
 	QCHighlighter.hpp
 	QCHighlighter.cpp
+	QCCompleter.hpp
+	QCCompleter.cpp
 	QCEdit.hpp
 	QCEdit.cpp
+	QideWindow.hpp
+	QideWindow.cpp
 )
 
 add_executable(qide ${QIDE_SOURCES})
@@ -27,4 +31,4 @@ set_target_properties(
 	AUTOUIC ON
 )
 
-target_link_libraries(qide fmt utf8::cpp gmqcclib Qt5::Widgets)
+target_link_libraries(qide fmt rapidfuzz::rapidfuzz gmqcclib Qt5::Widgets)

@@ -7,7 +7,7 @@ project(qide VERSION 0.0.1 LANGUAGES CXX)
 ################
 
 add_subdirectory(deps/fmt)
-add_subdirectory(deps/utfcpp)
+add_subdirectory(deps/rapidfuzz-cpp)
 add_subdirectory(deps/gmqcc)
 
 ###################

@@ -7,3 +7,6 @@
 [submodule "deps/utfcpp"]
 	path = deps/utfcpp
 	url = https://github.com/nemtrif/utfcpp.git
+[submodule "deps/rapidfuzz-cpp"]
+	path = deps/rapidfuzz-cpp
+	url = https://github.com/maxbachmann/rapidfuzz-cpp.git

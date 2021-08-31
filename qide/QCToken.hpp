@@ -5,7 +5,7 @@
 #include <QMetaEnum>
 #include <QString>
 
-inline const QVector<QString> qcKeywords = {
+inline const QStringList qcKeywords = {
 	"var", "return", "typedef", "for", "if", "else"
 };
 
@@ -56,7 +56,7 @@ class QCToken: public QObject{
 
 		Kind kind() const noexcept{ return m_kind; }
 		QStringView str() const noexcept{ return m_str; }
-		Location location() const noexcept{ return m_loc; }
+		const Location &location() const noexcept{ return m_loc; }
 
 	private:
 		Kind m_kind;

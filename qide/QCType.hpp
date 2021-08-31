@@ -5,6 +5,11 @@
 #include <optional>
 
 #include <QMetaEnum>
+#include <QStringList>
+
+inline const QStringList qcBasicTypes = {
+	"void", "int", "float", "vector", "string", "entity"
+};
 
 class QCType: public QObject{
 	Q_OBJECT
