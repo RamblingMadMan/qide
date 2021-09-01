@@ -154,7 +154,6 @@ bool QCEdit::loadFile(const QDir &dir){
 
 	m_fileDir = dir;
 
-	fmt::print(stderr, "Setting title: \"{}\"\n", filePath.toStdString());
 	m_parser.setTitle(filePath);
 	document()->setMetaInformation(QTextDocument::DocumentTitle, filePath);
 
