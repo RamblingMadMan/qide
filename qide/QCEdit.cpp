@@ -69,13 +69,16 @@ void QCEdit::updateLineNumberAreaWidth(int /* newBlockCount */){
 }
 
 void QCEdit::updateLineNumberArea(const QRect &rect, int dy){
-	if(dy)
+	if(dy){
 		m_lineNumArea.scroll(0, dy);
-	else
+	}
+	else{
 		m_lineNumArea.update(0, rect.y(), m_lineNumArea.width(), rect.height());
+	}
 
-	if(rect.contains(viewport()->rect()))
+	if(rect.contains(viewport()->rect())){
 		updateLineNumberAreaWidth(0);
+	}
 }
 
 void QCEdit::resizeEvent(QResizeEvent *e){
@@ -108,40 +111,54 @@ void QCEdit::lineNumberAreaPaintEvent(QPaintEvent *event){
 	painter.fillRect(event->rect(), QColor(Qt::darkGray).lighter(40));
 
 	QTextBlock block = firstVisibleBlock();
-	int blockNumber = block.blockNumber();
+	int blockNum = block.blockNumber();
 	int top = qRound(blockBoundingGeometry(block).translated(contentOffset()).top());
 	int bottom = top + qRound(blockBoundingRect(block).height());
 
 	while(block.isValid() && top <= event->rect().bottom()){
 		if(block.isVisible() && bottom >= event->rect().top()){
-			QString number = QString::number(blockNumber + 1);
+			QString numStr = QString::number(blockNum + 1);
 			painter.setPen(QColor(Qt::white).darker(175));
 			painter.drawText(
 				-3, top, m_lineNumArea.width(), fontMetrics().height(),
-				Qt::AlignRight, number
+				Qt::AlignRight, numStr
 			);
 		}
 
 		block = block.next();
 		top = bottom;
 		bottom = top + qRound(blockBoundingRect(block).height());
-		++blockNumber;
+		++blockNum;
 	}
 }
 
 bool QCEdit::loadFile(const QDir &dir){
-	QFile file(dir.path());
-	if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-		return false;
+	auto filePath = dir.path();
+
+	auto fileBufIt = m_fileBufs.find(filePath);
+	if(fileBufIt != m_fileBufs.end()){
+		setPlainText(fileBufIt.value());
+	}
+	else{
+		QFile file(dir.path());
+		if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
+			return false;
+		}
+
+		auto fileContents = file.readAll();
+
+		m_fileBufs.insert(filePath, fileContents);
+
+		setPlainText(fileContents);
 	}
 
 	m_fileDir = dir;
-	m_parser.setTitle(dir.path());
-	document()->setMetaInformation(QTextDocument::DocumentTitle, dir.path());
+
+	fmt::print(stderr, "Setting title: \"{}\"\n", filePath.toStdString());
+	m_parser.setTitle(filePath);
+	document()->setMetaInformation(QTextDocument::DocumentTitle, filePath);
 
 	emit fileDirChanged();
-
-	setPlainText(file.readAll());
 
 	return true;
 }

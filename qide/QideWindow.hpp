@@ -1,7 +1,9 @@
 #ifndef QIDE_QIDEWINDOW_HPP
 #define QIDE_QIDEWINDOW_HPP 1
 
+#include <QVBoxLayout>
 #include <QMainWindow>
+#include <QMenuBar>
 #include <QSplitter>
 #include <QTreeView>
 #include <QFileSystemModel>
@@ -21,11 +23,15 @@ class QideWindow: public QMainWindow{
 	private:
 		void readSettings();
 
+		QMenuBar m_menuBar;
+		QMenu m_fileMenu;
+
 		QDir m_projectDir;
 		QFileSystemModel m_fsModel;
 		QSplitter m_splitter;
 		QTreeView m_treeView;
 		QCEdit m_qcEdit;
+		QHash<QString, QString> m_fileBufs;
 };
 
 #endif // !QIDE_QIDEWINDOW_HPP
