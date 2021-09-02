@@ -1,4 +1,5 @@
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Network Widgets REQUIRED)
+find_package(ZLIB REQUIRED)
 
 set(
 	QIDE_SOURCES
@@ -16,6 +17,10 @@ set(
 	QCCompleter.cpp
 	QCEdit.hpp
 	QCEdit.cpp
+	QideEditor.hpp
+	QideEditor.cpp
+	QideGame.hpp
+	QideGame.cpp
 	QideWindow.hpp
 	QideWindow.cpp
 )
@@ -31,4 +36,10 @@ set_target_properties(
 	AUTOUIC ON
 )
 
-target_link_libraries(qide fmt rapidfuzz::rapidfuzz gmqcclib Qt5::Widgets)
+target_link_libraries(
+	qide
+	fmt rapidfuzz::rapidfuzz
+	gmqcclib
+	ZLIB::ZLIB
+	Qt5::Widgets Qt5::Network
+)
