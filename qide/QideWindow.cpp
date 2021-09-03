@@ -1,6 +1,7 @@
 #include "fmt/core.h"
 
 #include <QtMath>
+#include <QDebug>
 #include <QApplication>
 #include <QStandardPaths>
 #include <QSettings>
@@ -104,27 +105,27 @@ QideWindow::QideWindow(QWidget *parent)
 	connect(m_editor->qcEdit(), &QPlainTextEdit::redoAvailable, &m_redoAction, &QAction::setEnabled);
 
 	connect(
-		m_comp, &QideCompiler::canCompileChanged,
-		&m_buildAction, [this]{
-			m_buildAction.setEnabled(m_comp->canCompile());
-			if(!m_comp->canCompile()){
-				m_buildAction.setToolTip("Invalid progs.src");
-			}
-			else{
-				m_buildAction.setToolTip("Build the current project");
-			}
+		m_comp, &QideCompiler::compileStarted,
+		this, [this]{
+			m_buildAction.setEnabled(false);
+			m_launchAction.setEnabled(false);
 		}
 	);
 
-	connect(m_comp, &QideCompiler::compileStarted, &m_launchAction, [this]{ m_launchAction.setDisabled(true); });
-	connect(m_comp, &QideCompiler::compileFinished, &m_launchAction, &QAction::setEnabled);
+	connect(
+		m_comp, &QideCompiler::compileFinished,
+		this, [this](bool success){
+			m_buildAction.setEnabled(true);
+			m_launchAction.setEnabled(success);
+		}
+	);
 
-	m_saveAction.setDisabled(true);
-	m_openAction.setDisabled(true);
-	m_undoAction.setDisabled(true);
-	m_redoAction.setDisabled(true);
-	m_buildAction.setDisabled(true);
-	m_launchAction.setDisabled(true);
+	m_saveAction.setEnabled(false);
+	m_openAction.setEnabled(false);
+	m_undoAction.setEnabled(false);
+	m_redoAction.setEnabled(false);
+	m_buildAction.setEnabled(true);
+	m_launchAction.setEnabled(false);
 
 	// file menu
 	m_fileMenu.addAction(&m_openAction);
@@ -191,6 +192,8 @@ QideWindow::QideWindow(QDir projectDir_, QWidget *parent_)
 void QideWindow::setProjectDir(QDir projectDir_){
 	QString projPath = projectDir_.path();
 
+	qDebug() << QString::fromStdString(fmt::format("Opening project '{}'\n", projPath.toStdString()));
+
 	auto dirInfo = QFileInfo(projPath);
 	if(!dirInfo.exists() || !dirInfo.isDir()){
 		throw std::runtime_error("project directory doesn't exist or is not a directory");
@@ -203,6 +206,11 @@ void QideWindow::setProjectDir(QDir projectDir_){
 	settings.setValue("projDir", projPath);
 	settings.setValue("currentFile", currentFilePath);
 
+	auto projSubDir = dirInfo.baseName();
+	auto buildPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/" + projSubDir;
+
+	m_comp->setSrcPath(projectDir_.path());
+	m_comp->setBuildPath(buildPath);
 	m_editor->setRootDir(projectDir_);
 }
 

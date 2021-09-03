@@ -1,20 +1,15 @@
-#include <QtWidgets>
+#include <QApplication>
+#include <QDebug>
 
 #include "fmt/format.h"
 
-#include "QCEdit.hpp"
 #include "QideWindow.hpp"
 
-void downloadFteqw(){
-	const auto url = QUrl("https://www.fteqw.org/dl/fteqw-sdl2-linux64.zip");
-}
-
 int main(int argc, char *argv[]){
-	fmt::print(
+	qInfo() <<
 		"┌─────────────┐\n"
 		"│ QIDE v0.0.1 │\n"
-		"└─────────────┘\n"
-	);
+		"└─────────────┘\n";
 
 	QApplication::setOrganizationDomain("hamsmith.dev");
 	QApplication::setOrganizationName("Hamsmith");

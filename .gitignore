@@ -16,3 +16,4 @@ CMakeLists.txt.user
 # Mod files
 *.pak
 progs.dat
+*.lno

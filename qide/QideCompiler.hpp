@@ -8,31 +8,35 @@ class QFileSystemWatcher;
 class QideCompiler: public QObject{
 	Q_OBJECT
 
-	Q_PROPERTY(bool canCompile READ canCompile NOTIFY canCompileChanged)
+	Q_PROPERTY(QString srcPath READ srcPath WRITE setSrcPath NOTIFY srcPathChanged)
+	Q_PROPERTY(QString buildPath READ buildPath WRITE setBuildPath NOTIFY buildPathChanged)
 
 	public:
 		explicit QideCompiler(QObject *parent = nullptr);
 
 		~QideCompiler();
 
-		bool canCompile() const noexcept{ return m_canCompile; }
+		const QString &srcPath() const noexcept{ return m_srcPath; }
+		const QString &buildPath() const noexcept{ return m_buildPath; }
+
+		void setSrcPath(const QString &path);
+		void setBuildPath(const QString &path);
 
 	public slots:
 		void compile();
 
 	signals:
-		void canCompileChanged();
+		void srcPathChanged();
+		void buildPathChanged();
+
+		void progsSrcCompiled(const QString &progsSrcPath, bool success);
+
 		void compileStarted();
 		void compileFinished(bool success);
 
-	protected:
-		void setCanCompile(bool canCompile_);
-
 	private:
-		QFileSystemWatcher *m_watcher;
-		QString m_progsSrcPath;
-		struct ftepp_t *m_ftepp;
-		bool m_canCompile = false;
+		QString m_srcPath;
+		QString m_buildPath;
 };
 
 #endif // !QIDE_QIDECOMPILER_HPP
