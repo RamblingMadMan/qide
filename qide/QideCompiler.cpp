@@ -106,7 +106,10 @@ void QideCompiler::compile()
 
 		qDebug() << "progs.src dir:" << progsSrcDir;
 
-		auto buildOutPath = m_buildPath + "/" + progsSrcDir;
+		auto buildOutPath = m_buildPath;
+		if(!progsSrcDir.isEmpty()){
+			buildOutPath += "/" + progsSrcDir;
+		}
 
 		qDebug() << "Build path:" << buildOutPath;
 
@@ -142,9 +145,9 @@ void QideCompiler::compile()
 			}
 
 			if(hasOutputLine){
-				auto srcFile = QDir::cleanPath(progsSrcDir + "/" + line);
-				qDebug() << "Source file:" << srcFile;
-				files.push_back(srcFile);
+				line = QDir::cleanPath(progsSrcInfo.path() + "/" + line);
+				qDebug() << "Source file:" << line;
+				files.push_back(line);
 			}
 			else{
 				outputFile = QDir::cleanPath(buildOutPath + "/" + line);

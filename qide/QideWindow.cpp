@@ -15,6 +15,7 @@
 #include <QStackedWidget>
 #include <QLabel>
 #include <QProgressBar>
+#include <QFileDialog>
 
 #include "QideEditor.hpp"
 #include "QideGame.hpp"
@@ -88,7 +89,7 @@ QideWindow::QideWindow(QWidget *parent)
 	, m_editMenu("Edit", this)
 	, m_codeTab(new QideTab(QIcon::fromTheme("accessories-text-editor"), "Code", this))
 	, m_playTab(new QideTab(QIcon::fromTheme("applications-games"), "Play", this))
-	, m_openAction(QIcon::fromTheme("document-open"), "Open", this)
+	, m_openAction(QIcon::fromTheme("document-open"), "Open Project", this)
 	, m_saveAction(QIcon::fromTheme("document-save"), "Save", this)
 	, m_quitAction(QIcon::fromTheme("application-exit"), "Quit", this)
 	, m_undoAction(QIcon::fromTheme("edit-undo"), "Undo", this)
@@ -96,6 +97,14 @@ QideWindow::QideWindow(QWidget *parent)
 	, m_buildAction(/*QIcon::fromTheme(""), */"Build", this)
 	, m_launchAction(QIcon::fromTheme("system-run"), "Launch", this)
 {
+	connect(&m_openAction, &QAction::triggered, this, [this]{
+		auto newDir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+														QSettings().value("projDir").toString(),
+														QFileDialog::ShowDirsOnly
+														| QFileDialog::DontResolveSymlinks);
+		setProjectDir(newDir);
+	});
+
 	connect(&m_quitAction, &QAction::triggered, qApp, &QApplication::quit);
 	connect(&m_undoAction, &QAction::triggered, m_editor->qcEdit(), &QPlainTextEdit::undo);
 	connect(&m_redoAction, &QAction::triggered, m_editor->qcEdit(), &QPlainTextEdit::redo);
@@ -121,7 +130,7 @@ QideWindow::QideWindow(QWidget *parent)
 	);
 
 	m_saveAction.setEnabled(false);
-	m_openAction.setEnabled(false);
+	m_openAction.setEnabled(true);
 	m_undoAction.setEnabled(false);
 	m_redoAction.setEnabled(false);
 	m_buildAction.setEnabled(true);
@@ -206,7 +215,7 @@ void QideWindow::setProjectDir(QDir projectDir_){
 	settings.setValue("projDir", projPath);
 	settings.setValue("currentFile", currentFilePath);
 
-	auto projSubDir = dirInfo.baseName();
+	auto projSubDir = dirInfo.fileName();
 	auto buildPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/" + projSubDir;
 
 	m_comp->setSrcPath(projectDir_.path());
