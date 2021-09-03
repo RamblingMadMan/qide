@@ -19,6 +19,8 @@ set(
 	QCEdit.cpp
 	QideEditor.hpp
 	QideEditor.cpp
+	QideCompiler.hpp
+	QideCompiler.cpp
 	QideGame.hpp
 	QideGame.cpp
 	QideWindow.hpp

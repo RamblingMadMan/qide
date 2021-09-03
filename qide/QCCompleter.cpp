@@ -101,17 +101,17 @@ void QCCompleter::completeAtCursor(){
 		return;
 	}
 
-	fmt::print("Matches for '{}': {{ \"{}\"", tok->str().toString().toStdString(), matches[0].toStdString());
+	//fmt::print("Matches for '{}': {{ \"{}\"", tok->str().toString().toStdString(), matches[0].toStdString());
 
 	int maxLen = matches[0].length();
 
 	for(auto it = matches.cbegin() + 1; it != matches.cend(); ++it){
-		fmt::print(", \"{}\"", it->toStdString());
+		//fmt::print(", \"{}\"", it->toStdString());
 		maxLen = qMax(maxLen, it->length());
 	}
 
-	fmt::print(" }}\n");
-	std::fflush(stdout);
+	//fmt::print(" }}\n");
+	//std::fflush(stdout);
 
 	QFontMetricsF fntMetrics(m_qcEdit->font());
 

@@ -10,6 +10,7 @@ class QTabWidget;
 
 class QideEditor;
 class QideGame;
+class QideCompiler;
 
 class QideTab: public QWidget{
 	Q_OBJECT
@@ -68,6 +69,7 @@ class QideWindow: public QMainWindow{
 
 		QideEditor *m_editor;
 		QideGame *m_game;
+		QideCompiler *m_comp;
 		QMenuBar m_menuBar;
 		QMenu m_fileMenu, m_editMenu;
 		QideTab *m_codeTab, *m_playTab;

@@ -1,12 +1,12 @@
 [submodule "deps/fmt"]
 	path = deps/fmt
 	url = https://github.com/fmtlib/fmt.git
-[submodule "deps/gmqcc"]
-	path = deps/gmqcc
-	url = https://github.com/RamblingMadMan/gmqcc.git
 [submodule "deps/utfcpp"]
 	path = deps/utfcpp
 	url = https://github.com/nemtrif/utfcpp.git
 [submodule "deps/rapidfuzz-cpp"]
 	path = deps/rapidfuzz-cpp
 	url = https://github.com/maxbachmann/rapidfuzz-cpp.git
+[submodule "deps/gmqcc"]
+	path = deps/gmqcc
+	url = https://github.com/RamblingMadMan/gmqcc.git

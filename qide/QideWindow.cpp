@@ -17,6 +17,7 @@
 
 #include "QideEditor.hpp"
 #include "QideGame.hpp"
+#include "QideCompiler.hpp"
 #include "QideWindow.hpp"
 
 class QideTabBarStyle : public QProxyStyle{
@@ -80,6 +81,7 @@ QideWindow::QideWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, m_editor(new QideEditor(this))
 	, m_game(new QideGame(this))
+	, m_comp(new QideCompiler(this))
 	, m_menuBar(this)
 	, m_fileMenu("File", this)
 	, m_editMenu("Edit", this)
@@ -90,20 +92,39 @@ QideWindow::QideWindow(QWidget *parent)
 	, m_quitAction(QIcon::fromTheme("application-exit"), "Quit", this)
 	, m_undoAction(QIcon::fromTheme("edit-undo"), "Undo", this)
 	, m_redoAction(QIcon::fromTheme("edit-redo"), "Redo", this)
-	, m_buildAction(QIcon::fromTheme(""), "Build", this)
+	, m_buildAction(/*QIcon::fromTheme(""), */"Build", this)
 	, m_launchAction(QIcon::fromTheme("system-run"), "Launch", this)
 {
 	connect(&m_quitAction, &QAction::triggered, qApp, &QApplication::quit);
 	connect(&m_undoAction, &QAction::triggered, m_editor->qcEdit(), &QPlainTextEdit::undo);
 	connect(&m_redoAction, &QAction::triggered, m_editor->qcEdit(), &QPlainTextEdit::redo);
+	connect(&m_buildAction, &QAction::triggered, m_comp, &QideCompiler::compile);
 
 	connect(m_editor->qcEdit(), &QPlainTextEdit::undoAvailable, &m_undoAction, &QAction::setEnabled);
 	connect(m_editor->qcEdit(), &QPlainTextEdit::redoAvailable, &m_redoAction, &QAction::setEnabled);
+
+	connect(
+		m_comp, &QideCompiler::canCompileChanged,
+		&m_buildAction, [this]{
+			m_buildAction.setEnabled(m_comp->canCompile());
+			if(!m_comp->canCompile()){
+				m_buildAction.setToolTip("Invalid progs.src");
+			}
+			else{
+				m_buildAction.setToolTip("Build the current project");
+			}
+		}
+	);
+
+	connect(m_comp, &QideCompiler::compileStarted, &m_launchAction, [this]{ m_launchAction.setDisabled(true); });
+	connect(m_comp, &QideCompiler::compileFinished, &m_launchAction, &QAction::setEnabled);
 
 	m_saveAction.setDisabled(true);
 	m_openAction.setDisabled(true);
 	m_undoAction.setDisabled(true);
 	m_redoAction.setDisabled(true);
+	m_buildAction.setDisabled(true);
+	m_launchAction.setDisabled(true);
 
 	// file menu
 	m_fileMenu.addAction(&m_openAction);
@@ -128,6 +149,7 @@ QideWindow::QideWindow(QWidget *parent)
 	docToolbar->addAction(&m_redoAction);
 
 	auto runToolBar = new QToolBar(this);
+	runToolBar->addAction(&m_buildAction);
 	runToolBar->addAction(&m_launchAction);
 
 	setMenuBar(&m_menuBar);
@@ -163,10 +185,6 @@ QideWindow::QideWindow(QWidget *parent)
 QideWindow::QideWindow(QDir projectDir_, QWidget *parent_)
 	: QideWindow(parent_)
 {
-	QSettings settings;
-
-	settings.setValue("workDir", projectDir_.path());
-
 	setProjectDir(projectDir_);
 }
 
@@ -182,7 +200,7 @@ void QideWindow::setProjectDir(QDir projectDir_){
 
 	auto currentFilePath = projPath + "/src/defs.qc";
 
-	settings.setValue("workDir", projPath);
+	settings.setValue("projDir", projPath);
 	settings.setValue("currentFile", currentFilePath);
 
 	m_editor->setRootDir(projectDir_);
@@ -239,6 +257,10 @@ void QideWindow::downloadFTEQW(){
 void QideWindow::readSettings(){
 	QSettings settings;
 
+	setProjectDir(settings.value("projDir").toString());
+
+	auto buildDir = settings.value("buildDir", QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/" + m_projectDir.dirName());
+
 	auto fteqwPath = settings.value("fteqwPath");
 	if(!fteqwPath.isValid() || !QDir(fteqwPath.toString()).exists()){
 		m_playTab->setEnabled(false);
@@ -258,6 +280,8 @@ void QideWindow::readSettings(){
 			downloadFTEQW();
 		}
 	}
+	else{
+	}
 
 	setWindowTitle(settings.value("title", "QIDE").toString());
 
@@ -266,6 +290,4 @@ void QideWindow::readSettings(){
 
 	m_editor->splitter()->restoreState(settings.value("splitState").toByteArray());
 	m_editor->qcEdit()->setFileBuffers(settings.value("fileBufs").value<QHash<QString, QString>>());
-
-	setProjectDir(settings.value("workDir").toString());
 }
