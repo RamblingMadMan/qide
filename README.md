@@ -29,7 +29,7 @@ sudo apt update
 Then to install all of the build dependencies run the following command:
 
 ```bash
-sudo apt install g++-11 cmake qtbase5-dev qtbase5-dev-tools
+sudo apt install g++-11 cmake qtbase5-dev qtbase5-dev-tools libzip-dev
 ```
 
 ### Compiling

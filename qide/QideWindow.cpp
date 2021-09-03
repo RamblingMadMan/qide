@@ -1,7 +1,10 @@
 #include "fmt/core.h"
 
+#include "zip.h"
+
 #include <QtMath>
 #include <QDebug>
+#include <QStringLiteral>
 #include <QApplication>
 #include <QStandardPaths>
 #include <QSettings>
@@ -266,6 +269,48 @@ void QideWindow::downloadFTEQW(){
 	connect(manager, &QNetworkAccessManager::finished, [this](QNetworkReply *data){
 		auto fteqwArchive = data->readAll();
 
+		auto zipSource = zip_source_buffer_create(fteqwArchive.data(), fteqwArchive.size(), 0, nullptr);
+		auto zip = zip_open_from_source(zipSource, ZIP_RDONLY, nullptr);
+
+#ifdef _WIN32
+		const auto execName = "fteglqw64.exe";
+#elif defined(__linux__)
+		const auto execName = "fteqw-sdl2";
+#else
+#error "Unsupported platform"
+#endif
+
+		auto execIdx = zip_name_locate(zip, execName, ZIP_FL_NOCASE);
+
+		zip_stat_t execStat;
+		zip_stat_index(zip, execIdx, ZIP_FL_NOCASE, &execStat);
+
+		QByteArray execBytes;
+		execBytes.resize(execStat.size);
+
+		auto execFile = zip_fopen(zip, execName, ZIP_RDONLY);
+
+		zip_fseek(execFile, 0, 0);
+		zip_fread(execFile, execBytes.data(), execStat.size);
+
+		zip_fclose(execFile);
+
+		zip_close(zip);
+		zip_source_close(zipSource);
+
+		auto dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+		if(!QDir(dataPath).exists()){
+			QDir().mkdir(dataPath);
+		}
+
+		auto fteqwPath = dataPath + "/" + QString(execName);
+
+		QFile outFile(fteqwPath);
+		outFile.open(QFile::WriteOnly);
+		outFile.write(execBytes);
+
+		QSettings().setValue("fteqwPath", fteqwPath);
+
 		m_playTab->hideProgress();
 		m_playTab->setEnabled(true);
 	});
@@ -279,7 +324,7 @@ void QideWindow::readSettings(){
 	auto buildDir = settings.value("buildDir", QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/" + m_projectDir.dirName());
 
 	auto fteqwPath = settings.value("fteqwPath");
-	if(!fteqwPath.isValid() || !QDir(fteqwPath.toString()).exists()){
+	if(!fteqwPath.isValid() || !QFileInfo(fteqwPath.toString()).exists()){
 		m_playTab->setEnabled(false);
 
 		auto downloadDialog = new QMessageBox(

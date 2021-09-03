@@ -1,5 +1,5 @@
 find_package(Qt5 COMPONENTS Network Widgets REQUIRED)
-find_package(ZLIB REQUIRED)
+find_package(LibZip REQUIRED)
 
 set(
 	QIDE_SOURCES
@@ -38,10 +38,15 @@ set_target_properties(
 	AUTOUIC ON
 )
 
+target_include_directories(
+	qide PUBLIC
+	${LIBZIP_INCLUDE_DIR}
+)
+
 target_link_libraries(
 	qide
 	fmt rapidfuzz::rapidfuzz
+	${LIBZIP_LIBRARY}
 	gmqcclib
-	ZLIB::ZLIB
 	Qt5::Widgets Qt5::Network
 )

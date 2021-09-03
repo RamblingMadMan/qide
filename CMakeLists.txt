@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10.0 FATAL_ERROR)
 
 project(qide VERSION 0.0.1 LANGUAGES CXX)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 ################
 # Dependencies #
 ################
