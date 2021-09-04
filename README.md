@@ -8,7 +8,8 @@
   QIDE - The (Q)uake Mod (IDE)<p><br><p>
   <a href="https://github.com/RamblingMadMan/qide#About">About</a> - 
   <a href="https://github.com/RamblingMadMan/qide#Building">Building</a> - 
-  <a href="https://github.com/RamblingMadMan/qide#Running">Running</a>
+  <a href="https://github.com/RamblingMadMan/qide#Running">Running</a> - 
+  <a href="https://github.com/RamblingMadMan/qide#Screenshots">Screenshots</a>
   <p><br></p>
 </h1>
 
@@ -78,4 +79,8 @@ Now there should be a folder `build/qide` with the compiled executable inside.
 # Running
 
 TODO
+
+# Screenshots
+
+![Screenshot of main interface](res/screenshot.png)
 
