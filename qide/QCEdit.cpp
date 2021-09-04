@@ -184,6 +184,9 @@ bool QCEdit::loadFile(const QDir &dir){
 	m_highlighter->rehighlight();
 
 	setDocument(fileBuf);
+
+	setDefaultFont();
+
 	updateLineNumberAreaWidth(0);
 
 	m_parser->setTitle(filePath);

@@ -17,9 +17,11 @@
 #include <QMessageBox>
 #include <QStackedWidget>
 #include <QLabel>
+#include <QPushButton>
 #include <QProgressBar>
 #include <QFileDialog>
-#include <QUndoStack>
+#include <QMenuBar>
+#include <QToolBar>
 
 #include "QideEditor.hpp"
 #include "QideGame.hpp"
@@ -28,8 +30,8 @@
 
 QideTabsWidget::QideTabsWidget(QWidget *parent)
 	: QWidget(parent)
-	, m_codeTab(new QideTab(QIcon::fromTheme("accessories-text-editor"), "Code"))
-	, m_playTab(new QideTab(QIcon::fromTheme("applications-games"), "Play"))
+	, m_codeTab(new QPushButton(QIcon::fromTheme("accessories-text-editor"), "Code"))
+	, m_playTab(new QPushButton(QIcon::fromTheme("applications-games"), "Play"))
 	, m_selected(m_codeTab)
 {
 	auto lay = new QVBoxLayout(this);
@@ -40,45 +42,17 @@ QideTabsWidget::QideTabsWidget(QWidget *parent)
 	setSizePolicy(QSizePolicy::Policy::Fixed, QSizePolicy::Policy::Fixed);
 }
 
-QideTab::QideTab(QWidget *parent)
-	: QWidget(parent)
-	, m_icon(new QLabel)
-	, m_text(new QLabel)
-	, m_progress(new QProgressBar)
-{
-	auto labelLay = new QHBoxLayout;
-	labelLay->addWidget(m_icon);
-	labelLay->addWidget(m_text);
-
-	auto lay = new QVBoxLayout(this);
-	lay->addLayout(labelLay);
-	lay->addWidget(m_progress);
-
-	m_progress->hide();
-}
-
-void QideTab::setIcon(const QIcon &icon){
-	m_icon->setPixmap(icon.pixmap(32, 32));
-}
-
-void QideTab::setText(const QString &str){
-	m_text->setText(str);
-}
-
-void QideTab::setProgress(qreal p){ m_progress->setValue(qFloor(p * 100)); }
-void QideTab::showProgress(){ m_progress->show(); }
-void QideTab::hideProgress(){ m_progress->hide(); }
-
 QideWindow::QideWindow(Ctor, QWidget *parent)
 	: QMainWindow(parent)
 	, m_tabs(new QideTabsWidget(this))
 	, m_editor(new QideEditor(this))
 	, m_game(new QideGame(this))
 	, m_comp(new QideCompiler(this))
-	, m_menuBar(this)
-	, m_fileMenu("File", this)
-	, m_editMenu("Edit", this)
 {
+	auto menuBar = new QMenuBar(this);
+	auto fileMenu = new QMenu("File", this);
+	auto editMenu = new QMenu("Edit", this);
+
 	auto openAction = new QAction(QIcon::fromTheme("document-open"), "Open Project", this);
 	auto saveAction = new QAction(QIcon::fromTheme("document-save"), "Save", this);
 	auto quitAction = new QAction(QIcon::fromTheme("application-exit"), "Quit", this);
@@ -131,18 +105,18 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	m_redoAction->setEnabled(false);
 
 	// file menu
-	m_fileMenu.addAction(openAction);
-	m_fileMenu.addAction(saveAction);
-	m_fileMenu.addSeparator();
-	m_fileMenu.addAction(quitAction);
+	fileMenu->addAction(openAction);
+	fileMenu->addAction(saveAction);
+	fileMenu->addSeparator();
+	fileMenu->addAction(quitAction);
 
 	// edit menu
-	m_editMenu.addAction(m_undoAction);
-	m_editMenu.addAction(m_redoAction);
+	editMenu->addAction(m_undoAction);
+	editMenu->addAction(m_redoAction);
 
 	// menu bar
-	m_menuBar.addMenu(&m_fileMenu);
-	m_menuBar.addMenu(&m_editMenu);
+	menuBar->addMenu(fileMenu);
+	menuBar->addMenu(editMenu);
 
 	// tool bar buttons
 	auto docToolbar = new QToolBar(this);
@@ -156,7 +130,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	runToolBar->addAction(buildAction);
 	runToolBar->addAction(launchAction);
 
-	setMenuBar(&m_menuBar);
+	setMenuBar(menuBar);
 	addToolBar(Qt::TopToolBarArea, docToolbar);
 	addToolBar(Qt::TopToolBarArea, runToolBar);
 

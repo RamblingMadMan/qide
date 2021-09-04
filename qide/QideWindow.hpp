@@ -2,10 +2,11 @@
 #define QIDE_QIDEWINDOW_HPP 1
 
 #include <QMainWindow>
+#include <QAbstractButton>
 #include <QAbstractListModel>
-#include <QMenuBar>
-#include <QToolBar>
 #include <QDir>
+
+class QPushButton;
 
 class QTabWidget;
 
@@ -14,58 +15,27 @@ class QideGame;
 class QideCompiler;
 class QideTabsWidget;
 
-class QideTab: public QWidget{
-	Q_OBJECT
-
-	public:
-		explicit QideTab(QWidget *parent = nullptr);
-
-		explicit QideTab(const QString &str, QWidget *parent = nullptr)
-			: QideTab(parent)
-		{
-			setText(str);
-		}
-
-		explicit QideTab(const QIcon &icon, const QString &str, QWidget *parent = nullptr)
-			: QideTab(parent)
-		{
-			setIcon(icon);
-			setText(str);
-		}
-
-		void setIcon(const QIcon &icon);
-		void setText(const QString &str);
-
-		void setProgress(qreal p);
-		void showProgress();
-		void hideProgress();
-
-	private:
-		class QLabel *m_icon, *m_text;
-		class QProgressBar *m_progress;
-};
-
 class QideTabsWidget: public QWidget{
 	Q_OBJECT
 
-	Q_PROPERTY(QideTab* codeTab READ codeTab)
-	Q_PROPERTY(QideTab* playTab READ playTab)
-	Q_PROPERTY(QideTab* selectedTab READ selectedTab NOTIFY selectedTabChanged)
+	Q_PROPERTY(QPushButton* codeTab READ codeTab)
+	Q_PROPERTY(QPushButton* playTab READ playTab)
+	Q_PROPERTY(QPushButton* selectedTab READ selectedTab NOTIFY selectedTabChanged)
 
 	public:
 		explicit QideTabsWidget(QWidget *parent = nullptr);
 
-		QideTab *codeTab() noexcept{ return m_codeTab; }
-		QideTab *playTab() noexcept{ return m_playTab; }
-		QideTab *selectedTab() noexcept{ return m_selected; }
+		QPushButton *codeTab() noexcept{ return m_codeTab; }
+		QPushButton *playTab() noexcept{ return m_playTab; }
+		QPushButton *selectedTab() noexcept{ return m_selected; }
 
 	signals:
 		void selectedTabChanged();
 
 	private:
-		QideTab *m_codeTab = nullptr;
-		QideTab *m_playTab = nullptr;
-		QideTab *m_selected = nullptr;
+		QPushButton *m_codeTab = nullptr;
+		QPushButton *m_playTab = nullptr;
+		QPushButton *m_selected = nullptr;
 };
 
 class QideWindow: public QMainWindow{
@@ -100,8 +70,6 @@ class QideWindow: public QMainWindow{
 		QideEditor *m_editor;
 		QideGame *m_game;
 		QideCompiler *m_comp;
-		QMenuBar m_menuBar;
-		QMenu m_fileMenu, m_editMenu;
 
 		QAction *m_undoAction, *m_redoAction;
 
