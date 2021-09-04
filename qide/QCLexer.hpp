@@ -19,14 +19,10 @@ class QCLexer: public QObject{
 
 		using StrIter = QStringView::const_iterator;
 
-		explicit QCLexer(QCToken::Location loc = { 0, 0 })
-			: QObject(), m_curLoc{loc}{}
+		explicit QCLexer(QCToken::Location loc, QObject *parent = nullptr)
+			: QObject(parent), m_curLoc{loc}{}
 
-		void reset();
-
-		int lex(StrIter beg, StrIter end);
-
-		int lex(QStringView src){ return lex(std::cbegin(src), std::cend(src)); }
+		explicit QCLexer(QObject *parent = nullptr): QCLexer({ 0, 0 }, parent){}
 
 		QCToken::Location curLocation() const noexcept{
 			return m_curLoc;
@@ -52,6 +48,13 @@ class QCLexer: public QObject{
 
 			return nullptr;
 		}
+
+	public slots:
+		void reset();
+
+		int lex(StrIter beg, StrIter end);
+		int lex(QStringView src){ return lex(std::cbegin(src), std::cend(src)); }
+
 
 	signals:
 		void tokensChanged();

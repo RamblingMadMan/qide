@@ -20,9 +20,7 @@ class QCParser: public QObject{
 	public:
 		using Location = QCToken::Location;
 
-		QCParser();
-
-		void reset();
+		explicit QCParser(QObject *parent = nullptr);
 
 		void setTitle(QString str);
 
@@ -42,6 +40,9 @@ class QCParser: public QObject{
 				return nullptr;
 			}
 		}
+
+	public slots:
+		void reset();
 
 	signals:
 		void titleChanged();

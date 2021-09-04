@@ -1,5 +1,4 @@
 #include <QApplication>
-#include <QSettings>
 #include <QDir>
 #include <QDirIterator>
 #include <QFileSystemWatcher>

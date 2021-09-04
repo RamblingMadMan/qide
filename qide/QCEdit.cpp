@@ -1,29 +1,47 @@
 #include "fmt/format.h"
 
+#include <QDebug>
 #include <QPainter>
+#include <QUndoStack>
+#include <QPlainTextDocumentLayout>
 
+#include "QCLexer.hpp"
+#include "QCParser.hpp"
+#include "QCHighlighter.hpp"
+#include "QCCompleter.hpp"
 #include "QCEdit.hpp"
 
 LineNumberArea::LineNumberArea(QCEdit *plainEdit_)
 	: QWidget(plainEdit_)
 	, m_plainEdit(plainEdit_){}
 
-QSize LineNumberArea::sizeHint() const {
+QSize LineNumberArea::sizeHint() const{
 	return QSize(m_plainEdit->lineNumberAreaWidth(), 0);
 }
 
-void LineNumberArea::paintEvent(QPaintEvent *event) {
+void LineNumberArea::paintEvent(QPaintEvent *event){
 	m_plainEdit->lineNumberAreaPaintEvent(event);
+}
+
+QCFileBuffer::QCFileBuffer(QObject *parent)
+	: QTextDocument(parent)
+{
+	setDocumentLayout(new QPlainTextDocumentLayout(this));
+}
+
+QCFileBuffer::QCFileBuffer(const QString &contents_, QObject *parent)
+	: QCFileBuffer(parent)
+{
+	setPlainText(contents_);
 }
 
 QCEdit::QCEdit(QWidget *parent)
 	: QPlainTextEdit(parent)
+	, m_lexer(new QCLexer(this))
+	, m_parser(new QCParser(this))
+	, m_highlighter(new QCHighlighter(this))
+	, m_completer(new QCCompleter(nullptr, this))
 	, m_fileDir()
-	, m_plainStr()
-	, m_lexer()
-	, m_parser()
-	, m_highlighter(document(), &m_parser)
-	, m_completer(nullptr, this)
 	, m_lineNumArea(this)
 {
 	auto newPalette = palette();
@@ -33,8 +51,6 @@ QCEdit::QCEdit(QWidget *parent)
 	setPalette(newPalette);
 
 	setDefaultFont();
-
-	connect(this, &QCEdit::textChanged, this, &QCEdit::reparse);
 
 	connect(this, &QCEdit::blockCountChanged, this, &QCEdit::updateLineNumberAreaWidth);
 	connect(this, &QCEdit::updateRequest, this, &QCEdit::updateLineNumberArea);
@@ -47,8 +63,8 @@ QCEdit::QCEdit(QWidget *parent)
 	completerChoices << qcKeywords;
 	completerChoices << qcBasicTypes;
 
-	m_completer.setQcEdit(this);
-	m_completer.setChoices(completerChoices);
+	m_completer->setQcEdit(this);
+	m_completer->setChoices(completerChoices);
 }
 
 int QCEdit::lineNumberAreaWidth(){
@@ -133,47 +149,80 @@ void QCEdit::lineNumberAreaPaintEvent(QPaintEvent *event){
 }
 
 bool QCEdit::loadFile(const QDir &dir){
-	auto filePath = dir.path();
+	auto filePath = dir.absolutePath();
+
+	QTextDocument *fileBuf = nullptr;
 
 	auto fileBufIt = m_fileBufs.find(filePath);
 	if(fileBufIt != m_fileBufs.end()){
-		setPlainText(fileBufIt.value());
+		qDebug() << "Loaded buffered file" << fileBufIt.key();
+		fileBuf = fileBufIt.value();
 	}
 	else{
-		QFile file(dir.path());
+		qDebug() << "Loaded new file" << filePath;
+		QFile file(filePath);
 		if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
 			return false;
 		}
 
 		auto fileContents = file.readAll();
 
-		m_fileBufs.insert(filePath, fileContents);
+		fileBuf = new QTextDocument(fileContents);
+		fileBuf->setDefaultFont(font());
+		fileBuf->setDocumentLayout(new QPlainTextDocumentLayout(fileBuf));
+		fileBuf->setMetaInformation(QTextDocument::DocumentTitle, filePath);
 
-		setPlainText(fileContents);
+		m_fileBufs.insert(filePath, fileBuf);
 	}
 
 	m_fileDir = dir;
-
-	m_parser.setTitle(filePath);
-	document()->setMetaInformation(QTextDocument::DocumentTitle, filePath);
+	m_fileDir.makeAbsolute();
 
 	emit fileDirChanged();
+
+	m_highlighter->setDocument(fileBuf);
+	m_highlighter->rehighlight();
+
+	setDocument(fileBuf);
+	updateLineNumberAreaWidth(0);
+
+	m_parser->setTitle(filePath);
+	reparse();
+
+	return true;
+}
+
+QVariant saveState(){
+	QVector<QVariant> vars;
+
+	return QVariant::fromValue(vars);
+}
+
+bool restoreState(const QVariant &state){
+	if(!state.isValid()) return false;
+
+	auto vars = state.value<QVector<QVariant>>();
 
 	return true;
 }
 
 void QCEdit::reparse(){
-	m_plainStr = toPlainText();
+	emit parseStarted();
 
-	m_lexer.reset();
-	auto numToks = m_lexer.lex(m_plainStr);
+	auto plainStr = toPlainText();
+
+	m_lexer->reset();
+	auto numToks = m_lexer->lex(plainStr);
 
 	if(numToks < 0){
+		emit parseFinished(false);
 		return; // lexing error
 	}
 
-	m_parser.reset();
-	m_parser.parse(m_lexer.tokens().begin(), m_lexer.tokens().end());
+	m_parser->reset();
+	m_parser->parse(m_lexer->tokens().begin(), m_lexer->tokens().end());
+
+	emit parseFinished(true);
 }
 
 void QCEdit::setDefaultFont(){

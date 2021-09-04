@@ -6,22 +6,25 @@
 QideEditor::QideEditor(QWidget *parent)
 	: QWidget(parent)
 	, m_lay(new QHBoxLayout(this))
-	, m_qcEdit(new QCEdit(this))
-	, m_splitter(new QSplitter(this))
-	, m_treeView(new QTreeView(this))
+	, m_splitter(new QSplitter)
+	, m_qcEdit(new QCEdit(m_splitter))
+	, m_treeView(new QTreeView(m_splitter))
+	, m_fsModel(new QFileSystemModel(this))
 {
 	setContentsMargins(0, 0, 0, 0);
 
 	m_lay->setContentsMargins(0, 0, 0, 0);
 	m_lay->addWidget(m_splitter);
 
-	setLayout(m_lay);
+	m_splitter->setContentsMargins(0, 0, 0, 0);
+	m_splitter->addWidget(m_treeView);
+	m_splitter->addWidget(m_qcEdit);
 
 	m_qcEdit->setContentsMargins(0, 0, 0, 0);
 
 	m_treeView->setContentsMargins(0, 0, 0, 0);
 	m_treeView->setSelectionMode(QAbstractItemView::SingleSelection);
-	m_treeView->setModel(&m_fsModel);
+	m_treeView->setModel(m_fsModel);
 
 	auto viewHeader = m_treeView->header();
 
@@ -30,17 +33,24 @@ QideEditor::QideEditor(QWidget *parent)
 	viewHeader->hideSection(3);
 	viewHeader->hide();
 
-	m_splitter->setContentsMargins(0, 0, 0, 0);
-	m_splitter->addWidget(m_treeView);
-	m_splitter->addWidget(m_qcEdit);
-
 	connect(
 		m_treeView->selectionModel(), &QItemSelectionModel::selectionChanged,
 		this, [this]{
-			auto filePath = m_fsModel.filePath(m_treeView->currentIndex());
+			auto filePath = QDir(m_fsModel->filePath(m_treeView->currentIndex())).absolutePath();
+
 			m_qcEdit->loadFile(filePath);
 		}
 	);
+}
+
+void QideEditor::saveCurrent(){
+	auto filePath = m_qcEdit->fileDir().absolutePath();
+	QFile outFile(filePath);
+	if(!outFile.open(QFile::WriteOnly)){
+		return;
+	}
+
+	outFile.write(m_qcEdit->toPlainText().toUtf8());
 }
 
 void QideEditor::setRootDir(QDir dir){
@@ -53,10 +63,10 @@ void QideEditor::setRootDir(QDir dir){
 
 	auto filePath = path + "/src/defs.qc";
 
-	m_fsModel.setRootPath(path);
+	m_fsModel->setRootPath(path);
 
-	auto dirModelIdx = m_fsModel.index(path);
-	auto fileModelIdx = m_fsModel.index(filePath);
+	auto dirModelIdx = m_fsModel->index(path);
+	auto fileModelIdx = m_fsModel->index(filePath);
 
 	m_treeView->setRootIndex(dirModelIdx);
 	m_treeView->setCurrentIndex(fileModelIdx);

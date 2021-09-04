@@ -2,6 +2,7 @@
 #define QIDE_QIDEWINDOW_HPP 1
 
 #include <QMainWindow>
+#include <QAbstractListModel>
 #include <QMenuBar>
 #include <QToolBar>
 #include <QDir>
@@ -11,6 +12,7 @@ class QTabWidget;
 class QideEditor;
 class QideGame;
 class QideCompiler;
+class QideTabsWidget;
 
 class QideTab: public QWidget{
 	Q_OBJECT
@@ -43,6 +45,29 @@ class QideTab: public QWidget{
 		class QProgressBar *m_progress;
 };
 
+class QideTabsWidget: public QWidget{
+	Q_OBJECT
+
+	Q_PROPERTY(QideTab* codeTab READ codeTab)
+	Q_PROPERTY(QideTab* playTab READ playTab)
+	Q_PROPERTY(QideTab* selectedTab READ selectedTab NOTIFY selectedTabChanged)
+
+	public:
+		explicit QideTabsWidget(QWidget *parent = nullptr);
+
+		QideTab *codeTab() noexcept{ return m_codeTab; }
+		QideTab *playTab() noexcept{ return m_playTab; }
+		QideTab *selectedTab() noexcept{ return m_selected; }
+
+	signals:
+		void selectedTabChanged();
+
+	private:
+		QideTab *m_codeTab = nullptr;
+		QideTab *m_playTab = nullptr;
+		QideTab *m_selected = nullptr;
+};
+
 class QideWindow: public QMainWindow{
 	Q_OBJECT
 
@@ -63,20 +88,26 @@ class QideWindow: public QMainWindow{
 		 void closeEvent(QCloseEvent *event);
 
 	private:
+		struct Ctor{};
+
+		QideWindow(Ctor, QWidget *parent);
+
 		void downloadFTEQW();
 
+		void writeSettings();
 		void readSettings();
+		void readProjSettings();
 
+		QideTabsWidget *m_tabs;
 		QideEditor *m_editor;
 		QideGame *m_game;
 		QideCompiler *m_comp;
 		QMenuBar m_menuBar;
 		QMenu m_fileMenu, m_editMenu;
-		QideTab *m_codeTab, *m_playTab;
 
-		QAction m_openAction, m_saveAction, m_quitAction;
-		QAction m_undoAction, m_redoAction;
-		QAction m_buildAction, m_launchAction;
+		QAction *m_undoAction, *m_redoAction;
+
+		QVector<QAction*> m_actions;
 
 		QDir m_projectDir;
 };

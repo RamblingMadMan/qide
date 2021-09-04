@@ -4,9 +4,11 @@
 #include <QDir>
 #include <QPlainTextEdit>
 
-#include "QCHighlighter.hpp"
-#include "QCCompleter.hpp"
-#include "QCParser.hpp"
+class QUndoStack;
+class QCHighlighter;
+class QCCompleter;
+class QCLexer;
+class QCParser;
 
 class QCEdit;
 
@@ -25,13 +27,24 @@ class LineNumberArea : public QWidget{
 		QCEdit *m_plainEdit;
 };
 
+class QCFileBuffer: public QTextDocument{
+	Q_OBJECT
+
+	public:
+		explicit QCFileBuffer(QObject *parent = nullptr);
+		explicit QCFileBuffer(const QString &contents_, QObject *parent = nullptr);
+
+		QVariant saveState();
+		bool restoreState(const QVariant &state);
+};
+
 class QCEdit: public QPlainTextEdit{
 	Q_OBJECT
 
 	Q_PROPERTY(QDir fileDir READ fileDir NOTIFY fileDirChanged)
 	Q_PROPERTY(QCLexer lexer READ lexer)
 	Q_PROPERTY(QCParser parser READ parser)
-	Q_PROPERTY(QHash<QString, QString> fileBuffers READ fileBuffers WRITE setFileBuffers NOTIFY fileBuffersChanged)
+	Q_PROPERTY(QHash<QString, QTextDocument*> fileBuffers READ fileBuffers WRITE setFileBuffers NOTIFY fileBuffersChanged)
 
 	public:
 		explicit QCEdit(QWidget *parent = nullptr);
@@ -39,22 +52,31 @@ class QCEdit: public QPlainTextEdit{
 		bool loadFile(const QDir &dir);
 
 		const QDir &fileDir() const noexcept{ return m_fileDir; }
-		const QCLexer *lexer() const noexcept{ return &m_lexer; }
-		const QCParser *parser() const noexcept{ return &m_parser; }
+		const QCLexer *lexer() const noexcept{ return m_lexer; }
+		const QCParser *parser() const noexcept{ return m_parser; }
 
-		const QHash<QString, QString> &fileBuffers() const noexcept{ return m_fileBufs; }
+		const QHash<QString, QTextDocument*> &fileBuffers() const noexcept{ return m_fileBufs; }
 
 		void lineNumberAreaPaintEvent(QPaintEvent *event);
 		int lineNumberAreaWidth();
 
-		void setFileBuffers(const QHash<QString, QString> &bufs){
+		void setFileBuffers(const QHash<QString, QTextDocument*> &bufs){
 			m_fileBufs = bufs;
 			emit fileBuffersChanged();
 		}
 
+		//QVariant saveState();
+		//bool restoreState(const QVariant &state);
+
 	signals:
 		void fileDirChanged();
+		void fileBufferChanged(const QString &filePath);
 		void fileBuffersChanged();
+
+		void undoStackChanged();
+
+		void parseStarted();
+		void parseFinished(bool success);
 
 	private slots:
 		void updateLineNumberAreaWidth(int newBlockCount);
@@ -67,14 +89,13 @@ class QCEdit: public QPlainTextEdit{
 	private:
 		void reparse();
 
+		QCLexer *m_lexer;
+		QCParser *m_parser;
+		QCHighlighter *m_highlighter;
+		QCCompleter *m_completer;
 		QDir m_fileDir;
-		QString m_plainStr;
-		QCLexer m_lexer;
-		QCParser m_parser;
-		QCHighlighter m_highlighter;
-		QCCompleter m_completer;
 		LineNumberArea m_lineNumArea;
-		QHash<QString, QString> m_fileBufs;
+		QHash<QString, QTextDocument*> m_fileBufs;
 
 		void setDefaultFont();
 };

@@ -18,7 +18,24 @@ QideGame::QideGame(QWidget *parent)
 		auto vidCmd = fmt::format("vid_recenter {} {} {} {} {}", left, top, width, height, winId());
 
 		m_proc->write(vidCmd.c_str(), vidCmd.size());
+
+		emit launched();
 	});
+
+	connect(m_proc, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(onExited));
+}
+
+void QideGame::onExited(int status, QProcess::ExitStatus exitStatus){
+	emit exited(status);
+}
+
+QString QideGame::workDir(){
+	return m_proc->workingDirectory();
+}
+
+void QideGame::setWorkDir(const QString &dir){
+	m_proc->setWorkingDirectory(dir);
+	emit workDirChanged();
 }
 
 void QideGame::launch(){

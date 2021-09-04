@@ -6,6 +6,7 @@
 #include <QFileSystemModel>
 
 class QHBoxLayout;
+class QFileSystemModel;
 
 #include "QCEdit.hpp"
 
@@ -16,20 +17,16 @@ class QideEditor: public QWidget{
 	Q_PROPERTY(QSplitter* splitter READ splitter)
 	Q_PROPERTY(QCEdit* qcEdit READ qcEdit)
 	Q_PROPERTY(QTreeView* treeView READ treeView)
-	Q_PROPERTY(QHash<QString, QString> fileBuffers READ fileBuffers WRITE setFileBuffers NOTIFY fileBuffersChanged)
+	Q_PROPERTY(QFileSystemModel* fsModel READ fsModel)
 
 	public:
 		explicit QideEditor(QWidget *parent_ = nullptr);
 
 		const QDir &rootDir() const noexcept{ return m_rootDir; }
 
-		void setRootDir(QDir dir);
+		void saveCurrent();
 
-		void setFileBuffers(const QHash<QString, QString> &fileBufs){
-			// TODO: handle open buffers with modifications
-			m_fileBufs = fileBufs;
-			emit fileBuffersChanged();
-		}
+		void setRootDir(QDir dir);
 
 		QSplitter *splitter() noexcept{ return m_splitter; }
 
@@ -39,22 +36,20 @@ class QideEditor: public QWidget{
 		QTreeView *treeView() noexcept{ return m_treeView; }
 		const QTreeView *treeView() const noexcept{ return m_treeView; }
 
-		const QFileSystemModel &fsModel() const noexcept{ return m_fsModel; }
-
-		const QHash<QString, QString> &fileBuffers() const noexcept{ return m_fileBufs; }
+		QFileSystemModel *fsModel() noexcept{ return m_fsModel; }
+		const QFileSystemModel *fsModel() const noexcept{ return m_fsModel; }
 
 	signals:
 		void rootDirChanged();
-		void fileBuffersChanged();
+		void fileBufferChanged(const QString &filePath);
 
 	private:
 		QHBoxLayout *m_lay;
-		QCEdit *m_qcEdit;
 		QSplitter *m_splitter;
+		QCEdit *m_qcEdit;
 		QTreeView *m_treeView;
+		QFileSystemModel *m_fsModel;
 		QDir m_rootDir;
-		QHash<QString, QString> m_fileBufs;
-		QFileSystemModel m_fsModel;
 };
 
 #endif // !QIDE_QIDEEDITOR_HPP

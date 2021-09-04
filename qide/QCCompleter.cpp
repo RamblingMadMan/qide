@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QMultiMap>
 
+#include "QCLexer.hpp"
 #include "QCCompleter.hpp"
 #include "QCEdit.hpp"
 

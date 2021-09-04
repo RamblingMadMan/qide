@@ -17,7 +17,7 @@ Overload(Fns&&...) -> Overload<Fns...>;
 template<typename ... Fns>
 auto overload(Fns &&... fns){ return Overload{ std::forward<Fns>(fns)... }; }
 
-QCParser::QCParser(): QObject(){}
+QCParser::QCParser(QObject *parent): QObject(parent){}
 
 void QCParser::reset(){
 	m_results.clear();

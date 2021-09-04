@@ -4,23 +4,26 @@
 #include <QVector>
 #include <QSyntaxHighlighter>
 
-#include "QCLexer.hpp"
-#include "QCParser.hpp"
+#include "QCToken.hpp"
+#include "QCExpr.hpp"
+
+class QCLexer;
+class QCParser;
 
 class QCHighlighter: public QSyntaxHighlighter{
 	Q_OBJECT
 
 	public:
-		QCHighlighter(QTextDocument *doc, QCParser *parser);
+		explicit QCHighlighter(QObject *parent = nullptr);
+		explicit QCHighlighter(QTextDocument *parent);
 
 		void highlightBlock(const QString &text) override;
 
 	private:
 		void highlightParsed(int startIdx, const QCExpr *expr);
 
+		QCLexer *m_lexer;
 		QCParser *m_parser;
-		QCLexer m_lexer;
-		QCToken::Location m_curLoc;
 
 		QTextCharFormat m_tokenFmt[QCToken::Kind::count];
 };

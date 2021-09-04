@@ -1,14 +1,17 @@
 #include "fmt/format.h"
 
+#include <QTextDocument>
 #include <QRegularExpression>
 
 #include "QCHighlighter.hpp"
 #include "QCLexer.hpp"
+#include "QCParser.hpp"
 #include "QCType.hpp"
 
-QCHighlighter::QCHighlighter(QTextDocument *doc, QCParser *parser)
-	: QSyntaxHighlighter(doc)
-	, m_parser(parser)
+QCHighlighter::QCHighlighter(QObject *parent)
+	: QSyntaxHighlighter(parent)
+	, m_lexer(new QCLexer(this))
+	, m_parser(new QCParser(this))
 {
 	m_tokenFmt[QCToken::Id].setForeground(QColor(Qt::white).darker(66));
 	m_tokenFmt[QCToken::Type].setForeground(QColor(224, 109, 0));
@@ -19,24 +22,32 @@ QCHighlighter::QCHighlighter(QTextDocument *doc, QCParser *parser)
 	m_tokenFmt[QCToken::GlobalId].setForeground(Qt::cyan);
 }
 
+QCHighlighter::QCHighlighter(QTextDocument *doc)
+	: QCHighlighter((QObject*)doc)
+{
+	setDocument(doc);
+}
+
 void QCHighlighter::highlightBlock(const QString &text){
 	if(currentBlock().blockNumber() == 1){
-		m_lexer.reset();
+		m_lexer->reset();
 	}
 
-	int startIdx = m_lexer.tokens().size();
+	int startIdx = m_lexer->tokens().size();
 
-	int n = m_lexer.lex(text);
+	int n = m_lexer->lex(text);
 
 	if(n <= 0) return;
 
-	auto it = &m_lexer.tokens()[startIdx];
-	const auto end = m_lexer.tokens().end();
+	auto it = &m_lexer->tokens()[startIdx];
+	const auto end = m_lexer->tokens().end();
 
 	while(it != end){
 		const auto &tok = *it;
 
 		const auto tokStart = std::distance(text.begin(), tok.str().begin());
+
+		const QSignalBlocker block{document()};
 
 		/*if(auto expr = m_parser->atLocation(tok.location());){
 			highlightParsed(tokStart, expr);
@@ -54,6 +65,7 @@ void QCHighlighter::highlightBlock(const QString &text){
 }
 
 void QCHighlighter::highlightParsed(int startIdx, const QCExpr *expr){
+	const QSignalBlocker block{document()};
 	QTextCharFormat format;
 	format.setForeground(Qt::blue);
 	setFormat(startIdx, expr->str().length(), format);
