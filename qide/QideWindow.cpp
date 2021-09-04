@@ -246,24 +246,7 @@ void QideWindow::readSettings(){
 	QSettings settings;
 
 	auto fteqwPath = settings.value("fteqwPath");
-	if(!fteqwPath.isValid() || !QFileInfo(fteqwPath.toString()).exists()){
-		m_tabs->playTab()->setEnabled(false);
-
-		auto downloadDialog = new QMessageBox(
-			QMessageBox::Icon::Question,
-			"Download FTEQW?",
-			"To test your mod you will need FTEQW.\nDo you want to download it?",
-			QMessageBox::Yes | QMessageBox::No,
-			this
-		);
-
-		downloadDialog->setDefaultButton(QMessageBox::Yes);
-
-		int choice = downloadDialog->exec();
-		if(choice == QMessageBox::Yes){
-			downloadFTEQW();
-		}
-	}
+	m_tabs->playTab()->setEnabled(fteqwPath.isValid() && QFileInfo(fteqwPath.toString()).exists());
 
 	auto projPath = QDir(settings.value("projDir").toString()).absolutePath();
 
@@ -338,83 +321,4 @@ void QideWindow::readProjSettings(){
 	auto fileIdx = m_editor->fsModel()->index(curFilePath);
 	m_editor->treeView()->setCurrentIndex(fileIdx);
 	m_editor->qcEdit()->loadFile(curFilePath);
-}
-
-void QideWindow::downloadFTEQW(){
-	QSettings settings;
-	auto fteqwPath = settings.value("fteqwPath");
-	if(!fteqwPath.isValid()){
-		settings.setValue("fteqwPath", QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/fteqw");
-	}
-
-#ifdef _WIN32
-	const auto url = QUrl("https://www.fteqw.org/dl/fteqw_win64.zip");
-#elif defined(__linux__)
-	const auto url = QUrl("https://www.fteqw.org/dl/fteqw-sdl2-linux64.zip");
-#else
-#error "Unsupported platform"
-#endif
-
-	auto playTab = m_tabs->playTab();
-
-	playTab->showProgress();
-
-	auto manager = new QNetworkAccessManager(this);
-
-	auto reply = manager->get(QNetworkRequest(url));
-
-	connect(reply, &QNetworkReply::downloadProgress, [playTab](qint64 bytesReceived, qint64 bytesTotal){
-		double progress = double(bytesReceived) / bytesTotal;
-
-		playTab->setProgress(progress);
-	});
-
-	connect(manager, &QNetworkAccessManager::finished, [playTab](QNetworkReply *data){
-		auto fteqwArchive = data->readAll();
-
-		auto zipSource = zip_source_buffer_create(fteqwArchive.data(), fteqwArchive.size(), 0, nullptr);
-		auto zip = zip_open_from_source(zipSource, ZIP_RDONLY, nullptr);
-
-#ifdef _WIN32
-		const auto execName = "fteglqw64.exe";
-#elif defined(__linux__)
-		const auto execName = "fteqw-sdl2";
-#else
-#error "Unsupported platform"
-#endif
-
-		auto execIdx = zip_name_locate(zip, execName, ZIP_FL_NOCASE);
-
-		zip_stat_t execStat;
-		zip_stat_index(zip, execIdx, ZIP_FL_NOCASE, &execStat);
-
-		QByteArray execBytes;
-		execBytes.resize(execStat.size);
-
-		auto execFile = zip_fopen(zip, execName, ZIP_RDONLY);
-
-		zip_fseek(execFile, 0, 0);
-		zip_fread(execFile, execBytes.data(), execStat.size);
-
-		zip_fclose(execFile);
-
-		zip_close(zip);
-		zip_source_close(zipSource);
-
-		auto dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-		if(!QDir(dataPath).exists()){
-			QDir().mkdir(dataPath);
-		}
-
-		auto fteqwPath = dataPath + "/" + QString(execName);
-
-		QFile outFile(fteqwPath);
-		outFile.open(QFile::WriteOnly);
-		outFile.write(execBytes);
-
-		QSettings().setValue("fteqwPath", fteqwPath);
-
-		playTab->hideProgress();
-		playTab->setEnabled(true);
-	});
 }

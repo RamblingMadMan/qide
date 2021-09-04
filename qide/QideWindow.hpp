@@ -92,8 +92,6 @@ class QideWindow: public QMainWindow{
 
 		QideWindow(Ctor, QWidget *parent);
 
-		void downloadFTEQW();
-
 		void writeSettings();
 		void readSettings();
 		void readProjSettings();

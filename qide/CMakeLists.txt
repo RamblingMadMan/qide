@@ -28,6 +28,8 @@ set(
 	QideCompiler.cpp
 	QideGame.hpp
 	QideGame.cpp
+	QideSetup.hpp
+	QideSetup.cpp
 	QideWindow.hpp
 	QideWindow.cpp
 	${QIDE_RESOURCES}
