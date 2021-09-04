@@ -29,7 +29,6 @@ class QideGame: public QWidget{
 
 	private:
 		QProcess *m_proc;
-
 };
 
 #endif // !QIDE_QIDEGAME_HPP
