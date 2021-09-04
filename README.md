@@ -1,4 +1,4 @@
-# QIDE - The (Q)uake Mod (IDE)
+# ![icon](qide/img/icon-256.png) QIDE - The (Q)uake Mod (IDE)
 
 Currently targeting compatibility with the 2021 re-release.
 
