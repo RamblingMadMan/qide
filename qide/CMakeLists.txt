@@ -2,6 +2,11 @@ find_package(Qt5 COMPONENTS Network Widgets REQUIRED)
 find_package(LibZip REQUIRED)
 
 set(
+	QIDE_RESOURCES
+	icon.qrc
+)
+
+set(
 	QIDE_SOURCES
 	main.cpp
 	QCType.hpp
@@ -25,6 +30,7 @@ set(
 	QideGame.cpp
 	QideWindow.hpp
 	QideWindow.cpp
+	${QIDE_RESOURCES}
 )
 
 add_executable(qide ${QIDE_SOURCES})

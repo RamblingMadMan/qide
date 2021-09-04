@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=0.0.1
+Name=QIDE
+GenericName=QIDE
+Comment=The Quake Mode IDE
+Icon=qide-icon-256
+Terminal=false
+Exec=qide %F
+Categories=Development;Utility;

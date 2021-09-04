@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <QDebug>
+#include <QResource>
 
 #include "fmt/format.h"
 
@@ -17,7 +18,19 @@ int main(int argc, char *argv[]){
 
 	QApplication qapp(argc, argv);
 
+	//QResource::registerResource("icon.qrc");
+
+	QIcon appIcon(":/icon-32.png");
+	qapp.setWindowIcon(appIcon);
+
+	QFileInfo iconInfo(":/icon-32.png");
+	if(!iconInfo.exists()){
+		qDebug() << "Could not find app icon in resources";
+	}
+
 	QideWindow window(QDir::currentPath());
+
+	window.setWindowIcon(appIcon);
 
 	window.show();
 
