@@ -3,6 +3,7 @@ find_package(LibZip REQUIRED)
 
 set(
 	QIDE_RESOURCES
+	id1.qrc
 	icon.qrc
 )
 
