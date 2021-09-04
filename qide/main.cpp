@@ -35,7 +35,7 @@ int main(int argc, char *argv[]){
 	QFontDatabase::addApplicationFont(":/Hack-Italic.ttf");
 	QFontDatabase::addApplicationFont(":/Hack-BoldItalic.ttf");
 
-	QideWindow window(QDir::currentPath());
+	QideWindow *window = nullptr;
 
 	QSettings settings;
 
@@ -44,11 +44,19 @@ int main(int argc, char *argv[]){
 	const auto pak0Path = id1Dir + "/pak0.pak";
 
 	if(!QFileInfo(pak0Path).exists() || !QFileInfo(pak0Path).isFile() || !settings.value("fteqwPath").isValid()){
-		auto wizard = new QideSetup(&window);
+		auto wizard = new QideSetup;
 		wizard->show();
-	}
 
-	window.show();
+		QObject::connect(wizard, &QideSetup::finished, [&]{
+			window = new QideWindow(QDir::currentPath());
+			window->show();
+			wizard->setParent(window);
+		});
+	}
+	else{
+		window = new QideWindow(QDir::currentPath());
+		window->show();
+	}
 
 	return qapp.exec();
 }

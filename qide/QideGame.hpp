@@ -16,6 +16,8 @@ class QideGame: public QWidget{
 
 		void launch();
 
+		bool isRunning() const;
+
 	signals:
 		void workDirChanged();
 

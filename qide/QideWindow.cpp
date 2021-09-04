@@ -62,10 +62,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	auto launchAction = new QAction(QIcon::fromTheme("system-run"), "Launch", this);
 
 	connect(openAction, &QAction::triggered, this, [this]{
-		auto newDir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
-														QSettings().value("projDir").toString(),
-														QFileDialog::ShowDirsOnly
-														| QFileDialog::DontResolveSymlinks);
+		auto newDir = QFileDialog::getExistingDirectory(this, tr("Open Project Directory"), QSettings().value("projDir").toString());
 		setProjectDir(newDir);
 	});
 
@@ -139,9 +136,21 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 
 	auto stack = new QStackedWidget(this);
 	int editorIdx = stack->addWidget(m_editor);
-	stack->addWidget(m_game);
+	int gameIdx = stack->addWidget(m_game);
 
 	stack->setCurrentIndex(editorIdx);
+
+	connect(m_tabs->codeTab(), &QPushButton::pressed, [=]{
+		stack->setCurrentIndex(editorIdx);
+	});
+
+	connect(m_tabs->playTab(), &QPushButton::pressed, [=, this]{
+		if(!m_game->isRunning()){
+			m_game->launch();
+		}
+
+		stack->setCurrentIndex(gameIdx);
+	});
 
 	auto mainWidget = new QWidget(this);
 	auto mainLay = new QHBoxLayout(mainWidget);

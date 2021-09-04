@@ -336,6 +336,7 @@ QideSetupFTEQW::QideSetupFTEQW(QWidget *parent)
 			QFile outFile(fteqwPath);
 			if(outFile.open(QFile::WriteOnly)){
 				outFile.write(fteqwBinary);
+				outFile.setPermissions(outFile.permissions() | QFileDevice::ExeUser);
 			}
 
 			dlProgress->setValue(100);

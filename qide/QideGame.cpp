@@ -1,7 +1,9 @@
 #include "fmt/format.h"
 
+#include <QDebug>
 #include <QSettings>
 #include <QProcess>
+#include <QDir>
 
 #include "QideGame.hpp"
 
@@ -26,6 +28,7 @@ QideGame::QideGame(QWidget *parent)
 }
 
 void QideGame::onExited(int status, QProcess::ExitStatus exitStatus){
+	(void)exitStatus;
 	emit exited(status);
 }
 
@@ -39,11 +42,24 @@ void QideGame::setWorkDir(const QString &dir){
 }
 
 void QideGame::launch(){
-	m_proc->reset();
+	m_proc->terminate();
 
 	QSettings settings;
+	auto projDir = settings.value("projDir").toString();
+	auto projName = QDir(projDir).dirName();
 	auto fteqwPath = settings.value("fteqwPath").toString();
 
+	qDebug() << "Launching" << fteqwPath;
+
 	m_proc->setProgram(fteqwPath);
+
+	QStringList argList;
+	argList.push_back("-window");
+	argList.push_back("-game");
+	argList.push_back(projName);
+
+	m_proc->setArguments(argList);
 	m_proc->start();
 }
+
+bool QideGame::isRunning() const{ return m_proc->state() == QProcess::Running; }
