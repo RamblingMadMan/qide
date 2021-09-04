@@ -80,7 +80,10 @@ Now there should be a folder `build/qide` with the compiled executable inside.
 
 TODO
 
+<p><br></p>
+
 # Screenshots
 
-![Screenshot of main interface](res/screenshot.png)
+<p align="center"><img src="res/screenshot-wizard.png" width="1024" alt="Screenshot of wizard"></p>
+<p align="center"><img src="res/screenshot.png" width="1024" alt="Screenshot of main interface"></p>
 
