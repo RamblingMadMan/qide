@@ -1,13 +1,8 @@
 #include <QApplication>
 #include <QDebug>
 #include <QSettings>
-#include <QWizard>
-#include <QLabel>
-#include <QVBoxLayout>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QFileDialog>
 #include <QStandardPaths>
+#include <QFontDatabase>
 
 #include "fmt/format.h"
 
@@ -34,6 +29,11 @@ int main(int argc, char *argv[]){
 		QIcon appIcon(":/icon-32.png");
 		qapp.setWindowIcon(appIcon);
 	}
+
+	QFontDatabase::addApplicationFont(":/Hack-Regular.ttf");
+	QFontDatabase::addApplicationFont(":/Hack-Bold.ttf");
+	QFontDatabase::addApplicationFont(":/Hack-Italic.ttf");
+	QFontDatabase::addApplicationFont(":/Hack-BoldItalic.ttf");
 
 	QideWindow window(QDir::currentPath());
 

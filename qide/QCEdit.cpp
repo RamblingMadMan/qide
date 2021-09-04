@@ -229,11 +229,9 @@ void QCEdit::reparse(){
 }
 
 void QCEdit::setDefaultFont(){
-	QFont fontHack;
-	fontHack.setFamily("Hack");
+	QFont fontHack("Hack", 10);
 	fontHack.setStyleHint(QFont::Monospace);
 	fontHack.setFixedPitch(true);
-	fontHack.setPointSize(10);
 
 	QFontMetricsF fntMetrics(fontHack);
 	auto stopWidth = 4 * fntMetrics.width(' ');

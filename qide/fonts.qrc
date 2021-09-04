@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="Hack-Bold.ttf">ttf/Hack-Bold.ttf</file>
+        <file alias="Hack-BoldItalic.ttf">ttf/Hack-BoldItalic.ttf</file>
+        <file alias="Hack-Italic.ttf">ttf/Hack-Italic.ttf</file>
+        <file alias="Hack-Regular.ttf">ttf/Hack-Regular.ttf</file>
+    </qresource>
+</RCC>
+ 

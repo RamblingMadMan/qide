@@ -5,6 +5,7 @@ set(
 	QIDE_RESOURCES
 	id1.qrc
 	icon.qrc
+	fonts.qrc
 )
 
 set(
