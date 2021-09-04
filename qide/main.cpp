@@ -7,6 +7,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QFileDialog>
+#include <QStandardPaths>
 
 #include "fmt/format.h"
 
@@ -38,7 +39,11 @@ int main(int argc, char *argv[]){
 
 	QSettings settings;
 
-	if(!settings.value("quakeDir").isValid() || !settings.value("fteqwDir").isValid()){
+	const auto id1Dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/id1";
+
+	const auto pak0Path = id1Dir + "/pak0.pak";
+
+	if(!QFileInfo(pak0Path).exists() || !QFileInfo(pak0Path).isFile() || !settings.value("fteqwPath").isValid()){
 		auto wizard = new QideSetup(&window);
 		wizard->show();
 	}

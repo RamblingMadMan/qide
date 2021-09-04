@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
-		<file alias="pak0.pak">id1/pak0.pak</file>
+		<file compress="1" alias="pak0.pak">id1/pak0.pak</file>
 		<file alias="slicnse.txt">id1/slicnse.txt</file>
     </qresource>
 </RCC>

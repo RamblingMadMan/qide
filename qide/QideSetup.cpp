@@ -18,6 +18,35 @@
 
 #include "QideSetup.hpp"
 
+QString findId1PakFile(QDir dir, int pakNum){
+	QStringList subDirs;
+	subDirs.reserve(4);
+	subDirs.push_back("id1");
+	subDirs.push_back("Id1");
+	subDirs.push_back("ID1");
+	subDirs.push_back("id1re");
+
+	QStringList pakNames;
+	pakNames.reserve(4);
+	pakNames.push_back(QString("pak%1.pak").arg(pakNum));
+	pakNames.push_back(QString("pak%1.PAK").arg(pakNum));
+	pakNames.push_back(QString("PAK%1.PAK").arg(pakNum));
+	pakNames.push_back(QString("PAK%1.pak").arg(pakNum));
+
+	for(const auto &subDir : subDirs){
+		auto pakDir = dir.path() + "/" + subDir;
+
+		for(const auto &pakName : pakNames){
+			auto pakPath = pakDir + "/" + pakName;
+			if(QFileInfo(pakPath).exists()){
+				return pakPath;
+			}
+		}
+	}
+
+	return QString();
+}
+
 QideSetupIntro::QideSetupIntro(QWidget *parent)
 	: QWizardPage(parent)
 {
@@ -83,26 +112,73 @@ QideSetupQuake::QideSetupQuake(QWidget *parent)
 		}
 	}
 
+	auto versionLbl = new QLabel("No pak0.pak found. Using shareware version.");
+
 	auto pathEntry = new QLineEdit;
 	pathEntry->setReadOnly(true);
 
-	connect(pathEntry, &QLineEdit::textChanged, [this, pathEntry]{
+	connect(pathEntry, &QLineEdit::textChanged, [versionLbl, pathEntry]{
 		auto path = pathEntry->text();
 		auto pathExists = QDir(path).exists();
 
-		auto isValid = pathExists;
+		bool isValid = false;
+		bool isRegistered = false;
 
 		if(pathExists){
 			qDebug() << "Searching for Quake in" << path;
-			if(!QDir(path + "/id1re").exists() && !QDir(path + "/Id1").exists() && !QDir(path + "/id1").exists()){
-				isValid = false;
+			QStringList subDirs;
+			subDirs.reserve(4);
+			subDirs.push_back("id1");
+			subDirs.push_back("Id1");
+			subDirs.push_back("ID1");
+			subDirs.push_back("id1re");
+
+			QStringList pakNames;
+			pakNames.reserve(4);
+			pakNames.push_back("pak0.pak");
+			pakNames.push_back("pak0.PAK");
+			pakNames.push_back("PAK0.PAK");
+			pakNames.push_back("PAK0.pak");
+
+			for(const auto &subDir : subDirs){
+				auto pakDir = path + "/" + subDir;
+
+				for(const auto &pakName : pakNames){
+					if(QFileInfo(pakDir + "/" + pakName).exists()){
+						isValid = true;
+						break;
+					}
+				}
+
+				if(!isValid) continue;
+
+				if(subDir == "id1re"){
+					isRegistered = true;
+				}
+				else{
+					for(auto pak1Name : pakNames){
+						pak1Name.replace('0', '1');
+						if(QFileInfo(pakDir + "/" + pak1Name).exists()){
+							isRegistered = true;
+							break;
+						}
+					}
+				}
+
+				break;
 			}
 		}
 
-		auto oldIsValid = m_dirIsValid;
-		m_dirIsValid = isValid;
-		if(oldIsValid != m_dirIsValid){
-			emit completeChanged();
+		if(isValid){
+			if(isRegistered){
+				versionLbl->setText("Registered version of Quake found");
+			}
+			else{
+				versionLbl->setText("Shareware version of Quake found");
+			}
+		}
+		else{
+			versionLbl->setText("Quake not found in directory, will use built-in shareware version");
 		}
 	});
 
@@ -121,11 +197,9 @@ QideSetupQuake::QideSetupQuake(QWidget *parent)
 	auto lay = new QVBoxLayout;
 	lay->addWidget(label);
 	lay->addLayout(pathLay);
+	lay->addWidget(versionLbl);
 
-	connect(this, &QWizardPage::completeChanged, [this, pathEntry]{
-		if(!isComplete()) return;
-		QSettings().setValue("quakeDir", pathEntry->text());
-	});
+	lay->setAlignment(versionLbl, Qt::AlignBottom | Qt::AlignRight);
 
 	registerField("quakeDir", pathEntry);
 
@@ -135,8 +209,6 @@ QideSetupQuake::QideSetupQuake(QWidget *parent)
 
 	setLayout(lay);
 }
-
-bool QideSetupQuake::isComplete() const{ return m_dirIsValid; }
 
 QideSetupFTEQW::QideSetupFTEQW(QWidget *parent)
 	: QWizardPage(parent)
@@ -194,10 +266,12 @@ QideSetupFTEQW::QideSetupFTEQW(QWidget *parent)
 
 	connect(pathEntry, &QLineEdit::textChanged, [this, pathEntry]{
 		auto pathInfo = QFileInfo(pathEntry->text());
-		auto isValid = pathInfo.exists() && pathInfo.isFile() && (pathInfo.fileName() == "fteqw64");
-		auto oldIsValid = m_pathIsValid;
+		auto isValid = pathInfo.exists() && pathInfo.isFile() && (pathInfo.fileName() == execName);
+		qDebug() << "FTEQW path" << pathEntry->text() << (isValid ? "is valid" : "is not valid");
+
+		auto oldIsComplete = isComplete();
 		m_pathIsValid = isValid;
-		if(oldIsValid != m_pathIsValid){
+		if(oldIsComplete != isComplete()){
 			emit completeChanged();
 		}
 	});
@@ -218,9 +292,17 @@ QideSetupFTEQW::QideSetupFTEQW(QWidget *parent)
 	auto dlProgress = new QProgressBar;
 	dlProgress->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
-	connect(dlBtn, &QPushButton::pressed, [this, dlProgress, pathEntry, browseBtn]{
+	connect(dlBtn, &QPushButton::pressed, [this, dlBtn, dlProgress, pathEntry, browseBtn]{
+		dlBtn->setEnabled(false);
 		dlProgress->setEnabled(true);
+		pathEntry->setEnabled(false);
 		browseBtn->setEnabled(false);
+
+		auto oldComplete = isComplete();
+		m_downloading = true;
+		if(isComplete() != oldComplete){
+			emit completeChanged();
+		}
 
 		#ifdef _WIN32
 			const auto url = QUrl("https://fte.triptohell.info/moodles/win64/fteqw64.exe");
@@ -239,7 +321,7 @@ QideSetupFTEQW::QideSetupFTEQW(QWidget *parent)
 			dlProgress->setValue(qFloor(progress * 100.0));
 		});
 
-		connect(manager, &QNetworkAccessManager::finished, [dlProgress, pathEntry, browseBtn](QNetworkReply *data){
+		connect(reply, &QNetworkReply::finished, [this, dlBtn, dlProgress, pathEntry, browseBtn, data{reply}]{
 			auto fteqwBinary = data->readAll();
 
 			auto dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -249,16 +331,27 @@ QideSetupFTEQW::QideSetupFTEQW(QWidget *parent)
 
 			auto fteqwPath = dataPath + "/" + QString(execName);
 
+			QFile::remove(fteqwPath); // ensure old version isn't present
+
 			QFile outFile(fteqwPath);
-			outFile.open(QFile::WriteOnly);
-			outFile.write(fteqwBinary);
+			if(outFile.open(QFile::WriteOnly)){
+				outFile.write(fteqwBinary);
+			}
 
 			dlProgress->setValue(100);
 			dlProgress->setEnabled(false);
+			dlBtn->setEnabled(true);
 
 			browseBtn->setEnabled(true);
 
+			pathEntry->setEnabled(true);
 			pathEntry->setText(fteqwPath);
+
+			auto oldComplete = isComplete();
+			m_downloading = false;
+			if(isComplete() != oldComplete){
+				emit completeChanged();
+			}
 		});
 	});
 
@@ -278,10 +371,7 @@ QideSetupFTEQW::QideSetupFTEQW(QWidget *parent)
 	lay->setAlignment(browseLay, Qt::AlignBottom | Qt::AlignRight);
 	lay->setAlignment(dlLay, Qt::AlignBottom | Qt::AlignRight);
 
-	connect(this, &QWizardPage::completeChanged, [this, pathEntry]{
-		if(!m_pathIsValid) return;
-		QSettings().setValue("fteqwPath", pathEntry->text());
-	});
+	registerField("fteqwPath", pathEntry);
 
 	if(!fteqwPath.isEmpty()){
 		pathEntry->setText(fteqwPath);
@@ -290,7 +380,7 @@ QideSetupFTEQW::QideSetupFTEQW(QWidget *parent)
 	setLayout(lay);
 }
 
-bool QideSetupFTEQW::isComplete() const{ return m_pathIsValid; }
+bool QideSetupFTEQW::isComplete() const{ return !m_downloading && m_pathIsValid; }
 
 QideSetup::QideSetup(QWidget *parent)
 	: QWizard(parent)
@@ -302,6 +392,52 @@ QideSetup::QideSetup(QWidget *parent)
 		addPage(new QideSetupIntro);
 	}
 
-	addPage(new QideSetupQuake);
-	addPage(new QideSetupFTEQW);
+	static const auto dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+	static const auto id1Dir = dataDir + "/id1";
+
+	if(!QFileInfo(id1Dir + "/pak0.pak").exists()){
+		addPage(new QideSetupQuake);
+	}
+
+	auto cachedFteqwPath = QSettings().value("fteqwPath").toString();
+
+	if(cachedFteqwPath.isEmpty() || !QFileInfo(cachedFteqwPath).exists()){
+		addPage(new QideSetupFTEQW);
+	}
+
+	connect(this, &QWizard::finished, [this](int result){
+		if(result != QDialog::Accepted) return;
+
+		auto quakeDirVar = field("quakeDir");
+		if(quakeDirVar.isValid()){
+			auto quakeDir = quakeDirVar.toString();
+
+			QString pak0Path = ":/pak0.pak";
+			QString pak1Path;
+
+			if(!quakeDir.isEmpty()){
+				auto pak0Res = findId1PakFile(quakeDir, 0);
+				if(!pak0Res.isEmpty()){
+					pak0Path = pak0Res;
+
+					auto pak1Res = findId1PakFile(quakeDir, 1);
+					if(!pak1Res.isEmpty()){
+						pak1Path = pak1Res;
+					}
+				}
+			}
+
+			QDir().mkdir(id1Dir);
+
+			QFile::copy(pak0Path, id1Dir + "/pak0.pak");
+			if(!pak1Path.isEmpty()){
+				QFile::copy(pak1Path, id1Dir + "/pak1.pak");
+			}
+		}
+
+		auto fteqwPathVar = field("fteqwPath");
+		if(fteqwPathVar.isValid()){
+			QSettings().setValue("fteqwPath", fteqwPathVar.toString());
+		}
+	});
 }

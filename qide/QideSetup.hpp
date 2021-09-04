@@ -17,11 +17,6 @@ class QideSetupQuake: public QWizardPage{
 
 	public:
 		explicit QideSetupQuake(QWidget *parent = nullptr);
-
-		bool isComplete() const override;
-
-	private:
-		bool m_dirIsValid = false;
 };
 
 class QideSetupFTEQW: public QWizardPage{
@@ -34,6 +29,7 @@ class QideSetupFTEQW: public QWizardPage{
 
 	private:
 		bool m_pathIsValid = false;
+		bool m_downloading = false;
 };
 
 class QideSetup: public QWizard{
