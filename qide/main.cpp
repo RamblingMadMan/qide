@@ -48,13 +48,13 @@ int main(int argc, char *argv[]){
 		wizard->show();
 
 		QObject::connect(wizard, &QideSetup::finished, [&]{
-			window = new QideWindow(QDir::currentPath());
+			window = new QideWindow;
 			window->show();
 			wizard->setParent(window);
 		});
 	}
 	else{
-		window = new QideWindow(QDir::currentPath());
+		window = new QideWindow;
 		window->show();
 	}
 

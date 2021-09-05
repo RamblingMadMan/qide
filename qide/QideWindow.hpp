@@ -10,6 +10,7 @@ class QPushButton;
 
 class QTabWidget;
 
+class QCVM;
 class QideEditor;
 class QideGame;
 class QideCompiler;
@@ -70,6 +71,7 @@ class QideWindow: public QMainWindow{
 		QideEditor *m_editor;
 		QideGame *m_game;
 		QideCompiler *m_comp;
+		QCVM *m_vm;
 
 		QAction *m_undoAction, *m_redoAction;
 

@@ -1,7 +1,3 @@
-#include <vector>
-
-#include "zip.h"
-
 #include <QtMath>
 #include <QDebug>
 #include <QStringLiteral>
@@ -23,6 +19,9 @@
 #include <QMenuBar>
 #include <QToolBar>
 
+#include "QCVM.hpp"
+#include "QCByteCode.hpp"
+#include "QCEdit.hpp"
 #include "QideEditor.hpp"
 #include "QideGame.hpp"
 #include "QideCompiler.hpp"
@@ -48,6 +47,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	, m_editor(new QideEditor(this))
 	, m_game(new QideGame(this))
 	, m_comp(new QideCompiler(this))
+	, m_vm(new QCVM(this))
 {
 	auto menuBar = new QMenuBar(this);
 	auto fileMenu = new QMenu("File", this);
@@ -87,9 +87,17 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 
 	connect(
 		m_comp, &QideCompiler::compileFinished,
-		this, [=](bool success){
+		this, [=, this](bool success){
 			buildAction->setEnabled(true);
 			launchAction->setEnabled(success);
+
+			if(success){
+				QFile file(m_comp->buildPath() + "/progs.dat");
+				if(file.open(QFile::ReadOnly)){
+					auto bc = file.readAll();
+					m_vm->byteCode()->setByteCode(bc);
+				}
+			}
 		}
 	);
 
@@ -215,7 +223,7 @@ void QideWindow::writeSettings(){
 		fileBufs.insert(it.key(), it.value()->toPlainText());
 	}
 
-	settings.setValue(QString("projDir"), m_projectDir.absolutePath());
+	settings.setValue(QString("projDir"), m_projectDir.path());
 	settings.setValue(QString("%1/geometry").arg(projName), saveGeometry());
 	settings.setValue(QString("%1/state").arg(projName), saveState());
 	settings.setValue(QString("%1/splitState").arg(projName), m_editor->splitter()->saveState());
@@ -231,7 +239,7 @@ void QideWindow::readSettings(){
 	auto fteqwPath = settings.value("fteqwPath");
 	m_tabs->playTab()->setEnabled(fteqwPath.isValid() && QFileInfo(fteqwPath.toString()).exists());
 
-	auto projPath = QDir(settings.value("projDir").toString()).absolutePath();
+	auto projPath = QDir(settings.value("projDir").toString());
 
 	setProjectDir(projPath);
 
@@ -243,7 +251,7 @@ void QideWindow::readSettings(){
 void QideWindow::readProjSettings(){
 	QSettings settings;
 
-	auto projPath = m_projectDir.path();
+	auto projPath = m_projectDir.absolutePath();
 	auto projName = m_projectDir.dirName();
 
 	QHash<QString, QTextDocument*> projFileBufs;

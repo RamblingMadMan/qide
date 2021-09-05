@@ -8,7 +8,7 @@
 class QHBoxLayout;
 class QFileSystemModel;
 
-#include "QCEdit.hpp"
+class QCEdit;
 
 class QideEditor: public QWidget{
 	Q_OBJECT

@@ -18,6 +18,8 @@ set(
 	QCExpr.hpp
 	QCParser.hpp
 	QCParser.cpp
+	QCByteCode.hpp
+	QCByteCode.cpp
 	QCHighlighter.hpp
 	QCHighlighter.cpp
 	QCCompleter.hpp
@@ -28,6 +30,8 @@ set(
 	QideEditor.cpp
 	QideCompiler.hpp
 	QideCompiler.cpp
+	QCVM.hpp
+	QCVM.cpp
 	QideGame.hpp
 	QideGame.cpp
 	QideSetup.hpp

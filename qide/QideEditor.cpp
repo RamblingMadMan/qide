@@ -1,6 +1,7 @@
 #include <QHeaderView>
 #include <QHBoxLayout>
 
+#include "QCEdit.hpp"
 #include "QideEditor.hpp"
 
 QideEditor::QideEditor(QWidget *parent)
