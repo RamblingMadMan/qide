@@ -33,10 +33,7 @@ jobs:
           sudo update-alternatives --set c++ /usr/bin/g++
       
       - name: build AppImage
-        run: |
-            mkdir build
-            cd build
-            ../build-appimage.sh
+        run: ./build-appimage.sh
 
       - uses: actions/upload-artifact@v2
         with:
