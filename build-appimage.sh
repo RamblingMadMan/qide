@@ -9,6 +9,9 @@
 #
 ####################################
 
+# terminate on command error
+set -e
+
 TEMP_TEMPLATE="qide-appimage-build-XXXXXX"
 
 if [ "$CI" == "" ] && [ -d /dev/shm ]; then

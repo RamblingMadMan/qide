@@ -37,5 +37,12 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: AppImage
           path: '*.AppImage'
+          
+      - name: version
+        run: echo "::set-output name=version::$(./bin/azblogfilter --version)"
+        id: version
+          
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: '*.AppImage'
