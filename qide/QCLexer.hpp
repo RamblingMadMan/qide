@@ -2,6 +2,7 @@
 #define QIDE_QCLEXER_HPP 1
 
 #include <QObject>
+#include <QVector>
 
 #include "QCToken.hpp"
 
