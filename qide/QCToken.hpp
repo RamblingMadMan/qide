@@ -12,6 +12,10 @@ inline const QStringList qcKeywords = {
 class QCToken: public QObject{
 	Q_OBJECT
 
+	Q_PROPERTY(Kind kind READ kind WRITE setKind NOTIFY kindChanged)
+	Q_PROPERTY(QStringView str READ str WRITE setStr NOTIFY strChanged)
+	Q_PROPERTY(Location location READ location WRITE setLocation NOTIFY locationChanged)
+
 	public:
 		struct Location{
 			int line, col;
@@ -37,8 +41,11 @@ class QCToken: public QObject{
 
 		Q_ENUM(Kind)
 
-		QCToken(Kind kind_, QStringView str_, Location loc = { 0, 0 })
-			: QObject(), m_kind(kind_), m_str(str_), m_loc(loc){}
+		QCToken(Kind kind_, QStringView str_, Location loc, QObject *parent = nullptr)
+			: QObject(parent), m_kind(kind_), m_str(str_), m_loc(loc){}
+
+		explicit QCToken(QObject *parent = nullptr)
+			: QCToken(count, QStringLiteral(""), { 0, 0 }, parent){}
 
 		QCToken(const QCToken &other)
 			: QObject()
@@ -57,6 +64,15 @@ class QCToken: public QObject{
 		Kind kind() const noexcept{ return m_kind; }
 		QStringView str() const noexcept{ return m_str; }
 		const Location &location() const noexcept{ return m_loc; }
+
+		void setKind(Kind kind_){ m_kind = kind_; emit kindChanged(); }
+		void setStr(QStringView str_){ m_str = str_; emit strChanged(); }
+		void setLocation(const Location &loc){ m_loc = loc; emit locationChanged(); }
+
+	signals:
+		void kindChanged();
+		void strChanged();
+		void locationChanged();
 
 	private:
 		Kind m_kind;
