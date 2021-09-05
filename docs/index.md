@@ -1,6 +1,6 @@
 <p><br></p>
 
-<p align="center"><img src="qide/img/qide.png" alt="Icon"></p>
+<p align="center"><img src="../qide/img/qide.png" alt="Icon"></p>
 
 <p><br></p>
 
@@ -111,6 +111,6 @@ Now there should be a folder `build/qide` with the compiled executable inside.
 
 # Screenshots
 
-<p align="center"><img src="res/screenshot-wizard.png" width="1024" alt="Screenshot of wizard"></p>
-<p align="center"><img src="res/screenshot.png" width="1024" alt="Screenshot of main interface"></p>
+<p align="center"><img src="../res/screenshot-wizard.png" width="1024" alt="Screenshot of wizard"></p>
+<p align="center"><img src="../res/screenshot.png" width="1024" alt="Screenshot of main interface"></p>
  
