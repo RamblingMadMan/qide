@@ -23,8 +23,6 @@ jobs:
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt update
           sudo apt install g++-11 cmake qt5-default qtbase5-dev qtbase5-dev-tools libzip-dev qtdeclarative5-dev
-          sudo update-alternatives --remove-all gcc 
-          sudo update-alternatives --remove-all g++
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 10
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 10
           sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
