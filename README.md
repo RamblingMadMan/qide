@@ -1,6 +1,6 @@
 <p><br></p>
 
-<p align="center"><img src="qide/img/icon-256.png" alt="Icon"></p>
+<p align="center"><img src="qide/img/qide.png" alt="Icon"></p>
 
 <p><br></p>
 
