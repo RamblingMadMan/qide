@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10.0 FATAL_ERROR)
 project(
 	qide
 	DESCRIPTION "The Quake Mod IDE"
-	VERSION 0.0.1
+	VERSION 0.0.0
 	LANGUAGES CXX
 )
 
