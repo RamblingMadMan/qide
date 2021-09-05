@@ -9,6 +9,7 @@
 build/
 build-*/
 cmake-build*/
+*.AppImage
 
 # IDE / Build system related files
 CMakeLists.txt.user

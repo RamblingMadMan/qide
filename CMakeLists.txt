@@ -27,3 +27,9 @@ install(
 	TARGETS qide
 	RUNTIME DESTINATION bin
 )
+
+# Install icon and .desktop file on linux
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+	install(FILES res/QIDE.desktop DESTINATION share/applications)
+	install(FILES qide/img/qide.png DESTINATION share/icons/hicolor/256x256/apps)
+endif()

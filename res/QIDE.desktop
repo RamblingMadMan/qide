@@ -1,10 +1,11 @@
 [Desktop Entry]
+Encoding=UTF-8
+Version=1.0
 Type=Application
-Version=0.0.1
-Name=QIDE
-GenericName=QIDE
-Comment=The Quake Mode IDE
-Icon=qide-icon-256
 Terminal=false
 Exec=qide %F
+Name=QIDE
+Comment=The Quake Mod IDE
+Icon=qide
+GenericName=QIDE
 Categories=Development;Utility;
