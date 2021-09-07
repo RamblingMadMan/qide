@@ -2,11 +2,13 @@
 #define QIDE_QIDEWINDOW_HPP 1
 
 #include <QMainWindow>
+#include <QDockWidget>
 #include <QAbstractButton>
 #include <QAbstractListModel>
 #include <QDir>
 
 class QPushButton;
+class QStringListModel;
 
 class QTabWidget;
 
@@ -43,6 +45,38 @@ class QideTabsWidget: public QWidget{
 		QPushButton *m_selected = nullptr;
 };
 
+class QideVMDock: public QDockWidget{
+	Q_OBJECT
+
+	Q_PROPERTY(QCVM* vm READ vm WRITE setVm NOTIFY vmChanged)
+	Q_PROPERTY(QStringList fns READ fns NOTIFY fnsChanged)
+
+	public:
+		explicit QideVMDock(QWidget *parent = nullptr);
+
+		explicit QideVMDock(QCVM *vm_, QWidget *parent = nullptr)
+			: QideVMDock(parent)
+		{
+			setVm(vm_);
+		}
+
+		QCVM *vm() noexcept{ return m_vm; }
+		QStringList fns() const;
+
+		void setVm(QCVM *vm_);
+
+	public slots:
+		void updateFnList();
+
+	signals:
+		void vmChanged();
+		void fnsChanged();
+
+	private:
+		QCVM *m_vm;
+		QStringListModel *m_model;
+};
+
 class QideWindow: public QMainWindow{
 	Q_OBJECT
 
@@ -72,11 +106,11 @@ class QideWindow: public QMainWindow{
 		void readProjSettings();
 
 		QideTabsWidget *m_tabs;
+		QideVMDock *m_vmDock;
 		QideEditor *m_editor;
 		QideMapEditor *m_mapEditor;
 		QideGame *m_game;
 		QideCompiler *m_comp;
-		QCVM *m_vm;
 
 		QAction *m_undoAction, *m_redoAction;
 

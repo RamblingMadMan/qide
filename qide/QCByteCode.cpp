@@ -169,6 +169,7 @@ void QCByteCode::setByteCode(const QByteArray &bc){
 
 	m_globals.resize(numGlbs);
 	std::memcpy(m_globals.data(), glbsData.data(), glbsData.size());
+	m_globals[0] = 0;
 
 	m_bc = bc;
 	emit byteCodeChanged();

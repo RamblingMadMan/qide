@@ -11,6 +11,8 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QMessageBox>
+#include <QStringListModel>
+#include <QListView>
 #include <QStackedWidget>
 #include <QLabel>
 #include <QPushButton>
@@ -44,14 +46,64 @@ QideTabsWidget::QideTabsWidget(QWidget *parent)
 	setSizePolicy(QSizePolicy::Policy::Fixed, QSizePolicy::Policy::Fixed);
 }
 
+QideVMDock::QideVMDock(QWidget *parent)
+	: QDockWidget("QuakeC VM", parent)
+	, m_vm(nullptr)
+{
+	auto fnView = new QListView;
+	m_model = new QStringListModel;
+
+	fnView->setModel(m_model);
+
+	setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
+	setWidget(fnView);
+}
+
+QStringList QideVMDock::fns() const{
+	return m_model->stringList();
+}
+
+void QideVMDock::setVm(QCVM *vm_){
+	if(m_vm == vm_) return;
+
+	connect(vm_, &QCVM::byteCodeChanged, this, &QideVMDock::updateFnList);
+	vm_->setParent(this);
+
+	disconnect(m_vm, &QCVM::byteCodeChanged, this, &QideVMDock::updateFnList);
+	delete m_vm;
+	m_vm = vm_;
+
+	emit vmChanged();
+
+	updateFnList();
+}
+
+void QideVMDock::updateFnList(){
+	qDebug() << "Updating function list";
+
+	auto fnList = m_vm->fns();
+
+	QStringList strs;
+	strs.reserve(fnList.size());
+
+	for(auto &&fn : fnList){
+		strs.push_back(fn->name());
+	}
+
+	m_model->setHeaderData(0, Qt::Orientation::Horizontal, "Functions");
+	m_model->setStringList(strs);
+
+	emit fnsChanged();
+}
+
 QideWindow::QideWindow(Ctor, QWidget *parent)
 	: QMainWindow(parent)
 	, m_tabs(new QideTabsWidget(this))
+	, m_vmDock(new QideVMDock(new QCVM))
 	, m_editor(new QideEditor(this))
 	, m_mapEditor(new QideMapEditor(this))
 	, m_game(new QideGame(this))
 	, m_comp(new QideCompiler(this))
-	, m_vm(new QCVM(this))
 {
 	auto menuBar = new QMenuBar(this);
 	auto fileMenu = new QMenu("File", this);
@@ -99,7 +151,8 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 				QFile file(m_comp->buildPath() + "/progs.dat");
 				if(file.open(QFile::ReadOnly)){
 					auto bc = file.readAll();
-					m_vm->byteCode()->setByteCode(bc);
+					m_vmDock->vm()->byteCode()->setByteCode(bc);
+					m_vmDock->updateFnList();
 				}
 			}
 		}
@@ -142,6 +195,8 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	setMenuBar(menuBar);
 	addToolBar(Qt::TopToolBarArea, docToolbar);
 	addToolBar(Qt::TopToolBarArea, runToolBar);
+
+	addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, m_vmDock);
 
 	//m_codeTab->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	//m_playTab->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
