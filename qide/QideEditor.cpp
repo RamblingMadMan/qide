@@ -1,5 +1,6 @@
 #include <QHeaderView>
 #include <QHBoxLayout>
+#include <QPainter>
 
 #include "QCEdit.hpp"
 #include "QideEditor.hpp"
@@ -11,6 +12,7 @@ QideEditor::QideEditor(QWidget *parent)
 	, m_qcEdit(new QCEdit(m_splitter))
 	, m_treeView(new QTreeView(m_splitter))
 	, m_fsModel(new QFileSystemModel(this))
+	, m_bgColor(palette().dark().color())
 {
 	setContentsMargins(0, 0, 0, 0);
 
@@ -23,6 +25,11 @@ QideEditor::QideEditor(QWidget *parent)
 
 	m_qcEdit->setContentsMargins(0, 0, 0, 0);
 
+	auto treeViewPal = m_treeView->palette();
+	treeViewPal.setColor(QPalette::Window, QColor(0, 0, 0, 0));
+	treeViewPal.setColor(QPalette::Base, QColor(0, 0, 0, 0));
+
+	m_treeView->setPalette(treeViewPal);
 	m_treeView->setContentsMargins(0, 0, 0, 0);
 	m_treeView->setSelectionMode(QAbstractItemView::SingleSelection);
 	m_treeView->setModel(m_fsModel);
@@ -71,4 +78,13 @@ void QideEditor::setRootDir(QDir dir){
 
 	m_treeView->setRootIndex(dirModelIdx);
 	m_treeView->setCurrentIndex(fileModelIdx);
+}
+
+void QideEditor::setOpacity(qreal a){
+	m_bgColor.setAlphaF(a);
+}
+
+void QideEditor::paintEvent(QPaintEvent */*event*/){
+	QPainter painter(this);
+	painter.fillRect(rect(), m_bgColor);
 }

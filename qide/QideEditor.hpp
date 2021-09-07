@@ -28,6 +28,8 @@ class QideEditor: public QWidget{
 
 		void setRootDir(QDir dir);
 
+		void setOpacity(qreal a);
+
 		QSplitter *splitter() noexcept{ return m_splitter; }
 
 		QCEdit *qcEdit() noexcept{ return m_qcEdit; }
@@ -43,12 +45,16 @@ class QideEditor: public QWidget{
 		void rootDirChanged();
 		void fileBufferChanged(const QString &filePath);
 
+	protected:
+		void paintEvent(QPaintEvent *event) override;
+
 	private:
 		QHBoxLayout *m_lay;
 		QSplitter *m_splitter;
 		QCEdit *m_qcEdit;
 		QTreeView *m_treeView;
 		QFileSystemModel *m_fsModel;
+		QColor m_bgColor;
 		QDir m_rootDir;
 };
 

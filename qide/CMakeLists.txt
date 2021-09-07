@@ -1,4 +1,4 @@
-find_package(Qt5 COMPONENTS Network Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Core Network Widgets REQUIRED)
 find_package(LibZip REQUIRED)
 
 set(
@@ -24,10 +24,14 @@ set(
 	QCHighlighter.cpp
 	QCCompleter.hpp
 	QCCompleter.cpp
+	QCMap.hpp
+	QCMap.cpp
 	QCEdit.hpp
 	QCEdit.cpp
 	QideEditor.hpp
 	QideEditor.cpp
+	QideMapEditor.hpp
+	QideMapEditor.cpp
 	QideCompiler.hpp
 	QideCompiler.cpp
 	QCVM.hpp
@@ -62,5 +66,5 @@ target_link_libraries(
 	fmt rapidfuzz::rapidfuzz
 	${LIBZIP_LIBRARY}
 	gmqcclib
-	Qt5::Widgets Qt5::Network
+	Qt5::Core Qt5::Widgets Qt5::Network
 )

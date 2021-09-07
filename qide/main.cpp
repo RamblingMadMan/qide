@@ -3,6 +3,7 @@
 #include <QSettings>
 #include <QStandardPaths>
 #include <QFontDatabase>
+#include <QSurfaceFormat>
 
 #include "fmt/format.h"
 
@@ -20,6 +21,20 @@ int main(int argc, char *argv[]){
 	QApplication::setApplicationName("QIDE");
 
 	QApplication qapp(argc, argv);
+
+	QSurfaceFormat surfaceFmt;
+	surfaceFmt.setVersion(4, 3);
+	surfaceFmt.setProfile(QSurfaceFormat::CoreProfile);
+	surfaceFmt.setRedBufferSize(8);
+	surfaceFmt.setGreenBufferSize(8);
+	surfaceFmt.setBlueBufferSize(8);
+	surfaceFmt.setAlphaBufferSize(8);
+	surfaceFmt.setDepthBufferSize(24);
+	surfaceFmt.setStencilBufferSize(8);
+	surfaceFmt.setSwapBehavior(QSurfaceFormat::SwapBehavior::TripleBuffer);
+	surfaceFmt.setSwapInterval(1);
+
+	QSurfaceFormat::setDefaultFormat(surfaceFmt);
 
 	QFileInfo iconInfo(":/icon-32.png");
 	if(!iconInfo.exists()){

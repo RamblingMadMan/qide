@@ -23,6 +23,7 @@
 #include "QCByteCode.hpp"
 #include "QCEdit.hpp"
 #include "QideEditor.hpp"
+#include "QideMapEditor.hpp"
 #include "QideGame.hpp"
 #include "QideCompiler.hpp"
 #include "QideWindow.hpp"
@@ -30,12 +31,14 @@
 QideTabsWidget::QideTabsWidget(QWidget *parent)
 	: QWidget(parent)
 	, m_codeTab(new QPushButton(QIcon::fromTheme("accessories-text-editor"), "Code"))
+	, m_mapTab(new QPushButton(QIcon::fromTheme("applications-internet"), "Map"))
 	, m_playTab(new QPushButton(QIcon::fromTheme("applications-games"), "Play"))
 	, m_selected(m_codeTab)
 {
 	auto lay = new QVBoxLayout(this);
 
 	lay->addWidget(m_codeTab);
+	lay->addWidget(m_mapTab);
 	lay->addWidget(m_playTab);
 
 	setSizePolicy(QSizePolicy::Policy::Fixed, QSizePolicy::Policy::Fixed);
@@ -45,6 +48,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	: QMainWindow(parent)
 	, m_tabs(new QideTabsWidget(this))
 	, m_editor(new QideEditor(this))
+	, m_mapEditor(new QideMapEditor(this))
 	, m_game(new QideGame(this))
 	, m_comp(new QideCompiler(this))
 	, m_vm(new QCVM(this))
@@ -143,13 +147,25 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	//m_playTab->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
 	auto stack = new QStackedWidget(this);
-	int editorIdx = stack->addWidget(m_editor);
+
+	// added in reverse order for correct stacking
 	int gameIdx = stack->addWidget(m_game);
+	int mapEditorIdx = stack->addWidget(m_mapEditor);
+	int editorIdx = stack->addWidget(m_editor);
 
 	stack->setCurrentIndex(editorIdx);
 
-	connect(m_tabs->codeTab(), &QPushButton::pressed, [=]{
+	connect(m_tabs->codeTab(), &QPushButton::pressed, [=, this]{
+		if(m_mapEditor->isEnabled()){
+			m_editor->setOpacity(0.5);
+		}
+
 		stack->setCurrentIndex(editorIdx);
+	});
+
+	connect(m_tabs->mapTab(), &QPushButton::pressed, [=, this]{
+		m_mapEditor->setEnabled(true);
+		stack->setCurrentIndex(mapEditorIdx);
 	});
 
 	connect(m_tabs->playTab(), &QPushButton::pressed, [=, this]{

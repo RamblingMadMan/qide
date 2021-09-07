@@ -35,7 +35,19 @@ class QCToken: public QObject{
 		};
 
 		enum Kind{
-			Type, Keyword, Id, Number, String, Term, GlobalId, Comment, Op, EndOfFile, Unknown,
+			Space,
+			NewLine,
+			Type,
+			Keyword,
+			Id,
+			Number,
+			String,
+			Term,
+			GlobalId,
+			Comment,
+			Op,
+			EndOfFile,
+			Unknown,
 			count
 		};
 

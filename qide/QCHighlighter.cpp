@@ -1,5 +1,6 @@
 #include "fmt/format.h"
 
+#include <QDebug>
 #include <QTextDocument>
 #include <QRegularExpression>
 
@@ -29,7 +30,7 @@ QCHighlighter::QCHighlighter(QTextDocument *doc)
 }
 
 void QCHighlighter::highlightBlock(const QString &text){
-	if(currentBlock().blockNumber() == 1){
+	if(currentBlock().blockNumber() == 0){
 		m_lexer->reset();
 	}
 

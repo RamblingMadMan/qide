@@ -35,7 +35,10 @@ class QCByteCode: public QObject{
 			quint16 crc;
 			quint16 skip; // 0
 			quint32 sectionData[SECTION_COUNT * 2];
+			quint32 entityfields;
 		};
+
+		static_assert(sizeof(Header) == 60);
 
 		enum Type: quint16{
 			VOID = 0,
@@ -55,11 +58,15 @@ class QCByteCode: public QObject{
 			quint32 nameIdx;
 		};
 
+		static_assert(sizeof(Def) == 8);
+
 		struct Field{
 			Type type;
 			quint16 offset;
 			quint32 nameIdx;
 		};
+
+		static_assert(sizeof(Field) == 8);
 
 		struct Function{
 			qint32 entryPoint;
@@ -72,7 +79,9 @@ class QCByteCode: public QObject{
 			quint8 argSizes[8];
 		};
 
-		enum Op: quint32{
+		static_assert(sizeof(Function) == 36);
+
+		enum Op: quint16{
 			// Misc
 			DONE = 0x00,
 			STATE = 0x3C,
@@ -156,10 +165,12 @@ class QCByteCode: public QObject{
 
 		Q_ENUM(Op)
 
-		struct alignas(16) Instr{
+		struct Instr{
 			Op op;
-			quint32 args[3];
+			quint16 args[3];
 		};
+
+		static_assert(sizeof(Instr) == 8);
 
 		explicit QCByteCode(QObject *parent = nullptr);
 		explicit QCByteCode(const QByteArray &bc, QObject *parent = nullptr);

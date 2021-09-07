@@ -19,13 +19,13 @@ QCByteCode::QCByteCode(const QByteArray &bc, QObject *parent)
 }
 
 void QCByteCode::setByteCode(const QByteArray &bc){
-	Header header;
+	if(bc.size() < int(sizeof(Header))){
+		qDebug() << "invalid bytecode file, size too small for header";
+		return;
+	}
 
-	QDataStream in(bc);
-	in.readRawData((char*)&header.ver, sizeof(header.ver));
-	in.readRawData((char*)&header.crc, sizeof(header.crc));
-	in.readRawData((char*)&header.skip, sizeof(header.skip));
-	in.readRawData((char*)&header.sectionData, SECTION_COUNT * sizeof(quint32) * 2);
+	Header header;
+	std::memcpy(&header, bc.data(), sizeof(Header));
 
 	auto sectionOff = [&](Section section){
 		return header.sectionData[(section * 2)];
@@ -40,12 +40,12 @@ void QCByteCode::setByteCode(const QByteArray &bc){
 		return;
 	}
 
-	if(header.skip != 0){
+	if(header.skip != 0x0){
 		qDebug() << "Wrong header skip value" << header.skip;
 		return;
 	}
 
-	constexpr auto sectionDataSize = [](Section section){
+	constexpr auto sectionDataSize = [](Section section) -> std::size_t{
 		switch(section){
 			case STATEMENTS: return 16;
 			case DEFS: return 8;
@@ -78,6 +78,7 @@ void QCByteCode::setByteCode(const QByteArray &bc){
 	const auto numDefs = sectionLen(DEFS);
 	const auto numFields = sectionLen(FIELDS);
 	const auto numFns = sectionLen(FUNCTIONS);
+	const auto numGlbs = sectionLen(GLOBALS);
 
 	newInstrs.reserve(numInstrs);
 	newDefs.reserve(numDefs);
@@ -86,31 +87,31 @@ void QCByteCode::setByteCode(const QByteArray &bc){
 
 	auto opMeta = QMetaEnum::fromType<Op>();
 
-	QDataStream stmtIn(stmtsData);
-
 	for(std::size_t i = 0; i < numInstrs; i++){
 		Instr instr;
-		stmtIn.readRawData((char*)&instr.op, sizeof(instr.op));
+		std::memcpy(&instr, stmtsData.data() + (i * sizeof(Instr)), sizeof(Instr));
 
 		if(!opMeta.valueToKey(instr.op)){
 			qDebug() << "Invalid statement opcode" << instr.op;
 			return;
 		}
 
-		stmtIn.readRawData((char*)instr.args, std::size(instr.args) * sizeof(*instr.args));
-
 		newInstrs.push_back(instr);
 	}
 
-	QDataStream defIn(defsData);
-
 	for(std::size_t i = 0; i < numDefs; i++){
 		Def def;
-		defIn.readRawData((char*)&def.type, sizeof(def.type));
-		defIn.readRawData((char*)&def.globalIdx, sizeof(def.globalIdx));
-		defIn.readRawData((char*)&def.nameIdx, sizeof(def.nameIdx));
+		std::memcpy(&def, defsData.data() + (i * sizeof(Def)), sizeof(Def));
 
 		if(qint32(def.nameIdx) >= strsData.size()){
+			qDebug() << "Invalid name index" << def.nameIdx << "in def";
+			return;
+		}
+		else if(def.globalIdx >= glbsData.size()){
+			qDebug() << "Invalid global index" << def.globalIdx << "in def";
+			return;
+		}
+		else if(qint32(def.nameIdx) >= strsData.size()){
 			qDebug() << "Invalid name index" << def.nameIdx << "in def";
 			return;
 		}
@@ -120,16 +121,16 @@ void QCByteCode::setByteCode(const QByteArray &bc){
 
 	auto typeMeta = QMetaEnum::fromType<Type>();
 
-	QDataStream fldIn(fldsData);
-
 	for(std::size_t i = 0; i < numFields; i++){
 		Field field;
-		fldIn.readRawData((char*)&field.type, sizeof(field.type));
-		fldIn.readRawData((char*)&field.offset, sizeof(field.offset));
-		fldIn.readRawData((char*)&field.nameIdx, sizeof(field.nameIdx));
+		std::memcpy(&field, fldsData.data() + (i * sizeof(Field)), sizeof(Field));
 
 		if(!typeMeta.valueToKey(field.type)){
 			qDebug() << "Invalid type" << field.type << "in field";
+			return;
+		}
+		else if(field.offset >= glbsData.size()){
+			qDebug() << "Invalid offset" << field.offset << "in field";
 			return;
 		}
 		else if(qint32(field.nameIdx) >= strsData.size()){
@@ -140,18 +141,9 @@ void QCByteCode::setByteCode(const QByteArray &bc){
 		newFields.push_back(field);
 	}
 
-	QDataStream fncIn(fncsData);
-
 	for(std::size_t i = 0; i < numFns; i++){
 		Function fn;
-		fncIn.readRawData((char*)&fn.entryPoint, sizeof(fn.entryPoint));
-		fncIn.readRawData((char*)&fn.localIdx, sizeof(fn.localIdx));
-		fncIn.readRawData((char*)&fn.numLocals, sizeof(fn.numLocals));
-		fncIn.readRawData((char*)&fn.profile, sizeof(fn.profile));
-		fncIn.readRawData((char*)&fn.nameIdx, sizeof(fn.nameIdx));
-		fncIn.readRawData((char*)&fn.fileIdx, sizeof(fn.fileIdx));
-		fncIn.readRawData((char*)&fn.numArgs, sizeof(fn.numArgs));
-		fncIn.readRawData((char*)fn.argSizes, std::size(fn.argSizes));
+		std::memcpy(&fn, fncsData.data() + (i * sizeof(Function)), sizeof(Function));
 
 		if(fn.entryPoint > 0 && fn.entryPoint >= stmtsData.size()){
 			qDebug() << "Invalid function entry point" << fn.entryPoint;
@@ -175,6 +167,7 @@ void QCByteCode::setByteCode(const QByteArray &bc){
 	m_fns = newFns;
 	m_strs = strsData;
 
+	m_globals.resize(numGlbs);
 	std::memcpy(m_globals.data(), glbsData.data(), glbsData.size());
 
 	m_bc = bc;

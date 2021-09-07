@@ -4,6 +4,7 @@
 #include <QPainter>
 #include <QUndoStack>
 #include <QPlainTextDocumentLayout>
+#include <QPalette>
 
 #include "QCLexer.hpp"
 #include "QCParser.hpp"
@@ -45,7 +46,8 @@ QCEdit::QCEdit(QWidget *parent)
 	, m_lineNumArea(this)
 {
 	auto newPalette = palette();
-	newPalette.setColor(QPalette::Window, Qt::darkGray);
+	newPalette.setColor(QPalette::Window, QColor(0, 0, 0, 0));
+	newPalette.setColor(QPalette::Base, QColor(0, 0, 0, 0));
 	newPalette.setColor(QPalette::Text, Qt::lightGray);
 
 	setPalette(newPalette);
@@ -111,6 +113,7 @@ void QCEdit::highlightCurrentLine(){
 		QTextEdit::ExtraSelection selection;
 
 		QColor lineColor = QColor(Qt::darkGray).lighter(20);
+		lineColor.setAlpha(128);
 
 		selection.format.setBackground(lineColor);
 		selection.format.setProperty(QTextFormat::FullWidthSelection, true);

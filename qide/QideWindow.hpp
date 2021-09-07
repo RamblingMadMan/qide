@@ -12,6 +12,7 @@ class QTabWidget;
 
 class QCVM;
 class QideEditor;
+class QideMapEditor;
 class QideGame;
 class QideCompiler;
 class QideTabsWidget;
@@ -20,6 +21,7 @@ class QideTabsWidget: public QWidget{
 	Q_OBJECT
 
 	Q_PROPERTY(QPushButton* codeTab READ codeTab)
+	Q_PROPERTY(QPushButton* mapTab READ mapTab)
 	Q_PROPERTY(QPushButton* playTab READ playTab)
 	Q_PROPERTY(QPushButton* selectedTab READ selectedTab NOTIFY selectedTabChanged)
 
@@ -27,6 +29,7 @@ class QideTabsWidget: public QWidget{
 		explicit QideTabsWidget(QWidget *parent = nullptr);
 
 		QPushButton *codeTab() noexcept{ return m_codeTab; }
+		QPushButton *mapTab() noexcept{ return m_mapTab; }
 		QPushButton *playTab() noexcept{ return m_playTab; }
 		QPushButton *selectedTab() noexcept{ return m_selected; }
 
@@ -35,6 +38,7 @@ class QideTabsWidget: public QWidget{
 
 	private:
 		QPushButton *m_codeTab = nullptr;
+		QPushButton *m_mapTab = nullptr;
 		QPushButton *m_playTab = nullptr;
 		QPushButton *m_selected = nullptr;
 };
@@ -69,6 +73,7 @@ class QideWindow: public QMainWindow{
 
 		QideTabsWidget *m_tabs;
 		QideEditor *m_editor;
+		QideMapEditor *m_mapEditor;
 		QideGame *m_game;
 		QideCompiler *m_comp;
 		QCVM *m_vm;
