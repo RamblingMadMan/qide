@@ -63,7 +63,7 @@ QCMap::TokIt QCMap::parseFace(TokIt beg, TokIt end, Face *ret){
 				throw QCMapException("invalid face point value");
 			}
 
-			point[i] = it->str().toInt();
+			point[i] = it->str().toString().toInt();
 
 			++it;
 		}

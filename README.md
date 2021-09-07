@@ -92,6 +92,17 @@ Then to install all of the build dependencies run the following command:
 sudo apt install g++-11 cmake qtbase5-dev qtbase5-dev-tools libzip-dev
 ```
 
+You also may need to set GCC 11 as your default compiler with the following commands:
+
+```bash
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 10
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 10
+sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
+sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
+sudo update-alternatives --set cc /usr/bin/gcc
+sudo update-alternatives --set c++ /usr/bin/g++
+```
+
 <p><br></p>
 
 ### Compiling
