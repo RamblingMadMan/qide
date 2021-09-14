@@ -1,5 +1,4 @@
 #include <cstring>
-#include <span>
 
 #include <QtEndian>
 #include <QDebug>

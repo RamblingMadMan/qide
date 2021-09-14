@@ -38,7 +38,7 @@ QString findId1PakFile(QDir dir, int pakNum){
 
 		for(const auto &pakName : pakNames){
 			auto pakPath = pakDir + "/" + pakName;
-			if(QFileInfo(pakPath).exists()){
+			if(QFileInfo::exists(pakPath)){
 				return pakPath;
 			}
 		}
@@ -144,7 +144,7 @@ QideSetupQuake::QideSetupQuake(QWidget *parent)
 				auto pakDir = path + "/" + subDir;
 
 				for(const auto &pakName : pakNames){
-					if(QFileInfo(pakDir + "/" + pakName).exists()){
+					if(QFileInfo::exists(pakDir + "/" + pakName)){
 						isValid = true;
 						break;
 					}
@@ -158,7 +158,7 @@ QideSetupQuake::QideSetupQuake(QWidget *parent)
 				else{
 					for(auto pak1Name : pakNames){
 						pak1Name.replace('0', '1');
-						if(QFileInfo(pakDir + "/" + pak1Name).exists()){
+						if(QFileInfo::exists(pakDir + "/" + pak1Name)){
 							isRegistered = true;
 							break;
 						}
@@ -224,9 +224,6 @@ QideSetupFTEQW::QideSetupFTEQW(QWidget *parent)
 	label->setWordWrap(true);
 
 	auto dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-	if(!QDir(dataPath).exists()){
-		QDir().mkdir(dataPath);
-	}
 
 #ifdef _WIN32
 	static const auto execName = "fteqw64.exe";
@@ -253,12 +250,17 @@ QideSetupFTEQW::QideSetupFTEQW(QWidget *parent)
 
 	QString fteqwPath;
 
-	for(const auto &dir : searchDirs){
-		qDebug() << "Searching for FTEQW at" << dir;
-		if(QFileInfo(dir).exists() && QFileInfo(dir).isFile()){
-			fteqwPath = dir;
-			break;
+	if(QDir(dataPath).exists()){
+		for(const auto &dir : searchDirs){
+			qDebug() << "Searching for FTEQW at" << dir;
+			if(QFileInfo::exists(dir) && QFileInfo(dir).isFile()){
+				fteqwPath = dir;
+				break;
+			}
 		}
+	}
+	else{
+		QDir().mkpath(dataPath);
 	}
 
 	auto pathEntry = new QLineEdit;
@@ -326,7 +328,7 @@ QideSetupFTEQW::QideSetupFTEQW(QWidget *parent)
 
 			auto dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 			if(!QDir(dataPath).exists()){
-				QDir().mkdir(dataPath);
+				QDir().mkpath(dataPath);
 			}
 
 			auto fteqwPath = dataPath + "/" + QString(execName);
@@ -396,13 +398,13 @@ QideSetup::QideSetup(QWidget *parent)
 	static const auto dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 	static const auto id1Dir = dataDir + "/id1";
 
-	if(!QFileInfo(id1Dir + "/pak0.pak").exists()){
+	if(!QFileInfo::exists(id1Dir + "/pak0.pak")){
 		addPage(new QideSetupQuake);
 	}
 
 	auto cachedFteqwPath = QSettings().value("fteqwPath").toString();
 
-	if(cachedFteqwPath.isEmpty() || !QFileInfo(cachedFteqwPath).exists()){
+	if(cachedFteqwPath.isEmpty() || !QFileInfo::exists(cachedFteqwPath)){
 		addPage(new QideSetupFTEQW);
 	}
 
