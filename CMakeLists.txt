@@ -10,6 +10,21 @@ project(
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 ################
+# Project Defs #
+################
+
+set(QIDE_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/include")
+
+set(
+	QIDE_HEADERS
+	${QIDE_INCLUDE_DIR}/qide/types.hpp
+	${QIDE_INCLUDE_DIR}/qide/shapes.hpp
+	${QIDE_INCLUDE_DIR}/qide/Camera.hpp
+	${QIDE_INCLUDE_DIR}/qide/Renderer.hpp
+	${QIDE_INCLUDE_DIR}/qide/RendererGL.hpp
+)
+
+################
 # Dependencies #
 ################
 
@@ -17,10 +32,19 @@ add_subdirectory(deps/fmt)
 add_subdirectory(deps/rapidfuzz-cpp)
 add_subdirectory(deps/gmqcc)
 
+function(add_glbinding)
+	set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
+	set(OPTION_BUILD_EXAMPLES OFF CACHE BOOL "")
+	add_subdirectory(deps/glbinding)
+endfunction()
+
+add_glbinding()
+
 ###################
 # Project subdirs #
 ###################
 
+add_subdirectory(base)
 add_subdirectory(qide)
 
 install(

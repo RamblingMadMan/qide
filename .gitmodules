@@ -10,3 +10,6 @@
 [submodule "deps/gmqcc"]
 	path = deps/gmqcc
 	url = https://github.com/RamblingMadMan/gmqcc.git
+[submodule "deps/glbinding"]
+	path = deps/glbinding
+	url = https://github.com/cginternals/glbinding.git

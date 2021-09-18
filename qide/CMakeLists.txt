@@ -63,6 +63,7 @@ target_include_directories(
 
 target_link_libraries(
 	qide
+	qide-base
 	fmt rapidfuzz::rapidfuzz
 	${LIBZIP_LIBRARY}
 	gmqcclib

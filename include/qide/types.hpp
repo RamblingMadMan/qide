@@ -15,3 +15,37 @@
  *	You should have received a copy of the GNU General Public License
  *	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#ifndef QIDE_TYPES_HPP
+#define QIDE_TYPES_HPP 1
+
+#include <cstdint>
+
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+#include <glm/mat2x2.hpp>
+#include <glm/mat3x3.hpp>
+#include <glm/mat4x4.hpp>
+
+namespace qide{
+	using Nat8 = std::uint8_t;
+	using Nat16 = std::uint16_t;
+	using Nat32 = std::uint32_t;
+	using Nat64 = std::uint64_t;
+
+	using Int8 = std::int8_t;
+	using Int16 = std::int16_t;
+	using Int32 = std::int32_t;
+	using Int64 = std::int64_t;
+
+	using Vec2 = glm::vec2;
+	using Vec3 = glm::vec3;
+	using Vec4 = glm::vec4;
+
+	using Mat2 = glm::mat2;
+	using Mat3 = glm::mat3;
+	using Mat4 = glm::mat4;
+}
+
+#endif // !QIDE_TYPES_HPP

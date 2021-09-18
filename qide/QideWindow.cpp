@@ -208,11 +208,14 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	int mapEditorIdx = stack->addWidget(m_mapEditor);
 	int editorIdx = stack->addWidget(m_editor);
 
+	m_mapEditor->setEnabled(false);
+
 	stack->setCurrentIndex(editorIdx);
 
 	connect(m_tabs->codeTab(), &QPushButton::pressed, [=, this]{
 		if(m_mapEditor->isEnabled()){
-			m_editor->setOpacity(0.5);
+			m_mapEditor->setEnabled(false);
+			m_editor->setOpacity(0.25);
 		}
 
 		stack->setCurrentIndex(editorIdx);
@@ -279,8 +282,8 @@ void QideWindow::setProjectDir(QDir projectDir_){
 }
 
 void QideWindow::closeEvent(QCloseEvent *event){
-	(void)event;
 	writeSettings();
+	QMainWindow::closeEvent(event);
 }
 
 void QideWindow::writeSettings(){
@@ -308,7 +311,7 @@ void QideWindow::readSettings(){
 	QSettings settings;
 
 	auto fteqwPath = settings.value("fteqwPath");
-	m_tabs->playTab()->setEnabled(fteqwPath.isValid() && QFileInfo(fteqwPath.toString()).exists());
+	m_tabs->playTab()->setEnabled(fteqwPath.isValid() && QFileInfo::exists(fteqwPath.toString()));
 
 	auto projPath = QDir(settings.value("projDir").toString());
 

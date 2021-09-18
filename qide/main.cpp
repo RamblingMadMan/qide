@@ -25,6 +25,9 @@ int main(int argc, char *argv[]){
 	QSurfaceFormat surfaceFmt;
 	surfaceFmt.setVersion(4, 3);
 	surfaceFmt.setProfile(QSurfaceFormat::CoreProfile);
+#ifndef NDEBUG
+	surfaceFmt.setOption(QSurfaceFormat::FormatOption::DebugContext);
+#endif
 	surfaceFmt.setRedBufferSize(8);
 	surfaceFmt.setGreenBufferSize(8);
 	surfaceFmt.setBlueBufferSize(8);

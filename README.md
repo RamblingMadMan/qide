@@ -73,6 +73,7 @@ git clone --depth 1 https://github.com/RamblingMadMan/qide.git
 - C++20 compiler (GCC 11+)
 - CMake
 - Qt5 Widgets
+- [glm](https://github.com/g-truc/glm)
 
 <p><br></p>
 
@@ -89,7 +90,7 @@ sudo apt update
 Then to install all of the build dependencies run the following command:
 
 ```bash
-sudo apt install g++-11 cmake qtbase5-dev qtbase5-dev-tools libzip-dev
+sudo apt install g++-11 cmake qtbase5-dev qtbase5-dev-tools libzip-dev libglm-dev
 ```
 
 You also may need to set GCC 11 as your default compiler with the following commands:
