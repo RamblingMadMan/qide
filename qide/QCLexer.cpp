@@ -18,7 +18,7 @@ inline It skipSpaces(It it, It end, bool skipNewlines = false){
 	while(it != end){
 		if(!it->isSpace()) break;
 
-		if(!skipNewlines && *it == u'\n'){
+		if(!skipNewlines && *it == QChar('\n')){
 			return it;
 		}
 
@@ -29,8 +29,15 @@ inline It skipSpaces(It it, It end, bool skipNewlines = false){
 }
 
 QCToken QCLexer::lexNormal(StrIter it, StrIter end){
+	const auto beg = it;
+	const auto begLoc = m_curLoc;
+
+	if(m_skipWs){
+		it = ::skipSpaces(it, end, m_skipNl);
+	}
+
 	while(it != end && it->isSpace()){
-		if(*it == u'\n'){
+		if(*it == QChar('\n')){
 			auto nlLoc = m_curLoc;
 
 			++m_curLoc.line;
@@ -49,7 +56,7 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 			do{
 				++m_curLoc.col;
 				++it;
-			} while(it != end && it->isSpace() && (*it != u'\n'));
+			} while(it != end && it->isSpace() && (*it != QChar('\n')));
 
 			auto spaceEnd = it;
 
@@ -65,12 +72,12 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 
 	QCToken::Kind tokKind = QCToken::EndOfFile;
 
-	if(*it == u';'){
+	if(*it == QChar(';')){
 		tokKind = QCToken::Term;
 		++it;
 		++m_curLoc.col;
 	}
-	else if(*it == u'"'){
+	else if(*it == QChar('"')){
 		tokKind = QCToken::String;
 
 		do {
@@ -80,16 +87,16 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 			if(it == end){
 				break;
 			}
-			else if(*it == u'"'){
+			else if(*it == QChar('"')){
 				++it;
 				break;
 			}
-			else if(*it == u'\\'){
+			else if(*it == QChar('\\')){
 				++it;
 				if(it == end){
 					break;
 				}
-				else if(*it == u'\n'){
+				else if(*it == QChar('\n')){
 					++m_curLoc.line;
 					m_curLoc.col = 0;
 				}
@@ -99,19 +106,19 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 			}
 		} while(it != end);
 	}
-	else if(*it == u'#'){
+	else if(*it == QChar('#')){
 		tokKind = QCToken::GlobalId;
 
 		do {
 			++it;
 			++m_curLoc.col;
-		} while(it != end && ((*it == u'_') || it->isLetterOrNumber()));
+		} while(it != end && ((*it == QChar('_')) || it->isLetterOrNumber()));
 	}
-	else if(*it == u'_' || it->isLetter()){
+	else if(*it == QChar('_') || it->isLetter()){
 		do {
 			++it;
 			++m_curLoc.col;
-		} while(it != end && ((*it == u'_') || it->isLetterOrNumber()));
+		} while(it != end && ((*it == QChar('_')) || it->isLetterOrNumber()));
 
 		auto view = QStringView(tokStart, it);
 		auto ty = QCType::fromStr(view);
@@ -119,11 +126,11 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 		tokKind = ty ? QCToken::Type : QCToken::Id;
 	}
 	else if(it->isPunct() || it->isSymbol()){
-		if(*it == u'/'){
+		if(*it == QChar('/')){
 			++it;
 			++m_curLoc.col;
 
-			if(*it == u'*'){
+			if(*it == QChar('*')){
 				m_mode = Mode::MultilineComment;
 
 				++it;
@@ -134,11 +141,11 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 
 				return QCToken(QCToken::Comment, QStringView(tokStart, it), tokLoc);
 			}
-			else if(*it == u'/'){
+			else if(*it == QChar('/')){
 				do{
 					++it;
 					++m_curLoc.col;
-				} while(it != end && *it != u'\n');
+				} while(it != end && *it != QChar('\n'));
 
 				return QCToken(QCToken::Comment, QStringView(tokStart, it), tokLoc);
 			}
@@ -171,6 +178,9 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 			++m_curLoc.col;
 		} while(it != end && !it->isSpace());
 	}
+	else{
+		return QCToken(QCToken::Kind::EndOfFile, QStringView(beg, it), begLoc);
+	}
 
 	return QCToken(tokKind, QStringView(tokStart, it), tokLoc);
 }
@@ -180,15 +190,15 @@ QCToken QCLexer::lexMultilineComment(StrIter it, StrIter end){
 	const auto tokStart = it;
 
 	while(it != end){
-		if(*it == u'\n'){
+		if(*it == QChar('\n')){
 			++it;
 			++m_curLoc.line;
 			m_curLoc.col = 0;
 		}
-		else if(*it == u'*'){
+		else if(*it == QChar('*')){
 			++it;
 			++m_curLoc.col;
-			if(it != end && *it == u'/'){
+			if(it != end && *it == QChar('/')){
 				m_mode = Mode::Normal;
 				++it;
 				++m_curLoc.col;

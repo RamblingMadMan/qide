@@ -31,6 +31,7 @@ set(
 add_subdirectory(deps/fmt)
 add_subdirectory(deps/rapidfuzz-cpp)
 add_subdirectory(deps/gmqcc)
+add_subdirectory(deps/glm)
 
 function(add_glbinding)
 	set(BUILD_SHARED_LIBS OFF CACHE BOOL "")

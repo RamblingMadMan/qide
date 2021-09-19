@@ -3,6 +3,7 @@
 
 #include <optional>
 #include <functional>
+#include <variant>
 
 #include <QVector>
 #include <QMap>

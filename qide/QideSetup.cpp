@@ -97,19 +97,37 @@ QideSetupQuake::QideSetupQuake(QWidget *parent)
 	searchDirs.push_back(QDir::homePath() + "/.steam/steam/steamapps/common/Quake");
 #elif defined(_WIN32)
 	qDebug() << "Windows is untested";
-	searchDirs.push_back("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Quake");
+	searchDirs.push_back("C:/Program Files (x86)/Steam/steamapps/common/Quake");
 #else
 #error "Unsupported platform"
 #endif
 
 	QString quakePath;
 
+	QStringList subDirs;
+	subDirs.reserve(4);
+	subDirs.push_back("id1");
+	subDirs.push_back("Id1");
+	subDirs.push_back("ID1");
+	subDirs.push_back("id1re");
+
 	for(const auto &dir : searchDirs){
-		qDebug() << "Searching for Quake in" << dir;
-		if(QDir(dir + "/id1re").exists() || QDir(dir + "/Id1").exists() || QDir(dir + "/id1").exists()){
-			quakePath = dir;
-			break;
+		auto id1Dir = QDir(dir);
+
+		if(!id1Dir.exists()){
+			continue;
 		}
+
+		qDebug() << "Searching for Quake in" << id1Dir;
+
+		for(const auto &subDir : subDirs){
+			if(id1Dir.cd(subDir)){
+				quakePath = id1Dir.path();
+				break;
+			}
+		}
+
+		if(!quakePath.isEmpty()) break;
 	}
 
 	auto versionLbl = new QLabel("No pak0.pak found. Using shareware version.");

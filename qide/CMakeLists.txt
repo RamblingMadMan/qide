@@ -1,5 +1,5 @@
 find_package(Qt5 COMPONENTS Core Network Widgets REQUIRED)
-find_package(LibZip REQUIRED)
+#find_package(LibZip REQUIRED)
 
 set(
 	QIDE_RESOURCES
@@ -65,7 +65,7 @@ target_link_libraries(
 	qide
 	qide-base
 	fmt rapidfuzz::rapidfuzz
-	${LIBZIP_LIBRARY}
+	#${LIBZIP_LIBRARY}
 	gmqcclib
 	Qt5::Core Qt5::Widgets Qt5::Network
 )

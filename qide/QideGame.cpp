@@ -43,7 +43,7 @@ QideGame::QideGame(QWidget *parent)
 		stdoutWidget->append(m_proc->readAllStandardOutput());
 	});
 
-	connect(m_proc, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(onExited));
+	connect(m_proc, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(onExited()));
 
 	auto split = new QSplitter;
 	split->setOrientation(Qt::Vertical);

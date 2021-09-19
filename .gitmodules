@@ -13,3 +13,6 @@
 [submodule "deps/glbinding"]
 	path = deps/glbinding
 	url = https://github.com/cginternals/glbinding.git
+[submodule "deps/glm"]
+	path = deps/glm
+	url = https://github.com/g-truc/glm.git
