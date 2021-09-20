@@ -1,9 +1,24 @@
 <RCC>
     <qresource prefix="/">
-        <file alias="Hack-Bold.ttf">ttf/Hack-Bold.ttf</file>
-        <file alias="Hack-BoldItalic.ttf">ttf/Hack-BoldItalic.ttf</file>
-        <file alias="Hack-Italic.ttf">ttf/Hack-Italic.ttf</file>
-        <file alias="Hack-Regular.ttf">ttf/Hack-Regular.ttf</file>
+        <file>ttf/Hack-Bold.ttf</file>
+        <file>ttf/Hack-BoldItalic.ttf</file>
+        <file>ttf/Hack-Italic.ttf</file>
+        <file>ttf/Hack-Regular.ttf</file>
+        <file>ttf/SourceSans3-Black.ttf</file>
+        <file>ttf/SourceSans3-BlackIt.ttf</file>
+        <file>ttf/SourceSans3-Bold.ttf</file>
+        <file>ttf/SourceSans3-BoldIt.ttf</file>
+        <file>ttf/SourceSans3-ExtraLight.ttf</file>
+        <file>ttf/SourceSans3-ExtraLightIt.ttf</file>
+        <file>ttf/SourceSans3-It.ttf</file>
+        <file>ttf/SourceSans3-Light.ttf</file>
+        <file>ttf/SourceSans3-LightIt.ttf</file>
+        <file>ttf/SourceSans3-Regular.ttf</file>
+        <file>ttf/SourceSans3-Semibold.ttf</file>
+        <file>ttf/SourceSans3-SemiboldIt.ttf</file>
+        <file>ttf/Monoid-Bold.ttf</file>
+        <file>ttf/Monoid-Italic.ttf</file>
+        <file>ttf/Monoid-Regular.ttf</file>
+        <file>ttf/Monoid-Retina.ttf</file>
     </qresource>
 </RCC>
- 

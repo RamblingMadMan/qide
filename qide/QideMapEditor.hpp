@@ -2,7 +2,9 @@
 #define QIDE_QIDEMAPEDITOR_HPP 1
 
 #include <memory>
+#include <chrono>
 
+#include <QTime>
 #include <QWidget>
 #include <QOpenGLWindow>
 
@@ -16,6 +18,8 @@ class QideMapEditorWindow: public QOpenGLWindow{
 	Q_OBJECT
 
 	public:
+		using Clock = std::chrono::high_resolution_clock;
+
 		explicit QideMapEditorWindow(QWindow *parent = nullptr);
 
 		~QideMapEditorWindow();
@@ -35,7 +39,9 @@ class QideMapEditorWindow: public QOpenGLWindow{
 	private:
 		qide::Camera m_cam;
 		std::unique_ptr<qide::RendererGL43> m_r;
+		Clock::time_point m_start, m_frameStart;
 		QPointF m_lastMousePos;
+		qide::Vec3 m_movement;
 };
 
 class QideMapEditor: public QWidget{

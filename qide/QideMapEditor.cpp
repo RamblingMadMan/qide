@@ -2,6 +2,7 @@
 #include <QMouseEvent>
 #include <QKeyEvent>
 #include <QHBoxLayout>
+#include <QTimer>
 
 #include "qide/RendererGL.hpp"
 
@@ -15,8 +16,10 @@
 
 QideMapEditorWindow::QideMapEditorWindow(QWindow *parent)
 	: QOpenGLWindow(QOpenGLWindow::NoPartialUpdate, parent)
-	, m_cam(qide::Camera::Perspective{}, 92.f, 16.f / 9.f, 0.001f, 500.f)
+	, m_cam(qide::Camera::Perspective{}, 3.14f, 16.f / 9.f, 0.001f, 500.f)
 	, m_r(nullptr)
+	, m_start(Clock::now())
+	, m_frameStart(m_start)
 {
 }
 
@@ -27,18 +30,33 @@ void QideMapEditorWindow::initializeGL(){
 		return c->getProcAddress(name);
 	};
 
-	m_cam.setProjMat(qide::Camera::Perspective{}, 92.f, float(width()) / float(height()), 0.001f, 500.f);
+	m_cam.setProjMat(qide::Camera::Perspective{}, 3.14f, float(height()) / float(width()), 0.001f, 500.f);
+	m_cam.setPosition({ 0.f, 0.f, -1.f });
 
 	m_r = std::make_unique<qide::RendererGL43>(width(), height(), glGetProc, context());
 	m_r->setDrawAxis(true);
 }
 
 void QideMapEditorWindow::resizeGL(int w, int h){
-	m_cam.setProjMat(qide::Camera::Perspective{}, 92.f, float(width()) / float(height()), 0.001f, 500.f);
+	m_cam.setProjMat(qide::Camera::Perspective{}, 3.14f, float(h) / float(w), 0.001f, 500.f);
 	m_r->resize(w, h);
 }
 
 void QideMapEditorWindow::paintGL(){
+	auto frameEnd = Clock::now();
+	auto frameDt = frameEnd - m_frameStart;
+	m_frameStart = frameEnd;
+
+	auto dt = std::chrono::duration<float>(frameDt).count();
+
+	auto forward_ = m_cam.forward() * m_movement.z * dt;
+	auto right_ = m_cam.right() * m_movement.x * dt;
+	auto up_ = m_cam.up() * m_movement.y * dt;
+
+	auto amnt = glm::normalize(forward_ + right_ + up_) * 2.f;
+
+	m_cam.translate(amnt);
+
 	m_r->present(m_cam);
 }
 
@@ -98,10 +116,31 @@ void QideMapEditorWindow::mouseReleaseEvent(QMouseEvent *event){
 }
 
 void QideMapEditorWindow::keyPressEvent(QKeyEvent *event){
+	if(event->isAutoRepeat()) return;
+
+	switch(event->key()){
+		case Qt::Key_W: m_movement.z += 1.f; break;
+		case Qt::Key_S: m_movement.z -= 1.f; break;
+
+		case Qt::Key_A: m_movement.x -= 1.f; break;
+		case Qt::Key_D: m_movement.x += 1.f; break;
+
+		default: break;
+	}
 }
 
 void QideMapEditorWindow::keyReleaseEvent(QKeyEvent *event){
+	if(event->isAutoRepeat()) return;
 
+	switch(event->key()){
+		case Qt::Key_W: m_movement.z -= 1.f; break;
+		case Qt::Key_S: m_movement.z += 1.f; break;
+
+		case Qt::Key_A: m_movement.x += 1.f; break;
+		case Qt::Key_D: m_movement.x -= 1.f; break;
+
+		default: break;
+	}
 }
 
 /**

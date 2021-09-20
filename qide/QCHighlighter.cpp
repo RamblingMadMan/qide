@@ -36,7 +36,9 @@ void QCHighlighter::highlightBlock(const QString &text){
 
 	int startIdx = m_lexer->tokens().size();
 
-	int n = m_lexer->lex(text);
+	auto textView = QStringView(text);
+
+	int n = m_lexer->lex(textView);
 
 	if(n <= 0) return;
 
@@ -46,16 +48,16 @@ void QCHighlighter::highlightBlock(const QString &text){
 	while(it != end){
 		const auto &tok = *it;
 
-		const auto tokStart = std::distance(text.begin(), tok.str().begin());
+		const auto tokStart = std::distance(textView.begin(), tok.str().begin());
 
 		const QSignalBlocker block{document()};
 
-		/*if(auto expr = m_parser->atLocation(tok.location());){
+		if(auto expr = m_parser->atLocation(tok.location())){
 			highlightParsed(tokStart, expr);
 			it = expr->end();
 		}
-		else */if(tok.kind() < QCToken::count){
-			auto tokLen = tok.str().length();
+		else if(tok.kind() < QCToken::count){
+			const auto tokLen = tok.str().length();
 			setFormat(tokStart, tokLen, m_tokenFmt[tok.kind()]);
 			++it;
 		}

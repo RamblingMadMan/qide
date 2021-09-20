@@ -75,9 +75,23 @@ namespace qide::shaders{
 		L("layout(location = 0) in vec3 pos;")
 
 		L("uniform mat4 viewProj;")
+		L("uniform mat4 invView;")
+		L("uniform mat4 invProj;")
+
+		L("out vec3 nearPoint;")
+		L("out vec3 farPoint;")
+
+		L("vec3 unprojectPoint(vec3 p){")
+		L("	vec4 unprojectedW = invView * invProj * vec4(p, 1.0);")
+		L("	unprojectedW /= unprojectedW.w;")
+		L("	return unprojectedW.xyz;")
+		L("}")
 
 		L("void main(){")
-		L("	gl_Position = vec4(pos, 1.0);")
+		L("	nearPoint = unprojectPoint(vec3(pos.xy, 0.0));")
+		L("	farPoint = unprojectPoint(vec3(pos.xy, 1.0));")
+		//L("	farPoint = pos;")
+		L("	gl_Position = viewProj * vec4(pos, 1.0);")
 		L("}")
 	;
 
@@ -86,8 +100,12 @@ namespace qide::shaders{
 
 		L("layout(location = 0) out vec4 colorOut;")
 
+		L("in vec3 nearPoint;")
+		L("in vec3 farPoint;")
+
 		L("void main(){")
-		L(" colorOut = vec4(1.f, 1.f, 0.f, 1.f);")
+		L("	float t = -nearPoint.y / (farPoint.y - nearPoint.y);")
+		L(" colorOut = vec4(1.f, 0.f, t, 1.0);")
 		L("}")
 	;
 #undef L

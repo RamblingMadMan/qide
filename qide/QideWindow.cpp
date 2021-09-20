@@ -30,6 +30,11 @@
 #include "QideCompiler.hpp"
 #include "QideWindow.hpp"
 
+#ifdef _WIN32
+#include <dwmapi.h>
+#include <VersionHelpers.h>
+#endif
+
 QideTabsWidget::QideTabsWidget(QWidget *parent)
 	: QWidget(parent)
 	, m_codeTab(new QPushButton(QIcon::fromTheme("accessories-text-editor"), "Code"))
@@ -249,6 +254,14 @@ QideWindow::QideWindow(QWidget *parent_)
 	: QideWindow(Ctor{}, parent_)
 {
 	readSettings();
+
+#ifdef _WIN32
+	if(IsWindows10OrGreater()){
+		const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+		const int useDarkMode = 1;
+		DwmSetWindowAttribute((HWND)winId(), DWMWA_USE_IMMERSIVE_DARK_MODE, &useDarkMode, sizeof(useDarkMode));
+	}
+#endif
 }
 
 QideWindow::QideWindow(QDir projectDir_, QWidget *parent_)

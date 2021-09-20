@@ -31,6 +31,10 @@ namespace qide{
 
 			const Mat4 &projection() const noexcept{ return m_proj; }
 			const Mat4 &view() const noexcept;
+			const Vec3 &position() const noexcept{ return m_pos; }
+			const Vec3 &forward() const noexcept{ return m_forward; }
+			const Vec3 &right() const noexcept{ return m_right; }
+			const Vec3 &up() const noexcept{ return m_up; }
 
 			void translate(const Vec3 &v) noexcept{
 				m_pos += v;
@@ -45,11 +49,16 @@ namespace qide{
 			void setProjMat(const Mat4 &proj) noexcept{ m_proj = proj; }
 			void setProjMat(Perspective, float fovy, float aspect, float nearz, float farz) noexcept;
 
+			void setPosition(const Vec3 &p) noexcept{
+				m_pos = p;
+				m_dirty = true;
+			}
+
 		private:
 			Mat4 m_proj;
 			mutable Mat4 m_view;
 			Vec3 m_pos;
-			mutable Vec3 m_angles;
+			mutable Vec3 m_angles, m_forward, m_right, m_up;
 			mutable bool m_dirty = false;
 	};
 }

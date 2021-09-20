@@ -45,9 +45,6 @@ class QideEditor: public QWidget{
 		void rootDirChanged();
 		void fileBufferChanged(const QString &filePath);
 
-	protected:
-		void paintEvent(QPaintEvent *event) override;
-
 	private:
 		QHBoxLayout *m_lay;
 		QSplitter *m_splitter;

@@ -45,13 +45,6 @@ QCEdit::QCEdit(QWidget *parent)
 	, m_fileDir()
 	, m_lineNumArea(this)
 {
-	auto newPalette = palette();
-	newPalette.setColor(QPalette::Window, QColor(0, 0, 0, 0));
-	newPalette.setColor(QPalette::Base, QColor(0, 0, 0, 0));
-	newPalette.setColor(QPalette::Text, Qt::lightGray);
-
-	setPalette(newPalette);
-
 	setDefaultFont();
 
 	connect(this, &QCEdit::blockCountChanged, this, &QCEdit::updateLineNumberAreaWidth);
@@ -232,13 +225,13 @@ void QCEdit::reparse(){
 }
 
 void QCEdit::setDefaultFont(){
-	QFont fontHack("Hack", 10);
-	fontHack.setStyleHint(QFont::Monospace);
-	fontHack.setFixedPitch(true);
+	QFont fnt("Monoid", 10);
+	fnt.setStyleHint(QFont::Monospace);
+	fnt.setFixedPitch(true);
 
-	QFontMetricsF fntMetrics(fontHack);
+	QFontMetricsF fntMetrics(fnt);
 	auto stopWidth = 4 * fntMetrics.width(' ');
 
 	setTabStopDistance(stopWidth);
-	setFont(fontHack);
+	setFont(fnt);
 }

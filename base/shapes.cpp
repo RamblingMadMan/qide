@@ -37,10 +37,10 @@ shapes::Quad::Quad(
 
 shapes::Rect::Rect(float w, float h)
 	: Quad(
-		Vec2(-w * 0.5f, -h * 0.5f),
-		Vec2( w * 0.5f, -h * 0.5f),
+		Vec2(-w * 0.5f,  h * 0.5f),
 		Vec2( w * 0.5f,  h * 0.5f),
-		Vec2(-w * 0.5f,  h * 0.5f)
+		Vec2(-w * 0.5f, -h * 0.5f),
+		Vec2( w * 0.5f, -h * 0.5f)
 	)
 {}
 

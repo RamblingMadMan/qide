@@ -93,15 +93,14 @@ struct RenderGroupGL43::GLDrawElementsIndirectCommand{
 
 RenderGroupGL43::RenderGroupGL43(const shapes::Points &shape)
 {
-	glCreateVertexArrays(1, &m_vao);
 	glCreateBuffers(std::size(m_bufs), m_bufs);
 	auto vec3BufSize = shape.numPoints() * sizeof(Vec3);
 	auto vec2BufSize = shape.numPoints() * sizeof(Vec2);
 	auto indicesSize = shape.numIndices() * sizeof(Nat32);
-	glNamedBufferStorage(m_bufs[0], vec3BufSize, shape.vertices(), GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT);
-	glNamedBufferStorage(m_bufs[1], vec3BufSize, shape.normals(), GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT);
-	glNamedBufferStorage(m_bufs[2], vec2BufSize, shape.uvs(), GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT);
-	glNamedBufferStorage(m_bufs[3], indicesSize, shape.indices(), GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT);
+	glNamedBufferStorage(m_bufs[0], vec3BufSize, shape.vertices(), GL_DYNAMIC_STORAGE_BIT);
+	glNamedBufferStorage(m_bufs[1], vec3BufSize, shape.normals(), GL_DYNAMIC_STORAGE_BIT);
+	glNamedBufferStorage(m_bufs[2], vec2BufSize, shape.uvs(), GL_DYNAMIC_STORAGE_BIT);
+	glNamedBufferStorage(m_bufs[3], indicesSize, shape.indices(), GL_DYNAMIC_STORAGE_BIT);
 	glNamedBufferStorage(m_bufs[4], sizeof(GLDrawElementsIndirectCommand), nullptr, GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
 
 	m_drawKind = (Nat32)faceKindToGL(shape.faceKind());
@@ -115,6 +114,8 @@ RenderGroupGL43::RenderGroupGL43(const shapes::Points &shape)
 
 	glFlushMappedNamedBufferRange(m_bufs[4], 0, sizeof(GLDrawElementsIndirectCommand));
 
+	glCreateVertexArrays(1, &m_vao);
+
 	glVertexArrayVertexBuffer(m_vao, 0, m_bufs[0], 0, sizeof(Vec3));
 	glVertexArrayVertexBuffer(m_vao, 1, m_bufs[1], 0, sizeof(Vec3));
 	glVertexArrayVertexBuffer(m_vao, 2, m_bufs[2], 0, sizeof(Vec2));
@@ -124,13 +125,13 @@ RenderGroupGL43::RenderGroupGL43(const shapes::Points &shape)
 	glEnableVertexArrayAttrib(m_vao, 1);
 	glEnableVertexArrayAttrib(m_vao, 2);
 
-	glVertexArrayAttribBinding(m_vao, 0, 0);
-	glVertexArrayAttribBinding(m_vao, 1, 1);
-	glVertexArrayAttribBinding(m_vao, 2, 2);
-
 	glVertexArrayAttribFormat(m_vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
 	glVertexArrayAttribFormat(m_vao, 1, 3, GL_FLOAT, GL_FALSE, 0);
 	glVertexArrayAttribFormat(m_vao, 2, 2, GL_FLOAT, GL_FALSE, 0);
+
+	glVertexArrayAttribBinding(m_vao, 0, 0);
+	glVertexArrayAttribBinding(m_vao, 1, 1);
+	glVertexArrayAttribBinding(m_vao, 2, 2);
 }
 
 RenderGroupGL43::~RenderGroupGL43(){
@@ -157,6 +158,8 @@ namespace {
 	void glDebug(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam){
 		auto r = reinterpret_cast<const RendererGL43*>(userParam);
 
+		(void)r;
+
 		using M = glbinding::aux::Meta;
 
 		fmt::print(stderr, "[{} @ {}] {}: {}\n", M::getString(type), M::getString(source), M::getString(id), std::string_view(message, length));
@@ -165,6 +168,7 @@ namespace {
 
 RendererGL43::RendererGL43(Nat16 w, Nat16 h, GLGetProcFn getProc, void *ctx)
 	: m_unitSquare(2.f)
+	, m_unitCube(2.f)
 	, m_w(w), m_h(h)
 {
 	if(ctx){
@@ -175,8 +179,12 @@ RendererGL43::RendererGL43(Nat16 w, Nat16 h, GLGetProcFn getProc, void *ctx)
 	}
 
 #ifndef NDEBUG
+	glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(glDebug, this);
 #endif
+
+	//glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
 
 	std::vector<Framebuffer::AttachmentInfo> attachments = {
 		{ Framebuffer::AttachmentKind::depth, Texture2D::PixelKind::d24s8 }, // depth + stencil
@@ -187,17 +195,20 @@ RendererGL43::RendererGL43(Nat16 w, Nat16 h, GLGetProcFn getProc, void *ctx)
 
 	m_fb = std::make_unique<FramebufferGL43>(w, h, std::move(attachments));
 
-	m_shaders.reserve(2);
+	m_shaders.reserve(4);
 
-	auto &&fullbrightVert = m_shaders.emplace_back(std::make_unique<ShaderProgramGL43>(ShaderProgramGL43::Kind::vertex, shaders::fullbrightVert));
-	auto &&fullbrightFrag = m_shaders.emplace_back(std::make_unique<ShaderProgramGL43>(ShaderProgramGL43::Kind::fragment, shaders::fullbrightFrag));
+	auto fullbrightVert = m_shaders.emplace_back(std::make_unique<ShaderProgramGL43>(ShaderProgramGL43::Kind::vertex, shaders::fullbrightVert)).get();
+	auto fullbrightFrag = m_shaders.emplace_back(std::make_unique<ShaderProgramGL43>(ShaderProgramGL43::Kind::fragment, shaders::fullbrightFrag)).get();
 	m_pipelineFullbright = std::make_unique<ShaderPipelineGL43>(*fullbrightVert, *fullbrightFrag);
 
-	auto &&axisVert = m_shaders.emplace_back(std::make_unique<ShaderProgramGL43>(ShaderProgramGL43::Kind::vertex, shaders::axisVert));
-	auto &&axisFrag = m_shaders.emplace_back(std::make_unique<ShaderProgramGL43>(ShaderProgramGL43::Kind::fragment, shaders::axisFrag));
+	auto axisVert = m_shaders.emplace_back(std::make_unique<ShaderProgramGL43>(ShaderProgramGL43::Kind::vertex, shaders::axisVert)).get();
+	auto axisFrag = m_shaders.emplace_back(std::make_unique<ShaderProgramGL43>(ShaderProgramGL43::Kind::fragment, shaders::axisFrag)).get();
 	m_pipelineAxis = std::make_unique<ShaderPipelineGL43>(*axisVert, *axisFrag);
 
 	m_axisGroup = std::make_unique<RenderGroupGL43>(m_unitSquare);
+
+	m_cubeGroup = createRenderGroup(m_unitCube);
+	m_cubeGroup->setNumInstances(1);
 }
 
 RendererGL43::~RendererGL43(){}
@@ -211,6 +222,11 @@ void RendererGL43::resize(Nat16 w, Nat16 h){
 void RendererGL43::present(const Camera &cam){
 	glFrontFace(GL_CCW);
 
+	glEnable(GL_BLEND);
+
+	glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+
 	const float bgBrightness = 3.f/9.f;
 
 	m_fb->use(true, true);
@@ -220,20 +236,28 @@ void RendererGL43::present(const Camera &cam){
 	glDrawBuffers(std::size(drawBufs), drawBufs);
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
 
-	glClearColor(bgBrightness, bgBrightness, bgBrightness, 1.f);
+	glClearColor(bgBrightness, bgBrightness, bgBrightness, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	auto viewProj = cam.projection() * cam.view();
+	auto invView = glm::inverse(cam.view());
+	auto invProj = glm::inverse(cam.projection());
 
 	if(m_drawAxis){
-
+		glDisable(GL_CULL_FACE);
 
 		auto axisViewProjLoc = glGetUniformLocation(m_shaders[2]->glHandle(), "viewProj");
+		auto axisInvViewLoc = glGetUniformLocation(m_shaders[2]->glHandle(), "invView");
+		auto axisInvProjLoc = glGetUniformLocation(m_shaders[2]->glHandle(), "invProj");
 		glUniformMatrix4fv(axisViewProjLoc, 1, false, glm::value_ptr(viewProj));
+		glUniformMatrix4fv(axisInvViewLoc, 1, false, glm::value_ptr(invView));
+		glUniformMatrix4fv(axisInvProjLoc, 1, false, glm::value_ptr(invProj));
 
 		m_pipelineAxis->use();
 
 		m_axisGroup->draw();
+
+		glEnable(GL_CULL_FACE);
 	}
 
 	auto viewProjLoc = glGetUniformLocation(m_shaders[0]->glHandle(), "viewProj");
@@ -251,7 +275,7 @@ void RendererGL43::present(const Camera &cam){
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	glBlitFramebuffer(0, 0, width(), height(), 0, 0, width(), height(), GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	glBlitFramebuffer(0, 0, m_w, m_h, 0, 0, m_w, m_h, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 }
 
 RenderGroupGL43 *RendererGL43::createRenderGroup(const shapes::Points &shape){

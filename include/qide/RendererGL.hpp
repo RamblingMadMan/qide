@@ -92,9 +92,11 @@ namespace qide{
 			ShaderPipelineGL43();
 
 			template<typename ... Programs>
-			explicit ShaderPipelineGL43(const ShaderProgramGL43 &prog0, const Programs &... progs){
+			explicit ShaderPipelineGL43(const ShaderProgramGL43 &prog0, Programs &&... progs)
+				: ShaderPipelineGL43()
+			{
 				attach(prog0);
-				(attach(progs), ...);
+				(attach(std::forward<Programs>(progs)), ...);
 			}
 
 			~ShaderPipelineGL43();
@@ -152,6 +154,7 @@ namespace qide{
 
 		private:
 			shapes::Square m_unitSquare;
+			shapes::Cube m_unitCube;
 			Nat16 m_w, m_h;
 			std::unique_ptr<FramebufferGL43> m_fb;
 			std::vector<std::unique_ptr<ShaderProgramGL43>> m_shaders;
@@ -160,6 +163,7 @@ namespace qide{
 			std::vector<std::unique_ptr<RenderGroupGL43>> m_groups;
 			bool m_drawAxis = false;
 			std::unique_ptr<RenderGroupGL43> m_axisGroup;
+			RenderGroupGL43 *m_cubeGroup;
 	};
 
 	using RendererGL = RendererGL43;

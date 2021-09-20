@@ -8,9 +8,14 @@ set(
 	fonts.qrc
 )
 
+if(WIN32)
+	list(APPEND QIDE_RESOURCES QIDE.exe.manifest)
+endif()
+
 set(
 	QIDE_SOURCES
 	main.cpp
+	QuakeColors.hpp
 	QCType.hpp
 	QCToken.hpp
 	QCLexer.hpp
@@ -56,10 +61,10 @@ set_target_properties(
 	AUTOUIC ON
 )
 
-target_include_directories(
-	qide PUBLIC
-	${LIBZIP_INCLUDE_DIR}
-)
+#target_include_directories(
+    #qide PUBLIC
+	#${LIBZIP_INCLUDE_DIR}
+#)
 
 target_link_libraries(
 	qide
@@ -69,3 +74,10 @@ target_link_libraries(
 	gmqcclib
 	Qt5::Core Qt5::Widgets Qt5::Network
 )
+
+if(WIN32)
+	target_link_libraries(
+		qide
+		Dwmapi
+	)
+endif()

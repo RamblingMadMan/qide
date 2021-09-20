@@ -5,6 +5,8 @@
 #include "QCEdit.hpp"
 #include "QideEditor.hpp"
 
+#include "QuakeColors.hpp"
+
 QideEditor::QideEditor(QWidget *parent)
 	: QWidget(parent)
 	, m_lay(new QHBoxLayout(this))
@@ -12,7 +14,6 @@ QideEditor::QideEditor(QWidget *parent)
 	, m_qcEdit(new QCEdit(m_splitter))
 	, m_treeView(new QTreeView(m_splitter))
 	, m_fsModel(new QFileSystemModel(this))
-	, m_bgColor(palette().dark().color())
 {
 	setContentsMargins(0, 0, 0, 0);
 
@@ -25,11 +26,6 @@ QideEditor::QideEditor(QWidget *parent)
 
 	m_qcEdit->setContentsMargins(0, 0, 0, 0);
 
-	auto treeViewPal = m_treeView->palette();
-	treeViewPal.setColor(QPalette::Window, QColor(0, 0, 0, 0));
-	treeViewPal.setColor(QPalette::Base, QColor(0, 0, 0, 0));
-
-	m_treeView->setPalette(treeViewPal);
 	m_treeView->setContentsMargins(0, 0, 0, 0);
 	m_treeView->setSelectionMode(QAbstractItemView::SingleSelection);
 	m_treeView->setModel(m_fsModel);
@@ -49,6 +45,8 @@ QideEditor::QideEditor(QWidget *parent)
 			m_qcEdit->loadFile(filePath);
 		}
 	);
+
+	setOpacity(1.0);
 }
 
 void QideEditor::saveCurrent(){
@@ -81,10 +79,19 @@ void QideEditor::setRootDir(QDir dir){
 }
 
 void QideEditor::setOpacity(qreal a){
-	m_bgColor.setAlphaF(a);
-}
+	auto p = palette();
 
-void QideEditor::paintEvent(QPaintEvent */*event*/){
-	QPainter painter(this);
-	painter.fillRect(rect(), m_bgColor);
+	QPalette::ColorRole roles[] = {
+		QPalette::Window,
+		QPalette::Base
+	};
+
+	for(auto role : roles){
+		auto col = p.color(role);
+		col.setAlphaF(a);
+		p.setColor(role, col);
+	}
+
+	m_treeView->setPalette(p);
+	setPalette(p);
 }

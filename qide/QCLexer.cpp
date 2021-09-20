@@ -1,3 +1,5 @@
+#include <QDebug>
+
 #include "QCLexer.hpp"
 #include "QCType.hpp"
 
@@ -29,12 +31,8 @@ inline It skipSpaces(It it, It end, bool skipNewlines = false){
 }
 
 QCToken QCLexer::lexNormal(StrIter it, StrIter end){
-	const auto beg = it;
-	const auto begLoc = m_curLoc;
-
-	if(m_skipWs){
-		it = ::skipSpaces(it, end, m_skipNl);
-	}
+	auto beg = it;
+	auto begLoc = m_curLoc;
 
 	while(it != end && it->isSpace()){
 		if(*it == QChar('\n')){
@@ -44,31 +42,36 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 			m_curLoc.col = 0;
 
 			if(!m_skipNl){
-				return QCToken(QCToken::NewLine, QStringView(it++, 1), nlLoc);
+				return QCToken(QCToken::NewLine, QStringView(it, 1), nlLoc);
 			}
 
 			++it;
 		}
 		else if(!m_skipWs){
-			auto spaceStart = it;
+			auto spaceStart = it++;
 			auto spaceLoc = m_curLoc;
 
-			do{
-				++m_curLoc.col;
+			++m_curLoc.col;
+
+			while(it != end && *it != QChar('\n') && it->isSpace()){
 				++it;
-			} while(it != end && it->isSpace() && (*it != QChar('\n')));
+				++m_curLoc.col;
+			}
 
 			auto spaceEnd = it;
 
 			return QCToken(QCToken::Space, QStringView(spaceStart, spaceEnd), spaceLoc);
 		}
 		else{
-			++it;
+			do{
+				++it;
+				++m_curLoc.col;
+			} while(it != end && *it != QChar('\n') && it->isSpace());
 		}
 	}
 
-	const auto tokLoc = m_curLoc;
-	const auto tokStart = it;
+	auto tokStart = it;
+	auto tokLoc = m_curLoc;
 
 	QCToken::Kind tokKind = QCToken::EndOfFile;
 
@@ -179,7 +182,7 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 		} while(it != end && !it->isSpace());
 	}
 	else{
-		return QCToken(QCToken::Kind::EndOfFile, QStringView(beg, it), begLoc);
+		return QCToken(QCToken::Kind::EndOfFile, QStringView(beg, 1), begLoc);
 	}
 
 	return QCToken(tokKind, QStringView(tokStart, it), tokLoc);
@@ -223,7 +226,7 @@ int QCLexer::lex(StrIter beg, StrIter end){
 
 	do {
 		m_tokens.push_back(m_mode == Mode::MultilineComment ? lexMultilineComment(it, end) : lexNormal(it, end));
-		it += m_tokens.back().str().length();
+		it = m_tokens.back().str().end();
 	} while(it != end);
 
 	int numTokens = m_tokens.size() - origLen;
