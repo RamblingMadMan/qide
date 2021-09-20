@@ -1,0 +1,45 @@
+name: QIDE CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  
+    tags-ignore:
+      - "v*.*.*"
+      - "autobuild"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+  
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      
+      - name: install deps
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo apt update
+          sudo apt install g++-11 cmake qt5-default qtbase5-dev qtbase5-dev-tools libzip-dev qtdeclarative5-dev
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 10
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 10
+          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
+          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
+          sudo update-alternatives --set cc /usr/bin/gcc
+          sudo update-alternatives --set c++ /usr/bin/g++
+      
+      - name: build AppImage
+        run: ./build-appimage.sh
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: AppImage
+          path: '*.AppImage'
