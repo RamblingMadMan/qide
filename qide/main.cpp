@@ -7,12 +7,6 @@
 #include <QSurfaceFormat>
 #include <QStyleFactory>
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <dwmapi.h>
-#endif
-
 #include "fmt/format.h"
 
 #include "QideWindow.hpp"
@@ -29,6 +23,7 @@ int main(int argc, char *argv[]){
 	QApplication::setOrganizationDomain("hamsmith.dev");
 	QApplication::setOrganizationName("Hamsmith");
 	QApplication::setApplicationName("QIDE");
+	QApplication::setApplicationVersion("0.0.0");
 
 	QApplication qapp(argc, argv);
 

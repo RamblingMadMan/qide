@@ -26,7 +26,7 @@ class QCCompleter: public QObject{
 		}
 
 		void setChoices(QStringList choices_){
-			m_choices = std::move(choices_);
+			m_choices = choices_;
 			emit choicesChanged();
 		}
 

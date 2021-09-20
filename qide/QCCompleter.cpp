@@ -17,6 +17,7 @@ QCCompleter::QCCompleter(QCEdit *qcEdit, QObject *parent)
 {
 	m_popup.hide();
 	m_popup.setContentsMargins(0, 0, 0, 0);
+	//m_popup.setWindowFlags(Qt::Popup);
 
 	m_listView.setContentsMargins(0, 0, 0, 0);
 	m_listView.setModel(&m_model);
@@ -52,20 +53,24 @@ QStringList QCCompleter::complete(const QString &tok){
 	return ret;
 }
 
-void QCCompleter::setQcEdit(class QCEdit *qcEdit){
+void QCCompleter::setQcEdit(class QCEdit *qcEdit_){
 	if(m_qcEdit){
 		disconnect(m_qcEdit, &QPlainTextEdit::textChanged, this, &QCCompleter::completeAtCursor);
-		disconnect(m_qcEdit, &QPlainTextEdit::cursorPositionChanged, this, &QCCompleter::completeAtCursor);
+		//disconnect(m_qcEdit, &QPlainTextEdit::cursorPositionChanged, this, &QCCompleter::completeAtCursor);
 	}
 
-	m_qcEdit = qcEdit;
+	m_qcEdit = qcEdit_;
 
 	m_popup.setParent(m_qcEdit);
 
-	if(qcEdit){
-		m_listView.setFont(m_qcEdit->font());
-		connect(qcEdit, &QPlainTextEdit::textChanged, this, &QCCompleter::completeAtCursor);
-		connect(qcEdit, &QPlainTextEdit::cursorPositionChanged, this, &QCCompleter::completeAtCursor);
+	if(qcEdit_){
+		m_listView.setFont(qcEdit_->font());
+		connect(qcEdit_, &QPlainTextEdit::textChanged, this, &QCCompleter::completeAtCursor);
+		//connect(qcEdit, &QPlainTextEdit::cursorPositionChanged, this, &QCCompleter::completeAtCursor);
+	}
+
+	if(!parent()){
+		setParent(qcEdit_);
 	}
 
 	emit qcEditChanged();
@@ -88,7 +93,7 @@ void QCCompleter::completeAtCursor(){
 	//fmt::print("completing at cursor {{ {}, {} }}\n", textCursor.blockNumber(), textCursor.positionInBlock());
 	//std::fflush(stdout);
 
-	auto tok = m_qcEdit->lexer()->closest(QCToken::Location{ textCursor.blockNumber(), textCursor.positionInBlock() });
+	auto tok = m_qcEdit->lexer()->closest(QCToken::Location{ textCursor.blockNumber(), textCursor.columnNumber() });
 
 	if(!tok || (tok->kind() != QCToken::Id && tok->kind() != QCToken::Keyword)){
 		return;
@@ -96,11 +101,11 @@ void QCCompleter::completeAtCursor(){
 
 	auto matches = complete(tok->str().toString()).mid(0, 6);
 
-	m_model.setStringList(matches);
-
 	if(matches.empty()){
 		return;
 	}
+
+	m_model.setStringList(matches);
 
 	//fmt::print("Matches for '{}': {{ \"{}\"", tok->str().toString().toStdString(), matches[0].toStdString());
 
@@ -129,6 +134,7 @@ void QCCompleter::completeAtCursor(){
 
 	m_popup.setGeometry(xOff, yOff, xSize, ySize);
 	m_listView.setGeometry(0, 0, xSize, ySize);
+	m_listView.setCurrentIndex(m_model.index(0, 0));
 
 	m_popup.show();
 }

@@ -45,7 +45,7 @@ class QCLexer: public QObject{
 				auto &&tokLoc = tok.location();
 				if(tokLoc.line != loc.line) continue;
 
-				const auto tokLen = tok.str().length();
+				const auto tokLen = tok.str().size();
 
 				if((loc.col >= tokLoc.col) && (loc.col <= (tokLoc.col + tokLen))){
 					return &tok;

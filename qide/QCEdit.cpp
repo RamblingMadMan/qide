@@ -50,13 +50,14 @@ QCEdit::QCEdit(QWidget *parent)
 	connect(this, &QCEdit::blockCountChanged, this, &QCEdit::updateLineNumberAreaWidth);
 	connect(this, &QCEdit::updateRequest, this, &QCEdit::updateLineNumberArea);
 	connect(this, &QCEdit::cursorPositionChanged, this, &QCEdit::highlightCurrentLine);
+	connect(this, &QPlainTextEdit::textChanged, this, &QCEdit::reparse);
 
 	updateLineNumberAreaWidth(0);
 	highlightCurrentLine();
 
 	QStringList completerChoices;
-	completerChoices << qcKeywords;
-	completerChoices << qcBasicTypes;
+	completerChoices.append(qcKeywords);
+	completerChoices.append(qcBasicTypes);
 
 	m_completer->setQcEdit(this);
 	m_completer->setChoices(completerChoices);
@@ -208,7 +209,9 @@ bool restoreState(const QVariant &state){
 void QCEdit::reparse(){
 	emit parseStarted();
 
-	auto plainStr = toPlainText();
+	static QString plainStr;
+
+	plainStr = toPlainText();
 
 	m_lexer->reset();
 	auto numToks = m_lexer->lex(plainStr);
