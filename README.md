@@ -12,6 +12,8 @@
   <p><br></p>
 </h1>
 
+![CI Workflow](https://github.com/RamblingMadMan/qide/actions/workflows/ci.yaml/badge.svg)
+
 <p><br></p>
 
 # About
