@@ -88,8 +88,8 @@ namespace qide::shaders{
 		L("}")
 
 		L("void main(){")
-		L("	nearPoint = unprojectPoint(vec3(pos.xy, 0.0));")
-		L("	farPoint = unprojectPoint(vec3(pos.xy, 1.0));")
+		L("	nearPoint = unprojectPoint(vec3(pos.xy, 0.001));")
+		L("	farPoint = unprojectPoint(vec3(pos.xy, 500.0));")
 		//L("	farPoint = pos;")
 		L("	gl_Position = viewProj * vec4(pos, 1.0);")
 		L("}")
@@ -105,7 +105,7 @@ namespace qide::shaders{
 
 		L("void main(){")
 		L("	float t = -nearPoint.y / (farPoint.y - nearPoint.y);")
-		L(" colorOut = vec4(1.f, 0.f, t, 1.0);")
+		L(" colorOut = vec4(1.0, 0.0, 0.0, 1.0 * float(t > 0));")
 		L("}")
 	;
 #undef L

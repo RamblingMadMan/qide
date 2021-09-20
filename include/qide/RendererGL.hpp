@@ -58,6 +58,8 @@ namespace qide{
 
 			void use(bool read, bool write);
 
+			void resize(Nat16 w, Nat16 h);
+
 		private:
 			Nat16 m_w, m_h;
 			Nat32 m_fb;

@@ -1,3 +1,6 @@
+#include <QtMath>
+
+#include <QVector3D>
 #include <QDebug>
 #include <QMouseEvent>
 #include <QKeyEvent>
@@ -20,6 +23,8 @@ QideMapEditorWindow::QideMapEditorWindow(QWindow *parent)
 	, m_r(nullptr)
 	, m_start(Clock::now())
 	, m_frameStart(m_start)
+	, m_lastMousePos()
+	, m_movement(0.f, 0.f, 0.f)
 {
 }
 
@@ -49,13 +54,17 @@ void QideMapEditorWindow::paintGL(){
 
 	auto dt = std::chrono::duration<float>(frameDt).count();
 
-	auto forward_ = m_cam.forward() * m_movement.z * dt;
-	auto right_ = m_cam.right() * m_movement.x * dt;
-	auto up_ = m_cam.up() * m_movement.y * dt;
+	auto forward_ = m_cam.forward() * m_movement.z;
+	auto right_ = m_cam.right() * m_movement.x;
+	auto up_ = m_cam.up() * m_movement.y;
 
-	auto amnt = glm::normalize(forward_ + right_ + up_) * 2.f;
+	auto amnt = glm::normalize(forward_ + right_ + up_);
 
-	m_cam.translate(amnt);
+	if(glm::length(amnt) >= 0.999999f){
+		amnt *= 2.f * dt;
+		qDebug() << QVector3D(amnt.x, amnt.y, amnt.z);
+		m_cam.translate(amnt);
+	}
 
 	m_r->present(m_cam);
 }
@@ -64,8 +73,10 @@ void QideMapEditorWindow::mouseMoveEvent(QMouseEvent *event){
 	event->accept();
 
 	if(event->buttons() & Qt::MouseButton::RightButton){
-		auto dV = event->localPos() - m_lastMousePos;
-		// TODO: move camera
+		QPointF dV = (event->localPos() - m_lastMousePos);
+		dV.setX(qDegreesToRadians(dV.x()));
+		dV.setY(qDegreesToRadians(dV.y()));
+		dV *= 90.f;
 
 		m_cam.rotate({ 1.f, 0.f, 0.f }, dV.y());
 		m_cam.rotate({ 0.f, 1.f, 0.f }, dV.x());
@@ -116,6 +127,8 @@ void QideMapEditorWindow::mouseReleaseEvent(QMouseEvent *event){
 }
 
 void QideMapEditorWindow::keyPressEvent(QKeyEvent *event){
+	event->accept();
+
 	if(event->isAutoRepeat()) return;
 
 	switch(event->key()){
@@ -130,6 +143,8 @@ void QideMapEditorWindow::keyPressEvent(QKeyEvent *event){
 }
 
 void QideMapEditorWindow::keyReleaseEvent(QKeyEvent *event){
+	event->accept();
+
 	if(event->isAutoRepeat()) return;
 
 	switch(event->key()){

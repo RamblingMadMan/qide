@@ -69,10 +69,6 @@ void QCCompleter::setQcEdit(class QCEdit *qcEdit_){
 		//connect(qcEdit, &QPlainTextEdit::cursorPositionChanged, this, &QCCompleter::completeAtCursor);
 	}
 
-	if(!parent()){
-		setParent(qcEdit_);
-	}
-
 	emit qcEditChanged();
 }
 

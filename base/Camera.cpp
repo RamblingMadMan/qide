@@ -28,30 +28,33 @@ using namespace qide;
 Camera::Camera(Perspective, float fovy, float aspect, float nearz, float farz)
 	: m_proj(glm::perspective(fovy, aspect, nearz, farz))
 	, m_view(Mat4(1.f))
+	, m_pos(Vec3(0.f))
+	, m_angles(Vec3(0.f, 0.f, 0.f))
+	, m_forward(Vec3(0.f, 0.f, 1.f))
+	, m_right(Vec3(1.f, 0.f, 0.f))
+	, m_up(Vec3(0.f, 1.f, 0.f))
 {}
 
 const Mat4 &Camera::view() const noexcept{
 	using namespace std::numbers;
 
 	if(m_dirty){
-		m_angles = glm::mod(m_angles, 2.f * float(pi));
+		//m_angles = glm::mod(m_angles, 2.f * float(pi));
 
-		auto yaw = glm::angleAxis(m_angles.y, Vec3(0.f, 1.f, 0.f));
 		auto pitch = glm::angleAxis(m_angles.x, Vec3(1.f, 0.f, 0.f));
-		auto roll = glm::angleAxis(m_angles.z, Vec3(0.f, 0.f, 1.f));
+		auto yaw   = glm::angleAxis(m_angles.y, Vec3(0.f, 1.f, 0.f));
+		//auto roll  = glm::angleAxis(m_angles.z, Vec3(0.f, 0.f, 1.f));
 
-		auto orientation = yaw * pitch * roll;
+		auto orientation = pitch * yaw;
+		orientation = glm::normalize(orientation);
+		//auto rot = glm::inverse(glm::mat4_cast(orientation));
+		//auto trans = glm::translate(glm::mat4(1.f), -m_pos);
 
-		//glm::quat reverseOrient = glm::conjugate(orientation);
-		//glm::mat4 rot = glm::mat4_cast(reverseOrient);
-		//glm::mat4 trans = glm::translate(glm::mat4(1.0), m_pos);
+		m_right   = Vec4(1.f, 0.f, 0.f, 1.f);
+		m_up      = Vec4(0.f, 1.f, 0.f, 1.f);
+		m_forward = Vec4(0.f, 0.f, 1.f, 1.f);
 
-		m_forward = orientation * Vec3(0.f, 0.f, 1.f);
-		m_right = orientation * Vec3(1.f, 0.f, 0.f);
-		m_up = orientation * Vec3(0.f, 1.f, 0.f);
-
-		m_view = glm::lookAt(m_pos, m_pos + m_forward, m_up);
-		//m_view = rot * trans;
+		m_view = glm::lookAt(m_pos, m_pos + m_forward, glm::vec3(0.f, 1.f, 0.f));
 
 		m_dirty = false;
 	}

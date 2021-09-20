@@ -49,6 +49,13 @@ add_subdirectory(base)
 add_subdirectory(qide)
 
 install(
+	TARGETS qide-base
+	ARCHIVE DESTINATION lib
+	LIBRARY DESTINATION lib
+	RUNTIME DESTINATION bin
+)
+
+install(
 	TARGETS qide
 	RUNTIME DESTINATION bin
 )

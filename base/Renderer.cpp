@@ -214,6 +214,9 @@ RendererGL43::RendererGL43(Nat16 w, Nat16 h, GLGetProcFn getProc, void *ctx)
 RendererGL43::~RendererGL43(){}
 
 void RendererGL43::resize(Nat16 w, Nat16 h){
+	if(w > m_w || h > m_h){
+		m_fb->resize(std::max(m_fb->width(), w), std::max(m_fb->height(), h));
+	}
 	glViewport(0, 0, w, h);
 	m_w = w;
 	m_h = h;
@@ -246,12 +249,14 @@ void RendererGL43::present(const Camera &cam){
 	if(m_drawAxis){
 		glDisable(GL_CULL_FACE);
 
-		auto axisViewProjLoc = glGetUniformLocation(m_shaders[2]->glHandle(), "viewProj");
-		auto axisInvViewLoc = glGetUniformLocation(m_shaders[2]->glHandle(), "invView");
-		auto axisInvProjLoc = glGetUniformLocation(m_shaders[2]->glHandle(), "invProj");
-		glUniformMatrix4fv(axisViewProjLoc, 1, false, glm::value_ptr(viewProj));
-		glUniformMatrix4fv(axisInvViewLoc, 1, false, glm::value_ptr(invView));
-		glUniformMatrix4fv(axisInvProjLoc, 1, false, glm::value_ptr(invProj));
+		auto prog = m_shaders[2]->glHandle();
+
+		auto axisViewProjLoc = glGetUniformLocation(prog, "viewProj");
+		auto axisInvViewLoc = glGetUniformLocation(prog, "invView");
+		auto axisInvProjLoc = glGetUniformLocation(prog, "invProj");
+		glProgramUniformMatrix4fv(prog, axisViewProjLoc, 1, false, glm::value_ptr(viewProj));
+		glProgramUniformMatrix4fv(prog, axisInvViewLoc, 1, false, glm::value_ptr(invView));
+		glProgramUniformMatrix4fv(prog, axisInvProjLoc, 1, false, glm::value_ptr(invProj));
 
 		m_pipelineAxis->use();
 
@@ -260,8 +265,10 @@ void RendererGL43::present(const Camera &cam){
 		glEnable(GL_CULL_FACE);
 	}
 
-	auto viewProjLoc = glGetUniformLocation(m_shaders[0]->glHandle(), "viewProj");
-	glUniformMatrix4fv(viewProjLoc, 1, false, glm::value_ptr(viewProj));
+	auto prog = m_shaders[0]->glHandle();
+
+	auto viewProjLoc = glGetUniformLocation(prog, "viewProj");
+	glProgramUniformMatrix4fv(prog, viewProjLoc, 1, false, glm::value_ptr(viewProj));
 
 	m_pipelineFullbright->use();
 
@@ -572,7 +579,7 @@ FramebufferGL43::FramebufferGL43(Nat16 w, Nat16 h, std::vector<AttachmentInfo> a
 
 FramebufferGL43::~FramebufferGL43(){
 	glDeleteFramebuffers(1, &m_fb);
-	glDeleteTextures(numAttachments(), m_fbTexs.data());
+	glDeleteTextures(m_fbTexs.size(), m_fbTexs.data());
 }
 
 void FramebufferGL43::use(bool read, bool write){
@@ -584,5 +591,42 @@ void FramebufferGL43::use(bool read, bool write){
 	}
 	else if(write){
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fb);
+	}
+}
+
+void FramebufferGL43::resize(Nat16 w, Nat16 h){
+	if(!m_fbTexs.empty()){
+		glDeleteTextures(m_fbTexs.size(), m_fbTexs.data());
+	}
+
+	auto numTexs = numAttachments();
+
+	m_fbTexs.resize(numTexs);
+
+	glCreateTextures(GL_TEXTURE_2D, numTexs, m_fbTexs.data());
+
+	bool hasDepth = false;
+	Nat16 numColorAttachments = 0;
+
+	for(std::size_t i = 0; i < numTexs; i++){
+		auto tex = m_fbTexs[i];
+		auto a = attachment(i); // TODO: sidestep nasty bounds check
+		allocateTexGLStorage(tex, w, h, a.pixelKind, nullptr, false);
+
+		if(a.kind == Framebuffer::AttachmentKind::color){
+			glNamedFramebufferTexture(m_fb, GL_COLOR_ATTACHMENT0 + numColorAttachments, tex, 0);
+			++numColorAttachments;
+		}
+		else{
+			if(hasDepth){
+				throw std::runtime_error("multiple depth attachments aren't supported with OpenGL");
+			}
+
+			auto attachmentType = a.pixelKind == Texture2D::PixelKind::d24s8 ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT;
+
+			glNamedFramebufferTexture(m_fb, attachmentType, tex, 0);
+
+			hasDepth = true;
+		}
 	}
 }

@@ -59,7 +59,7 @@ namespace qide{
 			mutable Mat4 m_view;
 			Vec3 m_pos;
 			mutable Vec3 m_angles, m_forward, m_right, m_up;
-			mutable bool m_dirty = false;
+			mutable bool m_dirty = true;
 	};
 }
 
