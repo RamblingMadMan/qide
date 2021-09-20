@@ -70,8 +70,8 @@ int main(int argc, char *argv[]){
 	darkPalette.setColor(QPalette::Button, QColor(53,53,53));
 	darkPalette.setColor(QPalette::ButtonText, Qt::white);
 	darkPalette.setColor(QPalette::Disabled, QPalette::ButtonText,QColor(127,127,127));
-	darkPalette.setColor(QPalette::BrightText, QColorConstants::Svg::green.darker(100));
-	darkPalette.setColor(QPalette::Link, QColorConstants::Svg::orangered.darker());
+	darkPalette.setColor(QPalette::BrightText, quakeYello);
+	darkPalette.setColor(QPalette::Link, quakeOrange);
 	darkPalette.setColor(QPalette::Highlight, QColor(127, 83, 63));
 	darkPalette.setColor(QPalette::Disabled, QPalette::Highlight,QColor(80,80,80));
 	darkPalette.setColor(QPalette::HighlightedText, Qt::white);
