@@ -16,7 +16,7 @@
 
 # About
 
-QIDE aims to lower the barrier to entry for newcomers to QuakeC and make Quake modding more easily available to a wider audience.
+QIDE aims to lower the barrier to entry for newcomers to QuakeC and make Quake modding more easily accessable to a wider audience.
 
 The project currently targets compatibility with the 2021 re-release.
 
@@ -26,12 +26,12 @@ The project currently targets compatibility with the 2021 re-release.
 
 | Status | Feature | Description |
 | :---: | :----- | :----- |
-|  ✅  | Integrated compiler | [Modified version of GMQCC](https://github.com/RamblingMadMan/gmqcc) built-in. |
 |  ✅  | Automatic setup | Automatically find Quake (or use built-in shareware) and download [FTEQW](https://fte.triptohell.info/) if needed. |
+|  ✅  | Integrated compiler | [Modified version of GMQCC](https://github.com/RamblingMadMan/gmqcc) built-in. |
 |  ✅  | Separate work and data directories | QIDE keeps your source and Quake directories clean. |
 |  ✅  | Launch from editor | Launch Quake with your mod enabled, directly from the editor. |
-|  ❓  | Syntax Highlighting | Highlight QuakeC files. |
-|  ❌  | Play in-editor | Play and pause your mod while you code. |
+|  ❓  | Syntax/Semantic Highlighting | Highlight QuakeC files. |
+|  ❓  | In-built map editor | Edit maps with pausable live gameplay. |
 |  ❌  | QuakeC debugging | Debug your mods in real-time. |
 |  ❌  | QuakeC VM | Test out simple QuakeC snippets and integrate them with native code. |
 
@@ -70,10 +70,9 @@ git clone --depth 1 https://github.com/RamblingMadMan/qide.git
 
 ### Dependencies
 
-- C++20 compiler (GCC 11+)
-- CMake
+- C++20 compiler
+- [CMake](https://cmake.org/)
 - Qt5 Widgets
-- [glm](https://github.com/g-truc/glm)
 
 <p><br></p>
 
@@ -106,6 +105,16 @@ sudo update-alternatives --set c++ /usr/bin/g++
 
 <p><br></p>
 
+#### Windows 10
+
+It is recommended to use the latest version of MSVC, usually installed alongside Visual Studio.
+
+The easiest way to build the project is to install [Qt Creator](https://www.qt.io/product/development-tools), open it there and hit build.
+
+> When installing Qt make sure to install Qt 5.15.x
+
+<p><br></p>
+
 ### Compiling
 
 From the root directory of the repo run the following commands:
@@ -125,3 +134,22 @@ Now there should be a folder `build/qide` with the compiled executable inside.
 
 <p align="center"><img src="res/screenshot-wizard.png" width="1024" alt="Screenshot of wizard"></p>
 <p align="center"><img src="res/screenshot.png" width="1024" alt="Screenshot of main interface"></p>
+
+<p><br></p>
+
+# Special Thanks
+
+Thank you to all of the people involved in all of the projects that made QIDE possible.
+
+Projects used:
+
+- [FTEQW](https://fte.triptohell.info/)
+- [GMQCC](https://graphitemaster.github.io/gmqcc/)
+- [glbinding](https://github.com/cginternals/glbinding)
+- [rapidfuzz-cpp](https://github.com/maxbachmann/rapidfuzz-cpp)
+- [{fmt}](https://github.com/fmtlib/fmt)
+- [glm](https://github.com/g-truc/glm)
+- [UTF8-CPP](https://github.com/nemtrif/utfcpp)
+- [Source Sans font](https://github.com/adobe-fonts/source-sans)
+- [Hack font](https://github.com/source-foundry/Hack)
+- [Monoid font](https://github.com/larsenwork/monoid)
