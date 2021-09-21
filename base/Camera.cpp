@@ -16,7 +16,7 @@
  *	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <numbers>
+#include <cmath>
 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -36,8 +36,6 @@ Camera::Camera(Perspective, float fovy, float aspect, float nearz, float farz)
 {}
 
 const Mat4 &Camera::view() const noexcept{
-	using namespace std::numbers;
-
 	if(m_dirty){
 		//m_angles = glm::mod(m_angles, 2.f * float(pi));
 

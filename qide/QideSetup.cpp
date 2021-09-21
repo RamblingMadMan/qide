@@ -17,6 +17,7 @@
 #include <QStandardPaths>
 
 #include "QideSetup.hpp"
+#include "QideWindow.hpp"
 
 QString findId1PakFile(QDir dir, int pakNum){
 	QStringList subDirs;
@@ -406,6 +407,9 @@ bool QideSetupFTEQW::isComplete() const{ return !m_downloading && m_pathIsValid;
 QideSetup::QideSetup(QWidget *parent)
 	: QWizard(parent)
 {
+	setWizardStyle(QWizard::ModernStyle);
+	setWidgetDarkMode(this);
+
 	auto skipIntroVar = QSettings().value("skipSetupIntro");
 	const bool skipIntro = skipIntroVar.isValid() && skipIntroVar.toBool();
 

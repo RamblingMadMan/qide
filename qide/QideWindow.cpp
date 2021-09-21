@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include <QtMath>
 #include <QDebug>
 #include <QStringLiteral>
@@ -33,11 +35,22 @@
 #include "QideGame.hpp"
 #include "QideCompiler.hpp"
 #include "QideWindow.hpp"
+#include "QideProjectWizard.hpp"
 
 #ifdef _WIN32
 #include <dwmapi.h>
 #include <VersionHelpers.h>
 #endif
+
+void setWidgetDarkMode(QWidget *widget){
+#ifdef _WIN32
+	if(IsWindows10OrGreater()){
+		const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+		const int useDarkMode = 1;
+		DwmSetWindowAttribute((HWND)widget->winId(), DWMWA_USE_IMMERSIVE_DARK_MODE, &useDarkMode, sizeof(useDarkMode));
+	}
+#endif
+}
 
 QideTabsWidget::QideTabsWidget(QWidget *parent)
 	: QWidget(parent)
@@ -121,6 +134,27 @@ void QideMainView::resizeEvent(QResizeEvent *event){
 	QGraphicsView::resizeEvent(event);
 }
 
+static void recurseAddDir(QDir d, QStringList& list) {
+	QStringList qsl = d.entryList(QDir::NoDotAndDotDot | QDir::Dirs | QDir::Files);
+
+	foreach(QString file, qsl){
+		QFileInfo finfo(QString("%1/%2").arg(d.path()).arg(file));
+
+		if(finfo.isSymLink())
+			return;
+
+		if(finfo.isDir()){
+
+			QString dirname = finfo.fileName();
+			QDir sd(finfo.filePath());
+
+			recurseAddDir(sd, list);
+
+		}else
+			list << QDir::toNativeSeparators(finfo.filePath());
+	}
+}
+
 QideWindow::QideWindow(Ctor, QWidget *parent)
 	: QMainWindow(parent)
 	, m_tabs(new QideTabsWidget(this))
@@ -134,6 +168,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	auto fileMenu = new QMenu("File", this);
 	auto editMenu = new QMenu("Edit", this);
 
+	auto newProjAction = new QAction("New Project", this);
 	auto openAction = new QAction(QIcon::fromTheme("document-open"), "Open Project", this);
 	auto saveAction = new QAction(QIcon::fromTheme("document-save"), "Save", this);
 	auto quitAction = new QAction(QIcon::fromTheme("application-exit"), "Quit", this);
@@ -141,6 +176,43 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	m_redoAction = new QAction(QIcon::fromTheme("edit-redo"), "Redo", this);
 	auto buildAction = new QAction("Build", this);
 	auto launchAction = new QAction(QIcon::fromTheme("system-run"), "Launch", this);
+
+	connect(newProjAction, &QAction::triggered, this, [this]{
+		auto wizard = new QideProjectWizard(this);
+		wizard->show();
+
+		connect(wizard, &QWizard::finished, this, [=](int result){
+			if(result == QDialog::Rejected) return;
+
+			auto templ = wizard->field("template").toString();
+			QDir baseDir = wizard->field("dir").toString();
+			auto name = wizard->field("name").toString();
+
+			baseDir.mkdir(name);
+
+			QDir projDir = QString("%1/%2").arg(baseDir.path()).arg(name);
+
+			auto templateDir = QDir(QString(":/templates/%1").arg(templ));
+
+			QStringList templateFiles;
+			recurseAddDir(templateDir, templateFiles);
+
+			auto templatePath = templateDir.path();
+
+			foreach(auto &str, templateFiles){
+
+				auto relPath = str.midRef(templatePath.size() + 1);
+				auto newPath = QString("%1/%2").arg(projDir.path()).arg(relPath);
+				QDir().mkpath(QFileInfo(newPath).dir().path());
+				QFile::copy(str, newPath);
+				qDebug() << "Template file:" << relPath;
+			}
+
+			setProjectDir(projDir);
+		});
+
+		// TODO: connect onFinished
+	});
 
 	connect(openAction, &QAction::triggered, this, [this]{
 		auto newDir = QFileDialog::getExistingDirectory(this, tr("Open Project Directory"), QSettings().value("projDir").toString());
@@ -168,7 +240,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 
 	connect(
 		m_comp, &QideCompiler::compileFinished,
-		this, [=, this](bool success){
+		this, [=](bool success){
 			buildAction->setEnabled(true);
 			launchAction->setEnabled(success);
 
@@ -192,6 +264,8 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	m_redoAction->setEnabled(false);
 
 	// file menu
+	fileMenu->addAction(newProjAction);
+	fileMenu->addSeparator();
 	fileMenu->addAction(openAction);
 	fileMenu->addAction(saveAction);
 	fileMenu->addSeparator();
@@ -243,7 +317,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 
 	stackLay->setCurrentIndex(0);
 
-	connect(m_tabs->codeTab(), &QPushButton::pressed, [=, this]{
+	connect(m_tabs->codeTab(), &QPushButton::pressed, [=]{
 		bool showMap = m_mapEditor->isVisible();
 
 		m_editor->show();
@@ -270,7 +344,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 		stackLay->setCurrentIndex(1);
 	});
 
-	connect(m_tabs->playTab(), &QPushButton::pressed, [=, this]{
+	connect(m_tabs->playTab(), &QPushButton::pressed, [=]{
 		m_game->show();
 		stackLay->setCurrentIndex(2);
 
@@ -298,14 +372,7 @@ QideWindow::QideWindow(QWidget *parent_)
 	: QideWindow(Ctor{}, parent_)
 {
 	readSettings();
-
-#ifdef _WIN32
-	if(IsWindows10OrGreater()){
-		const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
-		const int useDarkMode = 1;
-		DwmSetWindowAttribute((HWND)winId(), DWMWA_USE_IMMERSIVE_DARK_MODE, &useDarkMode, sizeof(useDarkMode));
-	}
-#endif
+	setWidgetDarkMode(this);
 }
 
 QideWindow::QideWindow(QDir projectDir_, QWidget *parent_)

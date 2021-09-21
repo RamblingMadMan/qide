@@ -22,7 +22,7 @@ QCParser::QCParser(QObject *parent): QObject(parent){}
 void QCParser::reset(){
 	m_results.clear();
 	m_locMap.clear();
-	m_parseFn = std::bind_front(&QCParser::parseToplevel, this);
+	m_parseFn = [this](auto&&...args){ return parseToplevel(std::forward<decltype(args)>(args)...); };
 }
 
 void QCParser::setTitle(QString str){
@@ -69,7 +69,7 @@ std::variant<bool, QCExpr> QCParser::parseDef(QCType ty, const QCToken *exprStar
 	beg = skipComments(beg, end);
 
 	if(beg == end){
-		m_parseFn = std::bind_front(&QCParser::parseDef, this, ty, exprStart);
+		m_parseFn = [=](auto &&... args){ return parseDef(ty, exprStart, std::forward<decltype(args)>(args)...); };
 		return true;
 	}
 
@@ -129,7 +129,7 @@ std::variant<bool, QCExpr> QCParser::parseToplevel(const QCToken *beg, const QCT
 		return QCExpr::makeEOF(beg);
 	}
 	else if(it->str() == u"."){
-		auto continueFn = [=, this](const QCToken *beg_, const QCToken *end_) -> ParseResult{
+		auto continueFn = [=](const QCToken *beg_, const QCToken *end_) -> ParseResult{
 			if(beg_->kind() != QCToken::Type){
 				fmt::print(stderr, "[ERROR] Invalid type '{}'\n", beg_->str().toString().toStdString());
 				return false;

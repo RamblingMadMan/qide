@@ -1,6 +1,7 @@
 #ifndef QIDE_QCTYPE_HPP
 #define QIDE_QCTYPE_HPP 1
 
+#include <stdexcept>
 #include <memory>
 #include <optional>
 

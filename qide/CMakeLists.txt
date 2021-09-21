@@ -1,3 +1,4 @@
+find_package(OpenSSL REQUIRED)
 find_package(Qt5 COMPONENTS Core Network Widgets REQUIRED)
 #find_package(LibZip REQUIRED)
 
@@ -6,6 +7,7 @@ set(
 	id1.qrc
 	icon.qrc
 	fonts.qrc
+	templates.qrc
 )
 
 if(WIN32)
@@ -45,6 +47,8 @@ set(
 	QideGame.cpp
 	QideSetup.hpp
 	QideSetup.cpp
+	QideProjectWizard.hpp
+	QideProjectWizard.cpp
 	QideWindow.hpp
 	QideWindow.cpp
 	${QIDE_RESOURCES}
@@ -54,7 +58,7 @@ add_executable(qide ${QIDE_SOURCES})
 
 set_target_properties(
 	qide PROPERTIES
-	CXX_STANDARD 20
+	CXX_STANDARD 17
 	STANDARD_REQUIRED ON
 	AUTOMOC ON
 	AUTORCC ON
@@ -72,6 +76,7 @@ target_link_libraries(
 	fmt rapidfuzz::rapidfuzz
 	#${LIBZIP_LIBRARY}
 	gmqcclib
+	OpenSSL::SSL OpenSSL::Crypto
 	Qt5::Core Qt5::Widgets Qt5::Network
 )
 
@@ -80,4 +85,9 @@ if(WIN32)
 		qide
 		Dwmapi
 	)
+
+    #add_custom_command(TARGET qide POST_BUILD
+	#	COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:qide> $<TARGET_FILE_DIR:qide>
+	#	COMMAND_EXPAND_LISTS
+	#)
 endif()

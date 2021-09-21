@@ -72,48 +72,29 @@ git clone --depth 1 https://github.com/RamblingMadMan/qide.git
 
 ### Dependencies
 
-- C++20 compiler
-- [CMake](https://cmake.org/)
-- Qt5 Widgets
+- C++17 compiler
+- [CMake 3.21+](https://cmake.org/)
+- Qt 5.15 (Widgets + Core)
 
 <p><br></p>
 
 #### Ubuntu 20.04+
 
-First it is recommended you enable the [toolchain test builds ppa](https://launchpad.net/~ubuntu-toolchain-r/+archive/ubuntu/test) for the more recent compiler versions.
-To enable it run the following commands:
+To install all of the build dependencies, run the following command:
 
 ```bash
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-sudo apt update
-```
-
-Then to install all of the build dependencies run the following command:
-
-```bash
-sudo apt install g++-11 cmake qtbase5-dev qtbase5-dev-tools libzip-dev libglm-dev
-```
-
-You also may need to set GCC 11 as your default compiler with the following commands:
-
-```bash
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 10
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 10
-sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
-sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
-sudo update-alternatives --set cc /usr/bin/gcc
-sudo update-alternatives --set c++ /usr/bin/g++
+sudo apt install g++ cmake qtbase5-dev qtbase5-dev-tools
 ```
 
 <p><br></p>
 
 #### Windows 10
 
-It is recommended to use the latest version of MSVC, usually installed alongside Visual Studio.
+The easiest way to build the project is to install and run [Qt Creator](https://www.qt.io/product/development-tools), open the project and hit build.
 
-The easiest way to build the project is to install [Qt Creator](https://www.qt.io/product/development-tools), open it there and hit build.
+It is recommended to use the latest version of MinGW packaged with the Qt online installer, as there are bugs with MSVC and the QuakeC compiler.
 
-> When installing Qt make sure to install Qt 5.15.x
+> When installing Qt make sure to install Qt 5.15.x and MinGW 8+
 
 <p><br></p>
 
@@ -146,7 +127,7 @@ Thank you to all of the people involved in all of the projects that made QIDE po
 Projects used:
 
 - [FTEQW](https://fte.triptohell.info/)
-- [GMQCC](https://graphitemaster.github.io/gmqcc/)
+- [GMQCC](https://graphitemaster.github.io/gmqcc/) (using [my fork](https://github.com/RamblingMadMan/gmqcc))
 - [glbinding](https://github.com/cginternals/glbinding)
 - [rapidfuzz-cpp](https://github.com/maxbachmann/rapidfuzz-cpp)
 - [{fmt}](https://github.com/fmtlib/fmt)

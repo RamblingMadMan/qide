@@ -88,6 +88,8 @@ class QideMainView: public QGraphicsView{
 		void resizeEvent(QResizeEvent *event) override;
 };
 
+void setWidgetDarkMode(QWidget *widget);
+
 class QideWindow: public QMainWindow{
 	Q_OBJECT
 

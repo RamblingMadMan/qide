@@ -125,9 +125,9 @@ void QideCompiler::compile()
 		QTextStream in(&file);
 
 		while(!in.atEnd()){
-			auto line = in.readLine();
+			auto line = in.readLine().trimmed();
 
-			if(line.isEmpty() || (line[0] == '\0') || (line[0] == '/' && line[1] == '/')){
+			if(line.isEmpty() || (line[0] == QChar('\0')) || (line[0] == QChar('/') && line[1] == QChar('/'))){
 				continue;
 			}
 

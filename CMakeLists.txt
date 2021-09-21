@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.21.0 FATAL_ERROR)
 
 project(
 	qide
@@ -28,15 +28,15 @@ set(
 # Dependencies #
 ################
 
-add_subdirectory(deps/fmt)
-add_subdirectory(deps/rapidfuzz-cpp)
-add_subdirectory(deps/gmqcc)
-add_subdirectory(deps/glm)
+add_subdirectory(deps/fmt EXCLUDE_FROM_ALL)
+add_subdirectory(deps/rapidfuzz-cpp EXCLUDE_FROM_ALL)
+add_subdirectory(deps/gmqcc EXCLUDE_FROM_ALL)
+add_subdirectory(deps/glm EXCLUDE_FROM_ALL)
 
 function(add_glbinding)
 	set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
 	set(OPTION_BUILD_EXAMPLES OFF CACHE BOOL "")
-	add_subdirectory(deps/glbinding)
+	add_subdirectory(deps/glbinding EXCLUDE_FROM_ALL)
 endfunction()
 
 add_glbinding()
@@ -55,10 +55,16 @@ install(
 	RUNTIME DESTINATION bin
 )
 
+install(FILES ${QIDE_HEADERS} DESTINATION include/qide)
+
 install(
 	TARGETS qide
 	RUNTIME DESTINATION bin
 )
+
+if(WIN32)
+	install(FILES $<TARGET_RUNTIME_DLLS:qide> DESTINATION bin)
+endif()
 
 # Install icon and .desktop file on linux
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
