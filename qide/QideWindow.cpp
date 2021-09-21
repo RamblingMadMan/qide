@@ -19,7 +19,11 @@
 #include <QProgressBar>
 #include <QFileDialog>
 #include <QMenuBar>
+#include <QGraphicsView>
+#include <QGraphicsScene>
+#include <QGraphicsProxyWidget>
 #include <QToolBar>
+#include <QStackedLayout>
 
 #include "QCVM.hpp"
 #include "QCByteCode.hpp"
@@ -37,12 +41,23 @@
 
 QideTabsWidget::QideTabsWidget(QWidget *parent)
 	: QWidget(parent)
-	, m_codeTab(new QPushButton(QIcon::fromTheme("accessories-text-editor"), "Code"))
-	, m_mapTab(new QPushButton(QIcon::fromTheme("applications-internet"), "Map"))
-	, m_playTab(new QPushButton(QIcon::fromTheme("applications-games"), "Play"))
+	, m_codeTab(new QPushButton("Code"))
+	, m_mapTab(new QPushButton("Map"))
+	, m_playTab(new QPushButton("Play"))
 	, m_selected(m_codeTab)
 {
 	auto lay = new QVBoxLayout(this);
+
+	auto codeImg = QImage(":/img/ui/code.svg");
+	auto mapImg = QImage(":/img/ui/map.svg");
+	auto playImg = QImage(":/img/ui/play-circle.svg");
+	codeImg.invertPixels();
+	mapImg.invertPixels();
+	playImg.invertPixels();
+
+	m_codeTab->setIcon(QIcon(QPixmap::fromImage(codeImg)));
+	m_mapTab->setIcon(QIcon(QPixmap::fromImage(mapImg)));
+	m_playTab->setIcon(QIcon(QPixmap::fromImage(playImg)));
 
 	lay->addWidget(m_codeTab);
 	lay->addWidget(m_mapTab);
@@ -99,6 +114,11 @@ void QideVMDock::updateFnList(){
 	m_model->setStringList(strs);
 
 	emit fnsChanged();
+}
+
+void QideMainView::resizeEvent(QResizeEvent *event){
+	scene()->setSceneRect(0, 0, event->size().width(), event->size().height());
+	QGraphicsView::resizeEvent(event);
 }
 
 QideWindow::QideWindow(Ctor, QWidget *parent)
@@ -206,37 +226,57 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	//m_codeTab->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	//m_playTab->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-	auto stack = new QStackedWidget(this);
+	//m_mapEditor->setEnabled(false);
 
-	// added in reverse order for correct stacking
-	int gameIdx = stack->addWidget(m_game);
-	int mapEditorIdx = stack->addWidget(m_mapEditor);
-	int editorIdx = stack->addWidget(m_editor);
+	auto p = palette();
 
-	m_mapEditor->setEnabled(false);
+	auto stackLay = new QStackedLayout;
+	stackLay->setStackingMode(QStackedLayout::StackOne);
+	stackLay->setContentsMargins(0, 0, 0, 0);
 
-	stack->setCurrentIndex(editorIdx);
+	stackLay->insertWidget(0, m_editor);
+	stackLay->insertWidget(1, m_mapEditor);
+	stackLay->insertWidget(2, m_game);
+
+	m_game->hide();
+	m_mapEditor->hide();
+
+	stackLay->setCurrentIndex(0);
 
 	connect(m_tabs->codeTab(), &QPushButton::pressed, [=, this]{
-		if(m_mapEditor->isEnabled()){
-			m_mapEditor->setEnabled(false);
-			m_editor->setOpacity(0.25);
-		}
+		bool showMap = m_mapEditor->isVisible();
 
-		stack->setCurrentIndex(editorIdx);
+		m_editor->show();
+		stackLay->setCurrentIndex(0);
+
+		m_editor->raise();
+
+		if(showMap){
+			//mapEditW->setEnabled(false);
+			//m_mapEditor->show();
+			//m_mapEditor->stackUnder(m_editor);
+			m_editor->setOpacity(0.25);
+			//m_editor->show();
+			//m_editor->raise();
+		}
+		else{
+			m_editor->setOpacity(1.0);
+		}
 	});
 
-	connect(m_tabs->mapTab(), &QPushButton::pressed, [=, this]{
-		m_mapEditor->setEnabled(true);
-		stack->setCurrentIndex(mapEditorIdx);
+	connect(m_tabs->mapTab(), &QPushButton::pressed, [=]{
+		//mapEditW->setEnabled(true);
+		m_mapEditor->show();
+		stackLay->setCurrentIndex(1);
 	});
 
 	connect(m_tabs->playTab(), &QPushButton::pressed, [=, this]{
+		m_game->show();
+		stackLay->setCurrentIndex(2);
+
 		if(!m_game->isRunning()){
 			m_game->launch();
 		}
-
-		stack->setCurrentIndex(gameIdx);
 	});
 
 	auto mainWidget = new QWidget(this);
@@ -245,7 +285,11 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	mainLay->addWidget(m_tabs);
 	mainLay->setAlignment(m_tabs, Qt::AlignTop);
 
-	mainLay->addWidget(stack);
+	//sceneView->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
+	//sceneView->setResizeAnchor(QGraphicsView::AnchorViewCenter);
+	//sceneView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+	mainLay->addLayout(stackLay);
 
 	setCentralWidget(mainWidget);
 }

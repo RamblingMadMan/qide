@@ -3,21 +3,22 @@
 #include "rapidfuzz/utils.hpp"
 
 #include <QApplication>
+#include <QDebug>
 #include <QMultiMap>
 
 #include "QCLexer.hpp"
 #include "QCCompleter.hpp"
 #include "QCEdit.hpp"
 
-QCCompleter::QCCompleter(QCEdit *qcEdit, QObject *parent)
-	: QObject(parent)
+QCCompleter::QCCompleter(QCEdit *qcEdit, QWidget *parent)
+	: QWidget(parent)
 	, m_qcEdit(nullptr)
-	, m_popup()
-	, m_listView(&m_popup)
+	, m_listView(this)
 {
-	m_popup.hide();
-	m_popup.setContentsMargins(0, 0, 0, 0);
-	//m_popup.setWindowFlags(Qt::Popup);
+	hide();
+
+	setContentsMargins(0, 0, 0, 0);
+	//setWindowFlags(Qt::Popup);
 
 	m_listView.setContentsMargins(0, 0, 0, 0);
 	m_listView.setModel(&m_model);
@@ -33,7 +34,7 @@ QStringList QCCompleter::complete(const QString &tok){
 
 	constexpr double scoreCutoff = 50.0;
 
-	for(const auto &choice : m_choices){
+	foreach(const auto &choice, m_choices){
 		auto score = scorer.ratio(choice.toStdString(), scoreCutoff);
 
 		if(score >= scoreCutoff){
@@ -53,41 +54,44 @@ QStringList QCCompleter::complete(const QString &tok){
 	return ret;
 }
 
-void QCCompleter::setQcEdit(class QCEdit *qcEdit_){
+void QCCompleter::setQcEdit(QCEdit *qcEdit_){
 	if(m_qcEdit){
-		disconnect(m_qcEdit, &QPlainTextEdit::textChanged, this, &QCCompleter::completeAtCursor);
-		//disconnect(m_qcEdit, &QPlainTextEdit::cursorPositionChanged, this, &QCCompleter::completeAtCursor);
+		disconnect(m_qcEdit, &QPlainTextEdit::textChanged, this, nullptr);
+		disconnect(m_qcEdit, SIGNAL(cursorPositionChanged()), this, SLOT(completeAtCursor()));
 	}
 
+	auto oldEdit = m_qcEdit;
 	m_qcEdit = qcEdit_;
-
-	m_popup.setParent(m_qcEdit);
 
 	if(qcEdit_){
 		m_listView.setFont(qcEdit_->font());
-		connect(qcEdit_, &QPlainTextEdit::textChanged, this, &QCCompleter::completeAtCursor);
-		//connect(qcEdit, &QPlainTextEdit::cursorPositionChanged, this, &QCCompleter::completeAtCursor);
+		connect(qcEdit_, &QPlainTextEdit::textChanged, this, [this]{ completeAtCursor(true); });
+		connect(qcEdit_, SIGNAL(cursorPositionChanged()), this, SLOT(completeAtCursor()));
+	}
+
+	if(!parent() || parent() == oldEdit){
+		setParent(qcEdit_);
 	}
 
 	emit qcEditChanged();
 }
 
 void QCCompleter::closePopup(){
-	m_popup.hide();
+	hide();
 }
 
-void QCCompleter::completeAtCursor(){
-	m_popup.hide();
+void QCCompleter::completeAtCursor(bool forceShow){
+	if(isHidden() && !forceShow){
+		return;
+	}
+
+	hide();
 
 	if(!m_qcEdit){
 		return;
 	}
 
 	auto textCursor = m_qcEdit->textCursor();
-	auto cursorRect = m_qcEdit->cursorRect(textCursor);
-
-	//fmt::print("completing at cursor {{ {}, {} }}\n", textCursor.blockNumber(), textCursor.positionInBlock());
-	//std::fflush(stdout);
 
 	auto tok = m_qcEdit->lexer()->closest(QCToken::Location{ textCursor.blockNumber(), textCursor.columnNumber() });
 
@@ -123,14 +127,67 @@ void QCCompleter::completeAtCursor(){
 	int xSize = sbWidth + (charWidth * (maxLen + 1));
 	int ySize = sbWidth + (fntMetrics.height() * (matches.size() + 1));
 
+	auto cursorRect = m_qcEdit->cursorRect(textCursor);
 	int xOff = m_qcEdit->lineNumberAreaWidth() + ((tok->location().col + 0.25) * charWidth);
 	int yOff = cursorRect.y() + (fntMetrics.height() * 1.25);
 
 	// TODO: handle tabs
 
-	m_popup.setGeometry(xOff, yOff, xSize, ySize);
+	setGeometry(xOff, yOff, xSize, ySize);
 	m_listView.setGeometry(0, 0, xSize, ySize);
-	m_listView.setCurrentIndex(m_model.index(0, 0));
+	m_listView.setCurrentIndex(m_model.index(0));
 
-	m_popup.show();
+	show();
+	setFocus(Qt::PopupFocusReason);
+}
+
+void QCCompleter::keyPressEvent(QKeyEvent *ev){
+	if(isHidden()){
+		ev->ignore();
+		return;
+	}
+
+	int idx = m_listView.currentIndex().row();
+	switch(ev->key()){
+		case Qt::Key_Up:{
+			idx = std::max(0, idx - 1);
+			m_listView.setCurrentIndex(m_model.index(idx));
+			ev->accept();
+			break;
+		}
+
+		case Qt::Key_Down:{
+			idx = std::min(m_model.rowCount() - 1, idx + 1);
+			m_listView.setCurrentIndex(m_model.index(idx));
+			ev->accept();
+			break;
+		}
+
+		case Qt::Key_Escape:{
+			hide();
+			ev->accept();
+			break;
+		}
+
+		case Qt::Key_Return:
+		case Qt::Key_Enter:{
+			auto val = m_model.data(m_model.index(idx)).toString();
+
+			auto textCursor = m_qcEdit->textCursor();
+
+			auto tok = m_qcEdit->lexer()->closest(QCToken::Location{ textCursor.blockNumber(), textCursor.columnNumber() });
+
+			textCursor.movePosition(QTextCursor::MoveOperation::StartOfLine, QTextCursor::MoveAnchor, tok->location().col);
+			textCursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::KeepAnchor, tok->str().size());
+
+			textCursor.removeSelectedText();
+			textCursor.insertText(val);
+
+			hide();
+			ev->accept();
+			break;
+		}
+
+		default: ev->ignore(); break;
+	}
 }

@@ -54,6 +54,7 @@ class QCEdit: public QPlainTextEdit{
 		const QDir &fileDir() const noexcept{ return m_fileDir; }
 		const QCLexer *lexer() const noexcept{ return m_lexer; }
 		const QCParser *parser() const noexcept{ return m_parser; }
+		QCCompleter *completer() noexcept{ return m_completer; }
 
 		const QHash<QString, QTextDocument*> &fileBuffers() const noexcept{ return m_fileBufs; }
 

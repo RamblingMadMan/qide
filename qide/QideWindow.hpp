@@ -6,6 +6,7 @@
 #include <QAbstractButton>
 #include <QAbstractListModel>
 #include <QDir>
+#include <QGraphicsView>
 
 class QPushButton;
 class QStringListModel;
@@ -75,6 +76,16 @@ class QideVMDock: public QDockWidget{
 	private:
 		QCVM *m_vm;
 		QStringListModel *m_model;
+};
+
+class QideMainView: public QGraphicsView{
+	Q_OBJECT
+
+	public:
+		using QGraphicsView::QGraphicsView;
+
+	protected:
+		void resizeEvent(QResizeEvent *event) override;
 };
 
 class QideWindow: public QMainWindow{

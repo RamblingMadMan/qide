@@ -3,6 +3,7 @@
 #include <QPainter>
 
 #include "QCEdit.hpp"
+#include "QCCompleter.hpp"
 #include "QideEditor.hpp"
 
 #include "QuakeColors.hpp"
@@ -94,4 +95,14 @@ void QideEditor::setOpacity(qreal a){
 
 	m_treeView->setPalette(p);
 	setPalette(p);
+
+	auto completerP = p;
+
+	for(auto role : roles){
+		auto col = p.color(role);
+		col.setAlphaF(1.f);
+		completerP.setColor(role, col);
+	}
+
+	m_qcEdit->completer()->setPalette(completerP);
 }

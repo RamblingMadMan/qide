@@ -10,15 +10,18 @@
 #include <QWidget>
 #include <QStringListModel>
 
-class QCCompleter: public QObject{
+class QKeyEvent;
+class QCEdit;
+
+class QCCompleter: public QWidget{
 	Q_OBJECT
 
 	public:
-		explicit QCCompleter(class QCEdit *qcEdit = nullptr, QObject *parent = nullptr);
+		explicit QCCompleter(QCEdit *qcEdit = nullptr, QWidget *parent = nullptr);
 
 		QStringList complete(const QString &tok);
 
-		void setQcEdit(class QCEdit *qcEdit);
+		void setQcEdit(QCEdit *qcEdit);
 
 		void addChoice(const QString &choice){
 			m_choices.append(choice);
@@ -32,7 +35,7 @@ class QCCompleter: public QObject{
 
 		const QStringList &choices() const noexcept{ return m_choices; }
 
-		class QCEdit *qcEdit() noexcept{ return m_qcEdit; }
+		QCEdit *qcEdit() noexcept{ return m_qcEdit; }
 
 	signals:
 		void qcEditChanged();
@@ -40,11 +43,13 @@ class QCCompleter: public QObject{
 
 	public slots:
 		void closePopup();
-		void completeAtCursor();
+		void completeAtCursor(bool forceShow = false);
+
+	protected:
+		void keyPressEvent(QKeyEvent *ev) override;
 
 	private:
-		class QCEdit *m_qcEdit;
-		QWidget m_popup;
+		QCEdit *m_qcEdit;
 		QListView m_listView;
 		QStringListModel m_model;
 		QStringList m_choices;
