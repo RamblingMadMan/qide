@@ -155,3 +155,4 @@ Projects used:
 - [Source Sans font](https://github.com/adobe-fonts/source-sans)
 - [Hack font](https://github.com/source-foundry/Hack)
 - [Monoid font](https://github.com/larsenwork/monoid)
+- [Eva icons](https://github.com/akveo/eva-icons)
