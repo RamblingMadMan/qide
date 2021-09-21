@@ -36,10 +36,8 @@ jobs:
           sudo update-alternatives --set cc /usr/bin/gcc
           sudo update-alternatives --set c++ /usr/bin/g++
       
-      - name: build AppImage
-        run: ./build-appimage.sh
-
-      - uses: actions/upload-artifact@v2
-        with:
-          name: AppImage
-          path: '*.AppImage'
+      - name: build project
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Debug
+          cmake --build . -- -j$(nproc)
