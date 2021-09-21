@@ -6,7 +6,7 @@ set(
 	Renderer.cpp
 )
 
-add_library(qide-base SHARED ${QIDE_HEADERS} ${QIDE_BASE_SOURCES})
+add_library(qide-base STATIC ${QIDE_HEADERS} ${QIDE_BASE_SOURCES})
 
 set_target_properties(
 	qide-base PROPERTIES
