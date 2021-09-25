@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-appimage:
+  build-mingw-w64:
 
     runs-on: ubuntu-latest
 
@@ -27,7 +27,7 @@ jobs:
           sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
           sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
 
-      - name: Compile openssl
+      - name: Cross compile
         run: ./cross-mingw-w64.sh
 
       - uses: actions/upload-artifact@v2

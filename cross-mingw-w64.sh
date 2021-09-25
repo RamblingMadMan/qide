@@ -4,11 +4,6 @@ set -e
 
 OLD_CWD=$(readlink -f .)
 
-sudo apt install mingw-w64 build-essential libgl1-mesa-dev python
-
-sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
-sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
-
 # first install OpenSSL
 git clone --depth 1 https://github.com/openssl/openssl.git
 
@@ -26,18 +21,11 @@ rm -rf openssl
 
 # Now install Qt 5.15
 
-QT_VERSION_MM=5.15
-QT_VERSION=5.15.2
+QT_VERSION=5.15
 
-QT_ARCHIVE_NAME="qt-everywhere-src-${QT_VERSION}"
-QT_ARCHIVE_EXT=".tar.xz"
-QT_ARCHIVE="${QT_ARCHIVE_NAME}${QT_ARCHIVE_EXT}"
+git clone --recursive --depth 1 -b ${QT_VERSION} git://code.qt.io/qt/qt5.git
 
-curl http://ftp.yz.yamagata-u.ac.jp/pub/qtproject/archive/qt/${QT_VERSION_MM}/${QT_VERSION}/single/${QT_ARCHIVE} --output $QT_ARCHIVE
-
-tar -xf $QT_ARCHIVE
-
-pushd ${QT_ARCHIVE_NAME}
+pushd qt5
 
 ./configure \
     -xplatform win32-g++ \
@@ -66,7 +54,7 @@ make install
 
 popd
 
-rm -rf ${QT_ARCHIVE_NAME}
+rm -rf qt5
 
 mkdir build-mingw-w64
 
