@@ -12,7 +12,9 @@
   <p><br></p>
 </h1>
 
-![CI](https://github.com/RamblingMadMan/qide/actions/workflows/ci.yaml/badge.svg) ![Autobuild](https://github.com/RamblingMadMan/qide/actions/workflows/appimage.yaml/badge.svg)
+![CI](https://github.com/RamblingMadMan/qide/actions/workflows/ci.yaml/badge.svg)
+![AppImage Autobuild](https://github.com/RamblingMadMan/qide/actions/workflows/appimage.yaml/badge.svg)
+![MinGW-w64 Autobuild](https://github.com/RamblingMadMan/qide/actions/workflows/cross-mingw-w64.yaml/badge.svg)
 
 <p><br></p>
 
