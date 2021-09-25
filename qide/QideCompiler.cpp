@@ -105,7 +105,7 @@ namespace {
 
 						auto fileIt = fileBeg;
 						while(fileIt != fileEnd){
-							fileName.append(fileIt->str());
+							fileName.append(fileIt->str().toString());
 							++fileIt;
 						}
 

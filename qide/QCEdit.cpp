@@ -279,10 +279,6 @@ void QCEdit::reparse(){
 	m_parser->parse(m_lexer->tokens().begin(), m_lexer->tokens().end());
 
 	emit parseFinished(true);
-
-	for(auto &&expr : m_parser->results()){
-		qDebug() << "Expr:" << expr.kind();
-	}
 }
 
 void QCEdit::setDefaultFont(){
