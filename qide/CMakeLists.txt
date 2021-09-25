@@ -71,10 +71,18 @@ set_target_properties(
 	AUTOUIC ON
 )
 
+check_cxx_compiler_flag("-pipe" HAVE_PIPE_FLAG)
+
+if(HAVE_PIPE_FLAG)
+    target_compile_options(qide PUBLIC "-pipe")
+endif()
+
 target_include_directories(
 	qide PRIVATE
 	${OPENSSL_INCLUDE_DIR}
 )
+
+target_link_libraries(qide -static)
 
 target_link_libraries(
 	qide

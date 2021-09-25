@@ -23,57 +23,69 @@ OLD_CWD=$(readlink -f .)
 # Switch to build dir
 pushd "$BUILD_DIR"
 
-# first install OpenSSL
+# first make sure OpenSSL is installed
 
-git clone --depth 1 https://github.com/openssl/openssl.git
+OPENSSL_INSTALL_DIR=$HOME/mingw-w64/openssl
 
-pushd openssl
+if ! [ -d "$OPENSSL_INSTALL_DIR" ]; then
+    git clone --depth 1 https://github.com/openssl/openssl.git
 
-./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64
+    pushd openssl
 
-make -j$(nproc)
+    ./Configure --cross-compile-prefix=x86_64-w64-mingw32- mingw64
 
-make install DESTDIR="$HOME/mingw-w64/openssl"
+    make -j$(nproc)
 
-popd
+    make install DESTDIR="$HOME/mingw-w64/openssl"
+
+    popd
+fi
 
 # Now install Qt 5.15
 
 QT_VERSION=5.15
 
-git clone --recursive --depth 1 -b ${QT_VERSION} git://code.qt.io/qt/qt5.git
+QT_INSTALL_DIR="$HOME/mingw-w64/Qt${QT_VERSION}"
 
-pushd qt5
+if ! [ -d "$QT_INSTALL_DIR" ]; then
+    git clone --depth 1 -b ${QT_VERSION} git://code.qt.io/qt/qt5.git
 
-./configure \
-    -xplatform win32-g++ \
-    -device-option CROSS_COMPILE=/usr/bin/x86_64-w64-mingw32- \
-    -prefix "$HOME/mingw-w64/Qt${QT_VERSION}" \
-    -opensource \
-    -confirm-license \
-    -no-compile-examples \
-    -nomake examples \
-    -nomake tests \
-    -opengl desktop \
-    -static-runtime \
-    -release \
-    -skip qtactiveqt -skip qtcharts -skip qtdoc -skip qtlocation \
-    -skip qtremoteobjects -skip qtserialbus -skip qtwebchannel \
-    -skip qtwebview -skip qtandroidextras -skip qtconnectivity \
-    -skip qtgamepad -skip qtmacextras -skip qtpurchasing -skip qtscript \
-    -skip qttranslations -skip qtwebengine -skip qtwinextras \
-    -skip qtdatavis3d -skip qtgraphicaleffects -skip qtmultimedia \
-    -skip qtquickcontrols -skip qtscxml -skip qtspeech \
-    -skip qtvirtualkeyboard -skip qtwebglplugin -skip qtx11extras \
-    -skip qt3d -skip qtcanvas3d -skip qtdeclarative \
-    -skip qtimageformats -skip qtnetworkauth -skip qtquickcontrols2 \
-    -skip qtsensors -skip qtwayland -skip qtwebsockets
+    pushd qt5
 
-make -j$(nproc)
+    QT_SUBMODULES="qtbase,qtfeedback,qtimageformats,qtlottie,qtpim,qtqa,qtsvg,qtsystems"
 
-make install
+    ./init-repository --module-subset="$QT_SUBMODULES"
 
-popd
+    ./configure \
+        -xplatform win32-g++ \
+        -device-option CROSS_COMPILE=/usr/bin/x86_64-w64-mingw32- \
+        -prefix "$HOME/mingw-w64/Qt${QT_VERSION}" \
+        -opensource \
+        -confirm-license \
+        -no-compile-examples \
+        -nomake examples \
+        -nomake tests \
+        -nomake tools \
+        -opengl desktop \
+        -release \
+        -skip qtactiveqt -skip qtcharts -skip qtdoc -skip qtlocation \
+        -skip qtremoteobjects -skip qtserialbus -skip qtserialport -skip qtwebchannel \
+        -skip qtwebview -skip qtandroidextras -skip qtconnectivity \
+        -skip qtgamepad -skip qtmacextras -skip qtpurchasing -skip qtscript \
+        -skip qttranslations -skip qtwebengine -skip qtwinextras \
+        -skip qtdatavis3d -skip qtgraphicaleffects -skip qtmultimedia \
+        -skip qtquickcontrols -skip qtscxml -skip qtspeech \
+        -skip qtvirtualkeyboard -skip qtwebglplugin -skip qtx11extras \
+        -skip qt3d -skip qtcanvas3d -skip qtdeclarative \
+        -skip qtnetworkauth -skip qtquickcontrols2 \
+        -skip qtsensors -skip qtwayland -skip qtwebsockets -skip qtxmlpatterns
+
+    make -j$(nproc)
+
+    make install
+
+    popd
+fi
 
 mkdir build-mingw-w64
 
@@ -81,15 +93,19 @@ pushd build-mingw-w64
 
 cmake "$REPO_ROOT" \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    -DCMAKE_TOOLCHAIN_FILE=../toolchains/mingw-w64.cmake \
+    -DCMAKE_TOOLCHAIN_FILE="$REPO_ROOT/toolchains/mingw-w64.cmake" \
     -DQt5_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5" \
     -DQt5Core_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Core" \
     -DQt5Network_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Network" \
     -DQt5Widgets_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Widgets" \
     -DQt5Gui_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Gui" \
+    -DQt5Svg_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Svg" \
+    -DQt5Zlib_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Zlib" \
+    -DQt5ThemeSupport_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5ThemeSupport" \
+    -DQt5AccessibilitySupport_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5AccessibilitySupport" \
     -DQt5EventDispatcherSupport_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5EventDispatcherSupport" \
-    -DQt5_USE_STATIC_LIBS=ON \
-    -DQt5_USE_STATIC_RUNTIME=ON \
+    -DQt5FontDatabaseSupport_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5FontDatabaseSupport" \
+    -DQt5WindowsUIAutomationSupport_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5WindowsUIAutomationSupport" \
     -DOPENSSL_USE_STATIC_LIBS=TRUE \
     -DOPENSSL_ROOT_DIR="$HOME/mingw-w64/openssl/usr/local/" \
     -DOPENSSL_INCLUDE_DIR="$HOME/mingw-w64/openssl/usr/local/include/openssl" \
@@ -99,6 +115,21 @@ cmake "$REPO_ROOT" \
 
 cmake --build . -- -j$(nproc)
 
-mv qide/qide.exe $OLD_CWD
-
 popd
+
+mkdir qide-w64
+
+mv build-mingw-w64/qide/qide.exe qide-w64
+
+cp $QT_INSTALL_DIR/bin/Qt5{Core,Gui,Svg,Widgets,Network}.dll qide-w64
+
+QT_RUNTIME_DIRS=(bearer iconengines imageformats platforms styles)
+
+for runDir in ${QT_RUNTIME_DIRS[@]}; do
+    mkdir qide-w64/$runDir
+    cp $QT_INSTALL_DIR/plugins/$runDir/*.dll qide-w64/$runDir
+done
+
+zip -r qide-w64.zip qide-w64
+
+mv qide-w64.zip $OLD_CWD

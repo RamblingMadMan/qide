@@ -10,6 +10,8 @@ build/
 build-*/
 cmake-build*/
 *.AppImage
+qide-w64.zip
+qide-linux64.zip
 
 # IDE / Build system related files
 CMakeLists.txt.user
