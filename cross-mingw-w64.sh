@@ -2,7 +2,26 @@
 
 set -e
 
+if [ "$CI" == "" ] && [ -d /dev/shm ]; then
+	BUILD_DIR=$(mktemp -d -p /dev/shm $TEMP_TEMPLATE)
+else
+	BUILD_DIR=$(mktemp -d $TEMP_TEMPLATE)
+fi
+
+cleanup(){
+	if [ -d "$BUILD_DIR" ]; then
+		rm -rf "$BUILD_DIR"
+	fi
+}
+
+# Basically RAII for bash
+trap cleanup EXIT
+
+REPO_ROOT=$(readlink -f $(dirname $(dirname $0)))
 OLD_CWD=$(readlink -f .)
+
+# Switch to build dir
+pushd "$BUILD_DIR"
 
 # first install OpenSSL
 
@@ -60,7 +79,8 @@ mkdir build-mingw-w64
 
 pushd build-mingw-w64
 
-cmake .. \
+cmake "$REPO_ROOT" \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_TOOLCHAIN_FILE=../toolchains/mingw-w64.cmake \
     -DQt5_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5" \
     -DQt5Core_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Core" \
