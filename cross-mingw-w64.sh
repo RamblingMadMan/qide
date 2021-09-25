@@ -36,7 +36,7 @@ if ! [ -d "$OPENSSL_INSTALL_DIR" ]; then
 
     make -j$(nproc)
 
-    make install DESTDIR="$HOME/mingw-w64/openssl"
+    make install_sw DESTDIR="$HOME/mingw-w64/openssl"
 
     popd
 fi
