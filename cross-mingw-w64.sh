@@ -67,6 +67,7 @@ cmake .. \
     -DQt5Network_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Network" \
     -DQt5Widgets_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Widgets" \
     -DQt5Gui_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Gui" \
+    -DQt5EventDispatcherSupport_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5EventDispatcherSupport" \
     -DQt5_USE_STATIC_LIBS=ON \
     -DQt5_USE_STATIC_RUNTIME=ON \
     -DOPENSSL_USE_STATIC_LIBS=TRUE \
