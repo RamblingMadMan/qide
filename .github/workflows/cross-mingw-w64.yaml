@@ -32,14 +32,14 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: Win32 Executable
-          path: '*.exe'
+          name: MinGW-w64 Build
+          path: 'qide-w64.zip'
 
       - name: release
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
           body_path: CHANGELOG.md
-          files: '*.exe'
+          files: 'qide-w64.zip'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
