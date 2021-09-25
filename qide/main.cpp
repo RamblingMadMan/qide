@@ -120,14 +120,19 @@ int main(int argc, char *argv[]){
 		auto wizard = new QideSetup;
 		wizard->show();
 
-		QObject::connect(wizard, &QideSetup::finished, [&]{
-			window = new QideWindow;
+		QObject::connect(wizard, &QideSetup::finished, [wizard](int result){
+			if(result != QDialog::Accepted){
+				qApp->quit();
+				return;
+			}
+
+			auto window = new QideWindow;
 			window->show();
 			wizard->setParent(window);
 		});
 	}
 	else{
-		window = new QideWindow;
+		auto window = new QideWindow;
 		window->show();
 	}
 

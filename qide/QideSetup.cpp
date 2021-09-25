@@ -95,10 +95,17 @@ QideSetupQuake::QideSetupQuake(QWidget *parent)
 
 	QVector<QString> searchDirs;
 #ifdef __linux__
+	searchDirs.push_back(QDir::homePath() + "/.steam/steam/steamapps/common/Quake/rerelease");
 	searchDirs.push_back(QDir::homePath() + "/.steam/steam/steamapps/common/Quake");
+	searchDirs.push_back("/usr/local/games/quake");
+	searchDirs.push_back("/usr/local/games/Quake");
 #elif defined(_WIN32)
 	qDebug() << "Windows is untested";
+	searchDirs.push_back("C:/Program Files (x86)/Steam/steamapps/common/Quake/rerelease");
 	searchDirs.push_back("C:/Program Files (x86)/Steam/steamapps/common/Quake");
+	searchDirs.push_back("C:/GOG Games/Quake/rerelease");
+	searchDirs.push_back("C:/GOG Games/Quake");
+	searchDirs.push_back("C:/Quake");
 #else
 #error "Unsupported platform"
 #endif
@@ -106,11 +113,10 @@ QideSetupQuake::QideSetupQuake(QWidget *parent)
 	QString quakePath;
 
 	QStringList subDirs;
-	subDirs.reserve(4);
+	subDirs.reserve(3);
 	subDirs.push_back("id1");
 	subDirs.push_back("Id1");
 	subDirs.push_back("ID1");
-	subDirs.push_back("id1re");
 
 	for(const auto &dir : searchDirs){
 		auto id1Dir = QDir(dir);
@@ -146,11 +152,10 @@ QideSetupQuake::QideSetupQuake(QWidget *parent)
 		if(pathExists){
 			qDebug() << "Searching for Quake in" << path;
 			QStringList subDirs;
-			subDirs.reserve(4);
+			subDirs.reserve(3);
 			subDirs.push_back("id1");
 			subDirs.push_back("Id1");
 			subDirs.push_back("ID1");
-			subDirs.push_back("id1re");
 
 			QStringList pakNames;
 			pakNames.reserve(4);
@@ -171,7 +176,7 @@ QideSetupQuake::QideSetupQuake(QWidget *parent)
 
 				if(!isValid) continue;
 
-				if(subDir == "id1re"){
+				if(QFileInfo(path).baseName() == "rerelease"){
 					isRegistered = true;
 				}
 				else{
@@ -197,7 +202,7 @@ QideSetupQuake::QideSetupQuake(QWidget *parent)
 			}
 		}
 		else{
-			versionLbl->setText("Quake not found in directory, will use built-in shareware version");
+			versionLbl->setText("Quake not found in directory, will use shareware version");
 		}
 	});
 

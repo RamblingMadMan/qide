@@ -36,7 +36,7 @@ pushd qt5
     -nomake examples \
     -nomake tests \
     -opengl desktop \
-    -static \
+    -static-runtime \
     -release \
     -skip qtactiveqt -skip qtcharts -skip qtdoc -skip qtlocation \
     -skip qtremoteobjects -skip qtserialbus -skip qtwebchannel \
