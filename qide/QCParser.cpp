@@ -83,11 +83,11 @@ std::variant<bool, QCExpr> QCParser::parseDecl(QCType ty, const QCToken *exprSta
 	auto it = beg;
 
 	if(it->kind() != QCToken::Id){
-		qDebug() << QString("[ERROR] Expected Id but got %1 '%2'").arg(it->kind()).arg(it->str().toString());
+		qDebug() << QString("[ERROR] Expected Id but got %1 '%2'").arg(it->kind()).arg(it->str());
 		return false;
 	}
 
-	const auto name = it->str();
+	const auto name = it->str().toString();
 
 	++it;
 
@@ -101,7 +101,7 @@ std::variant<bool, QCExpr> QCParser::parseDecl(QCType ty, const QCToken *exprSta
 		auto it = beg_;
 
 		if(it->kind() == QCToken::Term){
-			return QCExpr::makeVarDef(ty, name.toString(), exprStart, ++it);
+			return QCExpr::makeVarDef(ty, name, exprStart, ++it);
 		}
 
 		return false;

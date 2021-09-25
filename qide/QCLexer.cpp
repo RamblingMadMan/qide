@@ -60,7 +60,7 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 
 			auto spaceEnd = it;
 
-			return QCToken(QCToken::Space, QStringView(spaceStart, spaceEnd), spaceLoc);
+			return QCToken(QCToken::Space, QStringView(spaceStart, std::distance(spaceStart, spaceEnd)), spaceLoc);
 		}
 		else{
 			do{
@@ -68,6 +68,10 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 				++m_curLoc.col;
 			} while(it != end && *it != QChar('\n') && it->isSpace());
 		}
+	}
+
+	if(it == end){
+		return QCToken(QCToken::EndOfFile, QStringView(), m_curLoc);
 	}
 
 	auto tokStart = it;
@@ -142,7 +146,7 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 				auto comment = lexMultilineComment(it, end);
 				it += comment.str().length();
 
-				return QCToken(QCToken::Comment, QStringView(tokStart, it), tokLoc);
+				return QCToken(QCToken::Comment, QStringView(tokStart, std::distance(tokStart, it)), tokLoc);
 			}
 			else if(*it == QChar('/')){
 				do{
@@ -150,7 +154,7 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 					++m_curLoc.col;
 				} while(it != end && *it != QChar('\n'));
 
-				return QCToken(QCToken::Comment, QStringView(tokStart, it), tokLoc);
+				return QCToken(QCToken::Comment, QStringView(tokStart, std::distance(tokStart, it)), tokLoc);
 			}
 			else{
 				--it;
@@ -185,7 +189,7 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 		return QCToken(QCToken::Kind::EndOfFile, QStringView(beg, 1), begLoc);
 	}
 
-	return QCToken(tokKind, QStringView(tokStart, it), tokLoc);
+	return QCToken(tokKind, QStringView(tokStart, std::distance(tokStart, it)), tokLoc);
 }
 
 QCToken QCLexer::lexMultilineComment(StrIter it, StrIter end){
@@ -214,7 +218,7 @@ QCToken QCLexer::lexMultilineComment(StrIter it, StrIter end){
 		}
 	}
 
-	return QCToken(QCToken::Comment, QStringView(tokStart, it), tokLoc);
+	return QCToken(QCToken::Comment, QStringView(tokStart, std::distance(tokStart, it)), tokLoc);
 }
 
 int QCLexer::lex(StrIter beg, StrIter end){

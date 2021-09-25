@@ -63,7 +63,7 @@ QCMap::TokIt QCMap::parseFace(TokIt beg, TokIt end, Face *ret){
 				throw QCMapException("invalid face point value");
 			}
 
-			point[i] = it->str().toString().toInt();
+			point[i] = it->str().toInt();
 
 			++it;
 		}
@@ -106,7 +106,7 @@ QCMap::TokIt QCMap::parseFace(TokIt beg, TokIt end, Face *ret){
 			throw QCMapException(QString("invalid token '%1' in texture values").arg(it->str()));
 		}
 
-		*valPtr[i] = it->str().toString().toInt();
+		*valPtr[i] = it->str().toInt();
 
 		++it;
 	}
@@ -165,7 +165,7 @@ QCMap::TokIt QCMap::parseEntity(TokIt beg, TokIt end){
 			break;
 		}
 		else if(it->kind() == QCToken::String){
-			auto key = it->str();
+			const auto key = it->str().toString();
 
 			it = skipSpaces(++it, end);
 
@@ -173,9 +173,9 @@ QCMap::TokIt QCMap::parseEntity(TokIt beg, TokIt end){
 				throw QCMapException(QString("invalid token '%1' in key value pair").arg(it->str()));
 			}
 
-			auto val = it->str();
+			const auto val = it->str().toString();
 
-			ent.keys[key.toString()] = val.toString();
+			ent.keys[key] = val;
 
 			it = skipSpaces(++it, end);
 		}
