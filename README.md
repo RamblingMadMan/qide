@@ -51,10 +51,10 @@ That said, for the keen and able (use linux) there are automatically built AppIm
 
 ## Autobuilds
 
-Automatic builds are available for linux in AppImage format.
-They are a work in progress themselves, but will be most up-to-date functionality wise.
+Automatic builds are available for linux in AppImage format and windows as a static executable.
+These builds are a work in progress themselves, but will be up-to-date functionality wise.
 
-[Download the latest AppImage here](https://github.com/RamblingMadMan/qide/releases/tag/autobuild)
+[Download the latest Autobuild here](https://github.com/RamblingMadMan/qide/releases/tag/autobuild)
 
 <p><br></p>
 

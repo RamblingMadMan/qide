@@ -2,6 +2,8 @@
 
 set -e
 
+OLD_CWD=$(readlink -f .)
+
 sudo apt install mingw-w64 build-essential libgl1-mesa-dev python
 
 sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
@@ -31,9 +33,7 @@ QT_ARCHIVE_NAME="qt-everywhere-src-${QT_VERSION}"
 QT_ARCHIVE_EXT=".tar.xz"
 QT_ARCHIVE="${QT_ARCHIVE_NAME}${QT_ARCHIVE_EXT}"
 
-if ! [ -e "$QT_ARCHIVE" ]; then
-    curl http://ftp.yz.yamagata-u.ac.jp/pub/qtproject/archive/qt/${QT_VERSION_MM}/${QT_VERSION}/single/${QT_ARCHIVE} --output $QT_ARCHIVE
-fi
+curl http://ftp.yz.yamagata-u.ac.jp/pub/qtproject/archive/qt/${QT_VERSION_MM}/${QT_VERSION}/single/${QT_ARCHIVE} --output $QT_ARCHIVE
 
 tar -xf $QT_ARCHIVE
 
@@ -87,5 +87,7 @@ cmake .. \
     -DOPENSSL_SSL_LIBRARY="$HOME/mingw-w64/openssl/usr/local/lib64/libssl.a"
 
 cmake --build . -- -j$(nproc)
+
+mv qide/qide.exe $OLD_CWD
 
 popd

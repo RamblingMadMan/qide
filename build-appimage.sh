@@ -56,4 +56,4 @@ export QML_SOURCES_PATHS="$REPO_ROOT/qide/qml"
 
 ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
 
-mv QIDE*.AppImage "$OLD_CWD"
+mv QIDE*.AppImage "$OLD_CWD"/QIDE.AppImage
