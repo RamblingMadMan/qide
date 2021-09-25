@@ -32,9 +32,9 @@ namespace qide{
 			const Mat4 &projection() const noexcept{ return m_proj; }
 			const Mat4 &view() const noexcept;
 			const Vec3 &position() const noexcept{ return m_pos; }
-			const Vec3 &forward() const noexcept{ return m_forward; }
-			const Vec3 &right() const noexcept{ return m_right; }
-			const Vec3 &up() const noexcept{ return m_up; }
+			const Vec3 &forward() const noexcept{ view(); return m_forward; }
+			const Vec3 &right() const noexcept{ view(); return m_right; }
+			const Vec3 &up() const noexcept{ view(); return m_up; }
 
 			void translate(const Vec3 &v) noexcept{
 				m_pos += v;

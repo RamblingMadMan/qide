@@ -58,7 +58,7 @@ namespace qide::shaders{
 		L("uniform sampler2D tex;")
 
 		L("void main(){")
-		L(" colorOut = mix(vec4(1.f, 1.f, 0.f, 1.f), texture(tex, uv_v), 0.5);")
+		L(" colorOut = vec4(1.0);")
 		L("}")
 	;
 
@@ -83,15 +83,14 @@ namespace qide::shaders{
 
 		L("vec3 unprojectPoint(vec3 p){")
 		L("	vec4 unprojectedW = invView * invProj * vec4(p, 1.0);")
-		L("	unprojectedW /= unprojectedW.w;")
-		L("	return unprojectedW.xyz;")
+		L("	return unprojectedW.xyz / unprojectedW.w;")
 		L("}")
 
 		L("void main(){")
-		L("	nearPoint = unprojectPoint(vec3(pos.xy, 0.001));")
-		L("	farPoint = unprojectPoint(vec3(pos.xy, 500.0));")
+		L("	nearPoint = unprojectPoint(vec3(pos.xy, 0.0));")
+		L("	farPoint = unprojectPoint(vec3(pos.xy, 1.0));")
 		//L("	farPoint = pos;")
-		L("	gl_Position = viewProj * vec4(pos, 1.0);")
+		L("	gl_Position = vec4(pos, 1.0);")
 		L("}")
 	;
 
@@ -104,8 +103,9 @@ namespace qide::shaders{
 		L("in vec3 farPoint;")
 
 		L("void main(){")
+		L("	float lum = 2.0/3.0;")
 		L("	float t = -nearPoint.y / (farPoint.y - nearPoint.y);")
-		L(" colorOut = vec4(1.0, 0.0, 0.0, 1.0 * float(t > 0));")
+		L(" colorOut = vec4(vec3(lum), 1.0 * float(t >= 0));")
 		L("}")
 	;
 #undef L

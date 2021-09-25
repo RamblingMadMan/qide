@@ -184,10 +184,8 @@ RendererGL43::RendererGL43(Nat16 w, Nat16 h, GLGetProcFn getProc, void *ctx)
 	glDebugMessageCallback(glDebug, this);
 #endif
 
-	//glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
-
 	std::vector<Framebuffer::AttachmentInfo> attachments = {
-		{ Framebuffer::AttachmentKind::depth, Texture2D::PixelKind::d24s8 }, // depth + stencil
+		{ Framebuffer::AttachmentKind::depth, Texture2D::PixelKind::d32f }, // depth
 		{ Framebuffer::AttachmentKind::color, Texture2D::PixelKind::rgba8 }, // diffuse texture
 		{ Framebuffer::AttachmentKind::color, Texture2D::PixelKind::rgba16f }, // lighting space texture
 		{ Framebuffer::AttachmentKind::color, Texture2D::PixelKind::rgba8 } // final scene
@@ -206,9 +204,6 @@ RendererGL43::RendererGL43(Nat16 w, Nat16 h, GLGetProcFn getProc, void *ctx)
 	m_pipelineAxis = std::make_unique<ShaderPipelineGL43>(*axisVert, *axisFrag);
 
 	m_axisGroup = std::make_unique<RenderGroupGL43>(m_unitSquare);
-
-	m_cubeGroup = createRenderGroup(m_unitCube);
-	m_cubeGroup->setNumInstances(1);
 }
 
 RendererGL43::~RendererGL43(){}
@@ -217,12 +212,24 @@ void RendererGL43::resize(Nat16 w, Nat16 h){
 	if(w > m_w || h > m_h){
 		m_fb->resize(std::max(m_fb->width(), w), std::max(m_fb->height(), h));
 	}
-	glViewport(0, 0, w, h);
+
 	m_w = w;
 	m_h = h;
 }
 
 void RendererGL43::present(const Camera &cam){
+	if(!m_cubeGroup){
+		m_cubeGroup = createRenderGroup(m_unitCube);
+		m_cubeGroup->setNumInstances(1);
+	}
+
+	glViewport(0, 0, m_w, m_h);
+
+	glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
+	glClearDepthf(0.f);
+	glDepthFunc(GL_GREATER);
+	glDepthRangef(1.f, 0.f);
+
 	glFrontFace(GL_CCW);
 
 	glEnable(GL_BLEND);
@@ -239,8 +246,8 @@ void RendererGL43::present(const Camera &cam){
 	glDrawBuffers(std::size(drawBufs), drawBufs);
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
 
-	glClearColor(bgBrightness, bgBrightness, bgBrightness, 0.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glClearColor(bgBrightness, bgBrightness, bgBrightness, 1.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	auto viewProj = cam.projection() * cam.view();
 	auto invView = glm::inverse(cam.view());
@@ -248,6 +255,8 @@ void RendererGL43::present(const Camera &cam){
 
 	if(m_drawAxis){
 		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+		glDepthMask(GL_FALSE);
 
 		auto prog = m_shaders[2]->glHandle();
 
@@ -263,6 +272,8 @@ void RendererGL43::present(const Camera &cam){
 		m_axisGroup->draw();
 
 		glEnable(GL_CULL_FACE);
+		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE);
 	}
 
 	auto prog = m_shaders[0]->glHandle();
@@ -282,7 +293,7 @@ void RendererGL43::present(const Camera &cam){
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	glBlitFramebuffer(0, 0, m_w, m_h, 0, 0, m_w, m_h, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	glBlitFramebuffer(0, 0, m_w, m_h, 0, 0, m_w, m_h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
 RenderGroupGL43 *RendererGL43::createRenderGroup(const shapes::Points &shape){

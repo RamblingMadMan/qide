@@ -117,5 +117,42 @@
         <file>templates/progs_dump/progs/a_mdls/m_shell2.mdl</file>
         <file>templates/progs_dump/maps/debris/brick01.bsp</file>
         <file>templates/progs_dump/maps/debris/wood1.bsp</file>
+        <file>templates/id1/src/client.qc</file>
+        <file>templates/id1/src/ai.qc</file>
+        <file>templates/id1/src/amtest.qc</file>
+        <file>templates/id1/src/boss.qc</file>
+        <file>templates/id1/src/buttons.qc</file>
+        <file>templates/id1/src/combat.qc</file>
+        <file>templates/id1/src/defs.qc</file>
+        <file>templates/id1/src/demon.qc</file>
+        <file>templates/id1/src/dog.qc</file>
+        <file>templates/id1/src/doors.qc</file>
+        <file>templates/id1/src/enforcer.qc</file>
+        <file>templates/id1/src/fight.qc</file>
+        <file>templates/id1/src/fish.qc</file>
+        <file>templates/id1/src/hknight.qc</file>
+        <file>templates/id1/src/items.qc</file>
+        <file>templates/id1/src/jctest.qc</file>
+        <file>templates/id1/src/knight.qc</file>
+        <file>templates/id1/src/misc.qc</file>
+        <file>templates/id1/src/models.qc</file>
+        <file>templates/id1/src/monsters.qc</file>
+        <file>templates/id1/src/ogre.qc</file>
+        <file>templates/id1/src/oldone.qc</file>
+        <file>templates/id1/src/plats.qc</file>
+        <file>templates/id1/src/player.qc</file>
+        <file>templates/id1/src/progs.src</file>
+        <file>templates/id1/src/shalrath.qc</file>
+        <file>templates/id1/src/shambler.qc</file>
+        <file>templates/id1/src/soldier.qc</file>
+        <file>templates/id1/src/sprites.qc</file>
+        <file>templates/id1/src/subs.qc</file>
+        <file>templates/id1/src/tarbaby.qc</file>
+        <file>templates/id1/src/triggers.qc</file>
+        <file>templates/id1/src/weapons.qc</file>
+        <file>templates/id1/src/wizard.qc</file>
+        <file>templates/id1/src/world.qc</file>
+        <file>templates/id1/src/zombie.qc</file>
+        <file>templates/id1/README.md</file>
     </qresource>
 </RCC>

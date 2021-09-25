@@ -1,7 +1,9 @@
-if(NOT WIN32 OR NOT MINGW)
-	find_package(OpenSSL) # this doesn't work with MinGW cross compiles
+if(WIN32 AND MINGW)
+    # make deployment with mingw easier
+	set(Qt5_USE_STATIC_LIBS ON)
+	set(Qt5_USE_STATIC_RUNTIME ON)
 else()
-	set(Qt5_USE_STATIC_LIBS ON) # make deployment with mingw easier
+	find_package(OpenSSL) # this doesn't work with MinGW cross compiles
 endif()
 
 find_package(Qt5 COMPONENTS Core Network Widgets REQUIRED)
@@ -13,6 +15,7 @@ set(
 	icon.qrc
 	fonts.qrc
 	templates.qrc
+	shaders.qrc
 )
 
 if(WIN32)

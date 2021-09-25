@@ -10,7 +10,9 @@
 
 #include "QCToken.hpp"
 
-class QCMap : public QObject{
+#include "qide/shapes.hpp"
+
+class QCMap: public QObject{
 	Q_OBJECT
 
 	Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
@@ -75,5 +77,9 @@ class QCMap : public QObject{
 		QString m_title;
 		QVector<Entity> m_ents;
 };
+
+Q_DECLARE_METATYPE(QCMap::Entity)
+Q_DECLARE_METATYPE(QCMap::Brush)
+Q_DECLARE_METATYPE(QCMap::Face)
 
 #endif // !QIDE_QCMAP_HPP

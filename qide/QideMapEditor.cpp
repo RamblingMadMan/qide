@@ -35,24 +35,35 @@ void QideMapEditorWindow::initializeGL(){
 		return c->getProcAddress(name);
 	};
 
-	m_cam.setProjMat(qide::Camera::Perspective{}, 3.14f, float(height()) / float(width()), 0.001f, 500.f);
-	m_cam.setPosition({ 0.f, 0.f, -1.f });
+	m_cam.setProjMat(qide::Camera::Perspective{}, 3.14f, float(width()) / float(height()), 0.001f, 500.f);
+	m_cam.setPosition({ 0.f, 1.f, -1.f });
 
 	m_r = std::make_unique<qide::RendererGL43>(width(), height(), glGetProc, context());
 	m_r->setDrawAxis(true);
 }
 
 void QideMapEditorWindow::resizeGL(int w, int h){
-	m_cam.setProjMat(qide::Camera::Perspective{}, 3.14f, float(h) / float(w), 0.001f, 500.f);
+	qDebug() << "Resize" << w << "x" << h;
+	m_cam.setProjMat(qide::Camera::Perspective{}, 3.14f, float(w) / float(h), 0.001f, 500.f);
 	m_r->resize(w, h);
 }
 
 void QideMapEditorWindow::paintGL(){
 	auto frameEnd = Clock::now();
 	auto frameDt = frameEnd - m_frameStart;
-	m_frameStart = frameEnd;
 
 	auto dt = std::chrono::duration<float>(frameDt).count();
+
+	// limit to 60 fps
+	float frameDtMin = 1.f / 60.f;
+	if(dt < frameDtMin){
+		update();
+		return;
+	}
+
+	QOpenGLWindow::paintGL();
+
+	m_frameStart = frameEnd;
 
 	auto forward_ = m_cam.forward() * m_movement.z;
 	auto right_ = m_cam.right() * m_movement.x;
@@ -62,11 +73,12 @@ void QideMapEditorWindow::paintGL(){
 
 	if(glm::length(amnt) >= 0.999999f){
 		amnt *= 2.f * dt;
-		qDebug() << QVector3D(amnt.x, amnt.y, amnt.z);
 		m_cam.translate(amnt);
 	}
 
 	m_r->present(m_cam);
+
+	update();
 }
 
 void QideMapEditorWindow::mouseMoveEvent(QMouseEvent *event){
@@ -76,32 +88,34 @@ void QideMapEditorWindow::mouseMoveEvent(QMouseEvent *event){
 		QPointF dV = (event->localPos() - m_lastMousePos);
 		dV.setX(qDegreesToRadians(dV.x()));
 		dV.setY(qDegreesToRadians(dV.y()));
-		dV *= 90.f;
+		dV *= 0.5f;
 
 		m_cam.rotate({ 1.f, 0.f, 0.f }, dV.y());
 		m_cam.rotate({ 0.f, 1.f, 0.f }, dV.x());
 
 		m_lastMousePos = event->localPos();
 
-		if(event->localPos().x() < 0.f){
-			auto c = cursor();
-			c.setPos(c.pos() + QPoint(width(), 0));
-			setCursor(c);
+		auto c = cursor();
+		auto cPos = c.pos();
+
+		auto newPos = event->localPos();
+
+		if(newPos.x() < 0.f){
+			cPos += QPoint(width(), 0);
 		}
-		else if(event->localPos().x() > width()){
-			auto c = cursor();
-			c.setPos(c.pos() - QPoint(width(), 0));
-			setCursor(c);
+		else if(newPos.x() > width()){
+			cPos -= QPoint(width(), 0);
 		}
 
-		if(event->localPos().y() < 0.f){
-			auto c = cursor();
-			c.setPos(c.pos() + QPoint(0, height()));
-			setCursor(c);
+		if(newPos.y() < 0.f){
+			cPos += QPoint(0, height());
 		}
-		else if(event->localPos().y() > height()){
-			auto c = cursor();
-			c.setPos(c.pos() - QPoint(0, height()));
+		else if(newPos.y() > height()){
+			cPos -= QPoint(0, height());
+		}
+
+		if(cPos != c.pos()){
+			c.setPos(cPos);
 			setCursor(c);
 		}
 	}
