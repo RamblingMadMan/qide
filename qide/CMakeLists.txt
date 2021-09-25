@@ -1,9 +1,5 @@
-if(WIN32 AND MINGW)
-    # make deployment with mingw easier
-	set(Qt5_USE_STATIC_LIBS ON)
-	set(Qt5_USE_STATIC_RUNTIME ON)
-else()
-	find_package(OpenSSL) # this doesn't work with MinGW cross compiles
+if(NOT WIN32 OR NOT MINGW)
+	find_package(OpenSSL REQUIRED) # this doesn't work with MinGW cross compiles
 endif()
 
 find_package(Qt5 COMPONENTS Core Network Widgets REQUIRED)

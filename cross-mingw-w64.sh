@@ -5,6 +5,7 @@ set -e
 OLD_CWD=$(readlink -f .)
 
 # first install OpenSSL
+
 git clone --depth 1 https://github.com/openssl/openssl.git
 
 pushd openssl
@@ -16,8 +17,6 @@ make -j$(nproc)
 make install DESTDIR="$HOME/mingw-w64/openssl"
 
 popd
-
-rm -rf openssl
 
 # Now install Qt 5.15
 
@@ -35,7 +34,10 @@ pushd qt5
     -confirm-license \
     -no-compile-examples \
     -nomake examples \
+    -nomake tests \
     -opengl desktop \
+    -static \
+    -release \
     -skip qtactiveqt -skip qtcharts -skip qtdoc -skip qtlocation \
     -skip qtremoteobjects -skip qtserialbus -skip qtwebchannel \
     -skip qtwebview -skip qtandroidextras -skip qtconnectivity \
@@ -54,19 +56,19 @@ make install
 
 popd
 
-rm -rf qt5
-
 mkdir build-mingw-w64
 
 pushd build-mingw-w64
 
 cmake .. \
+    -DCMAKE_TOOLCHAIN_FILE=../toolchains/mingw-w64.cmake \
     -DQt5_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5" \
     -DQt5Core_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Core" \
     -DQt5Network_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Network" \
     -DQt5Widgets_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Widgets" \
     -DQt5Gui_DIR="$HOME/mingw-w64/Qt${QT_VERSION}/lib/cmake/Qt5Gui" \
-    -DCMAKE_TOOLCHAIN_FILE=../toolchains/mingw-w64.cmake \
+    -DQt5_USE_STATIC_LIBS=ON \
+    -DQt5_USE_STATIC_RUNTIME=ON \
     -DOPENSSL_USE_STATIC_LIBS=TRUE \
     -DOPENSSL_ROOT_DIR="$HOME/mingw-w64/openssl/usr/local/" \
     -DOPENSSL_INCLUDE_DIR="$HOME/mingw-w64/openssl/usr/local/include/openssl" \
