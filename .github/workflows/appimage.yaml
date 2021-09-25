@@ -1,4 +1,4 @@
-name: AppImage AutoBuild
+name: AppImage Autobuild
 
 on:
   push:

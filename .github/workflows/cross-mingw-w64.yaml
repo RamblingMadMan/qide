@@ -1,4 +1,4 @@
-name: MinGW-w64 AutoBuild
+name: MinGW-w64 Autobuild
 
 on:
   push:
