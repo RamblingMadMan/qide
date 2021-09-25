@@ -6,7 +6,6 @@
         <file>templates/scratch/src/dummys.qc</file>
         <file>templates/scratch/src/main.qc</file>
         <file>templates/scratch/src/progs.src</file>
-        <file>templates/progs_dump/progs.dat</file>
         <file>templates/progs_dump/progs_dump-devkit-readme.txt</file>
         <file>templates/progs_dump/README.md</file>
         <file>templates/progs_dump/src/ai.qc</file>

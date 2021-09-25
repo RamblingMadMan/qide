@@ -49,8 +49,7 @@ int main(int argc, char *argv[]){
 		qDebug() << "Could not find app icon in resources";
 	}
 	else{
-		QIcon appIcon(":/icon-32.png");
-		qapp.setWindowIcon(appIcon);
+		qapp.setWindowIcon(QIcon(":/icon-32.png"));
 	}
 
 	qapp.setStyle(QStyleFactory::create("fusion"));

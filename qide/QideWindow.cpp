@@ -36,6 +36,7 @@
 #include "QideCompiler.hpp"
 #include "QideWindow.hpp"
 #include "QideProjectWizard.hpp"
+#include "QideFileWizard.hpp"
 
 #ifdef _WIN32
 #include <dwmapi.h>
@@ -129,11 +130,6 @@ void QideVMDock::updateFnList(){
 	emit fnsChanged();
 }
 
-void QideMainView::resizeEvent(QResizeEvent *event){
-	scene()->setSceneRect(0, 0, event->size().width(), event->size().height());
-	QGraphicsView::resizeEvent(event);
-}
-
 static void recurseAddDir(QDir d, QStringList& list) {
 	QStringList qsl = d.entryList(QDir::NoDotAndDotDot | QDir::Dirs | QDir::Files);
 
@@ -167,15 +163,43 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	auto menuBar = new QMenuBar(this);
 	auto fileMenu = new QMenu("File", this);
 	auto editMenu = new QMenu("Edit", this);
+	auto helpMenu = new QMenu("Help", this);
 
-	auto newProjAction = new QAction("New Project", this);
-	auto openAction = new QAction(QIcon::fromTheme("document-open"), "Open Project", this);
-	auto saveAction = new QAction(QIcon::fromTheme("document-save"), "Save", this);
-	auto quitAction = new QAction(QIcon::fromTheme("application-exit"), "Quit", this);
-	m_undoAction = new QAction(QIcon::fromTheme("edit-undo"), "Undo", this);
-	m_redoAction = new QAction(QIcon::fromTheme("edit-redo"), "Redo", this);
-	auto buildAction = new QAction("Build", this);
-	auto launchAction = new QAction(QIcon::fromTheme("system-run"), "Launch", this);
+	auto plusImg = QImage(":/img/ui/plus.svg");
+	auto folderImg = QImage(":/img/ui/folder.svg");
+	auto newFileImg = QImage(":/img/ui/file-add.svg");
+	auto saveImg = QImage(":/img/ui/save.svg");
+	auto quitImg = QImage(":/img/ui/close.svg");
+	auto undoImg = QImage(":/img/ui/undo.svg");
+	auto redoImg = QImage(":/img/ui/undo.svg").mirrored(true, false);
+	auto playImg = QImage(":/img/ui/play-circle.svg");
+	auto buildImg = QImage(":/img/ui/code-download.svg");
+	plusImg.invertPixels();
+	folderImg.invertPixels();
+	newFileImg.invertPixels();
+	saveImg.invertPixels();
+	quitImg.invertPixels();
+	undoImg.invertPixels();
+	redoImg.invertPixels();
+	playImg.invertPixels();
+	buildImg.invertPixels();
+
+	auto newProjAction = new QAction(QIcon(QPixmap::fromImage(plusImg)), "New Project", this);
+	auto openProjAction = new QAction(QIcon(QPixmap::fromImage(folderImg)), "Open Project", this);
+	auto newFileAction = new QAction(QIcon(QPixmap::fromImage(newFileImg)), "New file", this);
+	auto saveAction = new QAction(QIcon(QPixmap::fromImage(saveImg)), "Save", this);
+	saveAction->setShortcut(Qt::CTRL + Qt::Key_S);
+
+	auto saveAllAction = new QAction(QIcon(QPixmap::fromImage(saveImg)), "Save All", this);
+	saveAllAction->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_S);
+
+	auto quitAction = new QAction(QIcon(QPixmap::fromImage(quitImg)), "Quit", this);
+
+	m_undoAction = new QAction(QIcon(QPixmap::fromImage(undoImg)), "Undo", this);
+	m_redoAction = new QAction(QIcon(QPixmap::fromImage(redoImg)), "Redo", this);
+
+	auto buildAction = new QAction(QIcon(QPixmap::fromImage(buildImg)), "Build", this);
+	auto launchAction = new QAction(QIcon(QPixmap::fromImage(playImg)), "Launch", this);
 
 	connect(newProjAction, &QAction::triggered, this, [this]{
 		auto wizard = new QideProjectWizard(this);
@@ -214,9 +238,14 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 		// TODO: connect onFinished
 	});
 
-	connect(openAction, &QAction::triggered, this, [this]{
+	connect(openProjAction, &QAction::triggered, this, [this]{
 		auto newDir = QFileDialog::getExistingDirectory(this, tr("Open Project Directory"), QSettings().value("projDir").toString());
 		setProjectDir(newDir);
+	});
+
+	connect(newFileAction, &QAction::triggered, this, [this]{
+		auto wizard = new QideFileWizard(this);
+		wizard->show();
 	});
 
 	connect(saveAction, &QAction::triggered, this, [this]{
@@ -229,6 +258,10 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 
 	//connect(m_editor->qcEdit(), &QPlainTextEdit::undoAvailable, &m_undoAction, &QAction::setEnabled);
 	//connect(m_editor->qcEdit(), &QPlainTextEdit::redoAvailable, &m_redoAction, &QAction::setEnabled);
+
+	auto fsModel = this->m_editor->fsModel();
+
+	connect(m_editor->qcEdit(), &QCEdit::hasChangesChanged, saveAction, [this, saveAction]{ saveAction->setEnabled(m_editor->qcEdit()->hasChanges()); });
 
 	connect(
 		m_comp, &QideCompiler::compileStarted,
@@ -256,7 +289,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	);
 
 	saveAction->setEnabled(false);
-	openAction->setEnabled(true);
+	openProjAction->setEnabled(true);
 	buildAction->setEnabled(true);
 	launchAction->setEnabled(false);
 
@@ -265,9 +298,11 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 
 	// file menu
 	fileMenu->addAction(newProjAction);
+	fileMenu->addAction(openProjAction);
 	fileMenu->addSeparator();
-	fileMenu->addAction(openAction);
+	fileMenu->addAction(newFileAction);
 	fileMenu->addAction(saveAction);
+	fileMenu->addAction(saveAllAction);
 	fileMenu->addSeparator();
 	fileMenu->addAction(quitAction);
 
@@ -278,11 +313,15 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	// menu bar
 	menuBar->addMenu(fileMenu);
 	menuBar->addMenu(editMenu);
+	menuBar->addMenu(helpMenu);
 
 	// tool bar buttons
 	auto docToolbar = new QToolBar(this);
-	docToolbar->addAction(openAction);
+	docToolbar->addAction(openProjAction);
+	docToolbar->addSeparator();
+	docToolbar->addAction(newFileAction);
 	docToolbar->addAction(saveAction);
+	docToolbar->addAction(saveAllAction);
 	docToolbar->addSeparator();
 	docToolbar->addAction(m_undoAction);
 	docToolbar->addAction(m_redoAction);
@@ -426,7 +465,7 @@ void QideWindow::writeSettings(){
 	settings.setValue(QString("%1/state").arg(projName), saveState());
 	settings.setValue(QString("%1/splitState").arg(projName), m_editor->splitter()->saveState());
 	settings.setValue(QString("%1/fileBufs").arg(projName), fileBufs);
-	settings.setValue(QString("%1/curFile").arg(projName), m_editor->qcEdit()->fileDir().absolutePath());
+	settings.setValue(QString("%1/curFile").arg(projName), m_editor->qcEdit()->filePath());
 
 	qDebug() << "Wrote settings for project" << projName;
 }

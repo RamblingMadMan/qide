@@ -1,6 +1,8 @@
+#include <QDebug>
 #include <QHeaderView>
 #include <QHBoxLayout>
 #include <QPainter>
+#include <QShortcut>
 
 #include "QCEdit.hpp"
 #include "QCCompleter.hpp"
@@ -8,13 +10,26 @@
 
 #include "QuakeColors.hpp"
 
+QideFSModel::QideFSModel(QObject *parent_)
+	: QFileSystemModel(parent_){}
+
+QVariant QideFSModel::data(const QModelIndex &index, int role) const{
+	auto oldData = QFileSystemModel::data(index, role);
+
+	if(role != Qt::DisplayRole){ return oldData; }
+
+	// TODO: add asterisk to modified file names
+
+	return oldData;
+}
+
 QideEditor::QideEditor(QWidget *parent)
 	: QWidget(parent)
 	, m_lay(new QHBoxLayout(this))
 	, m_splitter(new QSplitter)
 	, m_qcEdit(new QCEdit(m_splitter))
 	, m_treeView(new QTreeView(m_splitter))
-	, m_fsModel(new QFileSystemModel(this))
+	, m_fsModel(new QideFSModel(this))
 {
 	setContentsMargins(0, 0, 0, 0);
 
@@ -51,13 +66,7 @@ QideEditor::QideEditor(QWidget *parent)
 }
 
 void QideEditor::saveCurrent(){
-	auto filePath = m_qcEdit->fileDir().absolutePath();
-	QFile outFile(filePath);
-	if(!outFile.open(QFile::WriteOnly)){
-		return;
-	}
-
-	outFile.write(m_qcEdit->toPlainText().toUtf8());
+	m_qcEdit->saveFile();
 }
 
 void QideEditor::setRootDir(QDir dir){
@@ -105,4 +114,12 @@ void QideEditor::setOpacity(qreal a){
 	}
 
 	m_qcEdit->completer()->setPalette(completerP);
+}
+
+void QideEditor::showCompleter(){
+	m_qcEdit->showCompleter();
+}
+
+void QideEditor::hideCompleter(){
+	m_qcEdit->hideCompleter();
 }

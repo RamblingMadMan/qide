@@ -52,7 +52,7 @@ class QCParser: public QObject{
 	private:
 		using ParseResult = std::variant<bool, QCExpr>;
 
-		ParseResult parseDef(QCType ty, const QCToken *exprStart, const QCToken *beg, const QCToken *end);
+		ParseResult parseDecl(QCType ty, const QCToken *exprStart, const QCToken *beg, const QCToken *end);
 		ParseResult parseToplevel(const QCToken *beg, const QCToken *end);
 
 		QString m_title;

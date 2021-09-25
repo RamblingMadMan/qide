@@ -3,8 +3,11 @@
 
 #include <QDir>
 #include <QPlainTextEdit>
+#include <QDateTime>
 
 class QUndoStack;
+class QShortcut;
+
 class QCHighlighter;
 class QCCompleter;
 class QCLexer;
@@ -35,28 +38,31 @@ class QCFileBuffer: public QTextDocument{
 		explicit QCFileBuffer(const QString &contents_, QObject *parent = nullptr);
 
 		QVariant saveState();
-		bool restoreState(const QVariant &state);
+		bool restoreState(const QVariant &state);		
 };
 
 class QCEdit: public QPlainTextEdit{
 	Q_OBJECT
 
-	Q_PROPERTY(QDir fileDir READ fileDir NOTIFY fileDirChanged)
+	Q_PROPERTY(QString filePath READ filePath NOTIFY filePathChanged)
 	Q_PROPERTY(QCLexer lexer READ lexer)
 	Q_PROPERTY(QCParser parser READ parser)
 	Q_PROPERTY(QHash<QString, QTextDocument*> fileBuffers READ fileBuffers WRITE setFileBuffers NOTIFY fileBuffersChanged)
+	Q_PROPERTY(bool hasChanges READ hasChanges NOTIFY hasChangesChanged)
 
 	public:
 		explicit QCEdit(QWidget *parent = nullptr);
 
-		bool loadFile(const QDir &dir);
+		bool loadFile(const QString &path);
 
-		const QDir &fileDir() const noexcept{ return m_fileDir; }
+		bool saveFile();
+
+		const QString &filePath() const noexcept{ return m_filePath; }
 		const QCLexer *lexer() const noexcept{ return m_lexer; }
 		const QCParser *parser() const noexcept{ return m_parser; }
 		QCCompleter *completer() noexcept{ return m_completer; }
-
 		const QHash<QString, QTextDocument*> &fileBuffers() const noexcept{ return m_fileBufs; }
+		bool hasChanges() const noexcept{ return m_hasChanges; }
 
 		void lineNumberAreaPaintEvent(QPaintEvent *event);
 		int lineNumberAreaWidth();
@@ -69,12 +75,17 @@ class QCEdit: public QPlainTextEdit{
 		//QVariant saveState();
 		//bool restoreState(const QVariant &state);
 
+	public slots:
+		void showCompleter();
+		void hideCompleter();
+
 	signals:
-		void fileDirChanged();
+		void filePathChanged();
 		void fileBufferChanged(const QString &filePath);
 		void fileBuffersChanged();
+		void fileSaveTimesChanged();
 
-		void undoStackChanged();
+		void hasChangesChanged();
 
 		void parseStarted();
 		void parseFinished(bool success);
@@ -94,9 +105,10 @@ class QCEdit: public QPlainTextEdit{
 		QCParser *m_parser;
 		QCHighlighter *m_highlighter;
 		QCCompleter *m_completer;
-		QDir m_fileDir;
+		QString m_filePath;
 		LineNumberArea m_lineNumArea;
 		QHash<QString, QTextDocument*> m_fileBufs;
+		bool m_hasChanges = false;
 
 		void setDefaultFont();
 };

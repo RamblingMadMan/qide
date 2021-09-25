@@ -1,4 +1,8 @@
-cmake_minimum_required(VERSION 3.21.0 FATAL_ERROR)
+if(WIN32)
+    cmake_minimum_required(VERSION 3.21.0 FATAL_ERROR)
+else()
+    cmake_minimum_required(VERSION 3.16.0 FATAL_ERROR)
+endif()
 
 project(
 	qide

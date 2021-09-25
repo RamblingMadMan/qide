@@ -6,9 +6,18 @@
 #include <QFileSystemModel>
 
 class QHBoxLayout;
-class QFileSystemModel;
+class QShortcut;
 
 class QCEdit;
+
+class QideFSModel: public QFileSystemModel{
+	Q_OBJECT
+
+	public:
+		explicit QideFSModel(QObject *parent_ = nullptr);
+
+		QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+};
 
 class QideEditor: public QWidget{
 	Q_OBJECT
@@ -40,6 +49,10 @@ class QideEditor: public QWidget{
 
 		QFileSystemModel *fsModel() noexcept{ return m_fsModel; }
 		const QFileSystemModel *fsModel() const noexcept{ return m_fsModel; }
+
+	public slots:
+		void showCompleter();
+		void hideCompleter();	
 
 	signals:
 		void rootDirChanged();

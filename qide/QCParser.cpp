@@ -1,3 +1,6 @@
+#include <QDebug>
+#include <QVector>
+
 #include "fmt/format.h"
 
 #include "QCParser.hpp"
@@ -30,18 +33,22 @@ void QCParser::setTitle(QString str){
 	emit titleChanged();
 }
 
-static inline const QCToken *skipComments(const QCToken *it, const QCToken *end){
-	while(it != end && (it->kind() == QCToken::Comment)){
+static inline const QCToken *skipKinds(const QCToken *it, const QCToken *end, const QVector<QCToken::Kind> &kinds){
+	while(it != end && kinds.contains(it->kind())){
 		++it;
 	}
 
 	return it;
 }
 
+static inline const QCToken *skipCommentsAndSpaces(const QCToken *it, const QCToken *end){ // ... AndNewLines
+	return skipKinds(it, end, { QCToken::Comment, QCToken::NewLine, QCToken::Space });
+}
+
 int QCParser::parse(const QCToken *beg, const QCToken *const end){
 	if(!beg || !end) return true;
 
-	beg = skipComments(beg, end);
+	beg = skipCommentsAndSpaces(beg, end);
 
 	int origLen = m_results.size();
 
@@ -65,22 +72,18 @@ int QCParser::parse(const QCToken *beg, const QCToken *const end){
 	return res;
 }
 
-std::variant<bool, QCExpr> QCParser::parseDef(QCType ty, const QCToken *exprStart, const QCToken *beg, const QCToken *end){
-	beg = skipComments(beg, end);
+std::variant<bool, QCExpr> QCParser::parseDecl(QCType ty, const QCToken *exprStart, const QCToken *beg, const QCToken *end){
+	beg = skipCommentsAndSpaces(beg, end);
 
 	if(beg == end){
-		m_parseFn = [=](auto &&... args){ return parseDef(ty, exprStart, std::forward<decltype(args)>(args)...); };
+		m_parseFn = [=](auto &&... args){ return parseDecl(ty, exprStart, std::forward<decltype(args)>(args)...); };
 		return true;
 	}
 
 	auto it = beg;
 
 	if(it->kind() != QCToken::Id){
-		auto meta = QMetaEnum::fromType<QCToken::Kind>();
-		fmt::print(
-			stderr, "[ERROR] expected Id but got {} '{}'\n",
-			meta.valueToKey(it->kind()), it->str().toString().toStdString()
-		);
+		qDebug() << QString("[ERROR] Expected Id but got %1 '%2'").arg(it->kind()).arg(it->str().toString());
 		return false;
 	}
 
@@ -89,9 +92,7 @@ std::variant<bool, QCExpr> QCParser::parseDef(QCType ty, const QCToken *exprStar
 	++it;
 
 	auto parseNamedDef = [ty, exprStart, name](const QCToken *beg_, const QCToken *end_) -> ParseResult{
-		while(beg_ != end_ && (beg_->kind() == QCToken::Comment)){
-			++beg_;
-		}
+		beg_ = skipKinds(beg_, end_, { QCToken::Comment });
 
 		if(beg_ == end_){
 			return true;
@@ -116,9 +117,7 @@ std::variant<bool, QCExpr> QCParser::parseDef(QCType ty, const QCToken *exprStar
 }
 
 std::variant<bool, QCExpr> QCParser::parseToplevel(const QCToken *beg, const QCToken *end){
-	while(beg != end && (beg->kind() == QCToken::Term || beg->kind() == QCToken::Comment)){
-		++beg;
-	}
+	beg = skipKinds(beg, end, { QCToken::Term, QCToken::Comment, QCToken::Space, QCToken::NewLine }); // find first non-empty statement
 
 	auto it = beg;
 
@@ -128,7 +127,7 @@ std::variant<bool, QCExpr> QCParser::parseToplevel(const QCToken *beg, const QCT
 	else if(it->kind() == QCToken::EndOfFile){
 		return QCExpr::makeEOF(beg);
 	}
-	else if(it->str() == u"."){
+	else if(it->str() == QString(".")){
 		auto continueFn = [=](const QCToken *beg_, const QCToken *end_) -> ParseResult{
 			if(beg_->kind() != QCToken::Type){
 				fmt::print(stderr, "[ERROR] Invalid type '{}'\n", beg_->str().toString().toStdString());
@@ -137,7 +136,7 @@ std::variant<bool, QCExpr> QCParser::parseToplevel(const QCToken *beg, const QCT
 
 			auto start = beg_;
 
-			return parseDef(
+			return parseDecl(
 				QCType(
 					QCType::Field,
 					*QCType::fromStr(start->str())
@@ -158,7 +157,7 @@ std::variant<bool, QCExpr> QCParser::parseToplevel(const QCToken *beg, const QCT
 	}
 	else if(it->kind() == QCToken::Type){
 		auto ty = *QCType::fromStr(it->str());
-		return parseDef(ty, beg, ++it, end);
+		return parseDecl(ty, beg, ++it, end);
 	}
 
 	return false;

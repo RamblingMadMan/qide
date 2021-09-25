@@ -65,7 +65,7 @@ The build process is pretty similar to other CMake based projects, and should be
 ### Getting the source
 
 ```bash
-git clone --depth 1 https://github.com/RamblingMadMan/qide.git
+git clone --recursive --depth 1 -j8 https://github.com/RamblingMadMan/qide.git
 ```
 
 <p><br></p>
@@ -73,8 +73,9 @@ git clone --depth 1 https://github.com/RamblingMadMan/qide.git
 ### Dependencies
 
 - C++17 compiler
-- [CMake 3.21+](https://cmake.org/)
+- [CMake 3.16+](https://cmake.org/)
 - Qt 5.15 (Widgets + Core)
+- OpenSSL
 
 <p><br></p>
 
@@ -83,7 +84,7 @@ git clone --depth 1 https://github.com/RamblingMadMan/qide.git
 To install all of the build dependencies, run the following command:
 
 ```bash
-sudo apt install g++ cmake qtbase5-dev qtbase5-dev-tools
+sudo apt install g++ cmake qtbase5-dev qtbase5-dev-tools libssl-dev
 ```
 
 <p><br></p>

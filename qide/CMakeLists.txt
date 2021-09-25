@@ -49,6 +49,8 @@ set(
 	QideSetup.cpp
 	QideProjectWizard.hpp
 	QideProjectWizard.cpp
+	QideFileWizard.hpp
+	QideFileWizard.cpp
 	QideWindow.hpp
 	QideWindow.cpp
 	${QIDE_RESOURCES}

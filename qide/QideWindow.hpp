@@ -78,16 +78,6 @@ class QideVMDock: public QDockWidget{
 		QStringListModel *m_model;
 };
 
-class QideMainView: public QGraphicsView{
-	Q_OBJECT
-
-	public:
-		using QGraphicsView::QGraphicsView;
-
-	protected:
-		void resizeEvent(QResizeEvent *event) override;
-};
-
 void setWidgetDarkMode(QWidget *widget);
 
 class QideWindow: public QMainWindow{

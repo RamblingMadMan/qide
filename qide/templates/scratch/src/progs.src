@@ -11,8 +11,8 @@
 
 ../progs.dat                                        // Output File
 
-Defs.QC                                             // Definitions
-Main.QC                                             // Main subroutines
-Client.QC                                           // Client subroutines
-Dummys.QC                                           // Null spawn functions
+defs.QC                                             // Definitions
+main.QC                                             // Main subroutines
+client.QC                                           // Client subroutines
+dummys.QC                                           // Null spawn functions
 

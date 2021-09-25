@@ -5,6 +5,8 @@
 #include <QUndoStack>
 #include <QPlainTextDocumentLayout>
 #include <QPalette>
+#include <QShortcut>
+#include <QDateTime>
 
 #include "QCLexer.hpp"
 #include "QCParser.hpp"
@@ -42,7 +44,7 @@ QCEdit::QCEdit(QWidget *parent)
 	, m_parser(new QCParser(this))
 	, m_highlighter(new QCHighlighter(this))
 	, m_completer(new QCCompleter(nullptr, this))
-	, m_fileDir()
+	, m_filePath()
 	, m_lineNumArea(this)
 {
 	setDefaultFont();
@@ -50,7 +52,7 @@ QCEdit::QCEdit(QWidget *parent)
 	connect(this, &QCEdit::blockCountChanged, this, &QCEdit::updateLineNumberAreaWidth);
 	connect(this, &QCEdit::updateRequest, this, &QCEdit::updateLineNumberArea);
 	connect(this, &QCEdit::cursorPositionChanged, this, &QCEdit::highlightCurrentLine);
-	connect(this, &QPlainTextEdit::textChanged, this, &QCEdit::reparse);
+	connect(this, &QPlainTextEdit::textChanged, this, [this]{ reparse(); m_hasChanges = true; }); // TODO: check if undos available instead of text changes
 
 	updateLineNumberAreaWidth(0);
 	highlightCurrentLine();
@@ -74,6 +76,14 @@ int QCEdit::lineNumberAreaWidth(){
 	int space = 6 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
 
 	return space;
+}
+
+void QCEdit::showCompleter(){
+	m_completer->completeAtCursor(true);
+}
+
+void QCEdit::hideCompleter(){
+	m_completer->hide();
 }
 
 void QCEdit::updateLineNumberAreaWidth(int /* newBlockCount */){
@@ -145,8 +155,20 @@ void QCEdit::lineNumberAreaPaintEvent(QPaintEvent *event){
 	}
 }
 
-bool QCEdit::loadFile(const QDir &dir){
-	auto filePath = dir.absolutePath();
+bool QCEdit::loadFile(const QString &path){
+	auto fileInfo = QFileInfo(path);
+	auto filePath = fileInfo.absoluteFilePath();
+
+	if(filePath == m_filePath){
+		return true;
+	}
+
+	QFile file(filePath);
+	if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
+		return false;
+	}
+
+	auto fileContents = file.readAll();
 
 	QTextDocument *fileBuf = nullptr;
 
@@ -154,15 +176,14 @@ bool QCEdit::loadFile(const QDir &dir){
 	if(fileBufIt != m_fileBufs.end()){
 		qDebug() << "Loaded buffered file" << fileBufIt.key();
 		fileBuf = fileBufIt.value();
+
+		if(fileBuf->toPlainText() != fileContents){
+			m_hasChanges = true;
+			emit hasChangesChanged();
+		}
 	}
 	else{
 		qDebug() << "Loaded new file" << filePath;
-		QFile file(filePath);
-		if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-			return false;
-		}
-
-		auto fileContents = file.readAll();
 
 		fileBuf = new QTextDocument(fileContents);
 		fileBuf->setDefaultFont(font());
@@ -170,12 +191,16 @@ bool QCEdit::loadFile(const QDir &dir){
 		fileBuf->setMetaInformation(QTextDocument::DocumentTitle, filePath);
 
 		m_fileBufs.insert(filePath, fileBuf);
+
+		if(m_hasChanges){
+			m_hasChanges = false;
+			emit hasChangesChanged();
+		}
 	}
 
-	m_fileDir = dir;
-	m_fileDir.makeAbsolute();
+	m_filePath = fileInfo.absoluteFilePath();
 
-	emit fileDirChanged();
+	emit filePathChanged();
 
 	m_highlighter->setDocument(fileBuf);
 	m_highlighter->rehighlight();
@@ -188,6 +213,35 @@ bool QCEdit::loadFile(const QDir &dir){
 
 	m_parser->setTitle(filePath);
 	reparse();
+
+	return true;
+}
+
+bool QCEdit::saveFile(){
+	if(!hasChanges()){
+		return true;
+	}
+
+	qDebug() << "Saving" << m_filePath;
+
+	// TODO: write to temporary file then backup old file and move
+	QFile outFile(m_filePath);
+	if(!outFile.open(QFile::WriteOnly)){
+		qDebug() << "Error opening" << m_filePath << "for write";
+		return false;
+	}
+
+	auto src = toPlainText().toUtf8();
+
+	if(outFile.write(src) != src.size()){
+		qDebug() << "Failed to write" << m_filePath;
+		return false;
+	}
+
+	outFile.close();
+
+	m_hasChanges = false;
+	emit hasChangesChanged();
 
 	return true;
 }
@@ -225,6 +279,10 @@ void QCEdit::reparse(){
 	m_parser->parse(m_lexer->tokens().begin(), m_lexer->tokens().end());
 
 	emit parseFinished(true);
+
+	for(auto &&expr : m_parser->results()){
+		qDebug() << "Expr:" << expr.kind();
+	}
 }
 
 void QCEdit::setDefaultFont(){

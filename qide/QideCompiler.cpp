@@ -10,9 +10,11 @@
 #include "gmqcc/parser.h"
 
 // required by gmqcc (^:',
+// might try cobbling something together with fteqcc...
 const oper_info *operators = nullptr;
 size_t operator_count = 0;
 
+#include "QCLexer.hpp"
 #include "QideCompiler.hpp"
 
 QideCompiler::QideCompiler(QObject *parent)
@@ -68,6 +70,68 @@ void QideCompiler::setBuildPath(const QString &path){
 	emit buildPathChanged();
 }
 
+namespace {
+	using TokIter = QVector<QCToken>::ConstIterator;
+
+	inline QStringList parseProgsSrc(TokIter beg, TokIter end){
+		QStringList files;
+
+		files.reserve(8);
+
+		auto lineBeg = beg;
+
+		while(lineBeg != end){
+			while(lineBeg != end && lineBeg->kind() == QCToken::Space){
+				++lineBeg;
+			}
+
+			if(lineBeg == end) break;
+
+			auto it = lineBeg;
+
+			do{
+				switch(it->kind()){
+					case QCToken::Comment:
+					case QCToken::NewLine:{
+						auto fileBeg = lineBeg;
+						auto fileEnd = it;
+						lineBeg = ++it;
+
+						if(std::distance(fileBeg, fileEnd) == 0){
+							break;
+						}
+
+						QString fileName;
+
+						auto fileIt = fileBeg;
+						while(fileIt != fileEnd){
+							fileName.append(fileIt->str());
+							++fileIt;
+						}
+
+						fileName = fileName.trimmed();
+
+						if(fileName.isEmpty()){
+							continue;
+						}
+
+						files.append(fileName);
+
+						break;
+					}
+
+					default:{
+						++it;
+						break;
+					}
+				}
+			} while(it > lineBeg && it != end);
+		}
+
+		return files;
+	}
+}
+
 void QideCompiler::compile()
 {
 	QVector<QString> m_progsSrcs;
@@ -101,13 +165,14 @@ void QideCompiler::compile()
 
 		auto progsSrcInfo = QFileInfo(progsSrcPath);
 
-		auto progsSrcDir = progsSrcInfo.absoluteDir().path().mid(m_srcPath.length() + 1);
+		auto progsSrcDir = progsSrcInfo.absoluteDir();
+		auto progsSrcProjDir = progsSrcDir.path().mid(m_srcPath.length() + 1);
 
-		qDebug() << "progs.src dir:" << progsSrcDir;
+		qDebug() << "progs.src dir:" << progsSrcProjDir;
 
 		auto buildOutPath = m_buildPath;
-		if(!progsSrcDir.isEmpty()){
-			buildOutPath += "/" + progsSrcDir;
+		if(!progsSrcProjDir.isEmpty()){
+			buildOutPath += "/" + progsSrcProjDir;
 		}
 
 		qDebug() << "Build path:" << buildOutPath;
@@ -115,54 +180,27 @@ void QideCompiler::compile()
 		opts_setoptimlevel(2);
 		opts_setflag("LNO", true);
 
-		QString outputFile;
-		bool hasOutputLine = false;
+		QCLexer lexer;
+		lexer.setSkipSpaces(false);
+		lexer.setSkipNewLines(false);
 
-		QVector<QString> files;
+		auto progsSrcContents = QString::fromUtf8(file.readAll());
+		lexer.lex(progsSrcContents);
 
-		files.reserve(16);
+		auto &&toks = lexer.tokens();
+		auto files = parseProgsSrc(toks.begin(), toks.end());
 
-		QTextStream in(&file);
-
-		while(!in.atEnd()){
-			auto line = in.readLine().trimmed();
-
-			if(line.isEmpty() || (line[0] == QChar('\0')) || (line[0] == QChar('/') && line[1] == QChar('/'))){
-				continue;
-			}
-
-			int nonAlphaSlash = -1;
-			for(int i = 0; i < line.length(); i++){
-				if(!line[i].isLetterOrNumber() && line[i] != '/' && line[i] != '.'){
-					nonAlphaSlash = i;
-					break;
-				}
-			}
-
-			if(nonAlphaSlash != -1){
-				line.remove(nonAlphaSlash, line.length() - nonAlphaSlash);
-			}
-
-			if(hasOutputLine){
-				line = QDir::cleanPath(progsSrcInfo.path() + "/" + line);
-				qDebug() << "Source file:" << line;
-				files.push_back(line);
-			}
-			else{
-				outputFile = QDir::cleanPath(buildOutPath + "/" + line);
-				qDebug() << "Output file:" << outputFile;
-				hasOutputLine = true;
-			}
-		}
-
-		if(!hasOutputLine){
-			qDebug() << "No output file in" << progsSrcPath;
-			allCompiled = false;
+		if(files.empty()){
+			qDebug() << "No files listed";
 			emit progsSrcCompiled(progsSrcPath, false);
 			continue;
 		}
 
+		QString outputFile = files[0];
+
 		auto outputFileStr = outputFile.toStdString();
+
+		files.erase(files.begin());
 
 		OPTS_OPTION_STR(OPTION_OUTPUT) = outputFileStr.c_str();
 
@@ -171,37 +209,77 @@ void QideCompiler::compile()
 
 		bool hasError = false;
 
-		for(const auto &path : files){
-			QFileInfo pathInfo(path);
+		foreach(auto &&file, files){
+			qDebug() << "Including file" << file;
 
-			auto fileName = pathInfo.fileName().toStdString();
-			auto filePath = path.toStdString();
+			QFileInfo fileInfo(progsSrcDir.absolutePath() + "/" + file);
 
-			if(!ftepp_preprocess_file(ftepp, filePath.c_str())){
-				hasError = true;
-				qDebug() << "Could not preprocess file" << path;
-				break;
+			auto filePath = fileInfo.absoluteFilePath();
+			auto fileName = fileInfo.fileName();
+			auto fileDir = fileInfo.dir();
+
+			if(!fileInfo.exists()){
+				qDebug() << "File" << filePath << "does not exist";
+
+				const auto guesses = QVector<QString>{
+					fileName.toLower(), fileName.toUpper()
+				};
+
+				QString existingPath;
+
+				foreach(auto &&guess, guesses){
+					auto guessDir = fileDir;
+					auto guessPath = guessDir.absolutePath() + "/" + guess;
+					qDebug() << "Guessing" << guessPath;
+					QFileInfo guessInfo(guessPath);
+					if(guessInfo.exists()){
+						existingPath = guessPath;
+						break;
+					}
+				}
+
+				if(existingPath.isEmpty()){
+					qDebug() << "Could not guess file path :^(";
+					continue;
+				}
+
+				fileInfo.setFile(existingPath);
+
+				filePath = fileInfo.absoluteFilePath();
+				fileName = fileInfo.fileName();
+			}
+
+			auto filePathStr = filePath.toStdString();
+
+			if(!ftepp_preprocess_file(ftepp, filePathStr.c_str())){
+				qDebug() << "Could not preprocess file" << filePath;
+				continue;
 			}
 
 			auto data = ftepp_get(ftepp);
 			if(vec_size(data)){
-				if(!parser_compile_string(parser, fileName.c_str(), data, vec_size(data))){
+				if(!parser_compile_string(parser, filePathStr.c_str(), data, vec_size(data))){
 					hasError = true;
-					qDebug() << "Could not parse file" << path;
-					break;
+					qDebug() << "Could not parse file" << filePath;
+					ftepp_flush(ftepp);
+					continue;
 				}
 			}
 
 			ftepp_flush(ftepp);
 		}
 
+		(void)hasError;
+
+		/*
 		if(hasError){
-			parser_finish(parser, nullptr);
+			//parser_finish(parser, nullptr);
 			ftepp_finish(ftepp);
 			allCompiled = false;
 			emit progsSrcCompiled(progsSrcPath, false);
 			continue;
 		}
+		*/
 
 		bool success = parser_finish(parser, outputFileStr.c_str());
 
