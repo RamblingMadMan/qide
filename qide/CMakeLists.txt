@@ -74,7 +74,7 @@ set_target_properties(
 check_cxx_compiler_flag("-pipe" HAVE_PIPE_FLAG)
 
 if(HAVE_PIPE_FLAG)
-    target_compile_options(qide PUBLIC "-pipe")
+	target_compile_options(qide PUBLIC "-pipe")
 endif()
 
 target_include_directories(
@@ -82,7 +82,9 @@ target_include_directories(
 	${OPENSSL_INCLUDE_DIR}
 )
 
-target_link_libraries(qide -static)
+if(WIN32 AND MINGW)
+	target_link_libraries(qide -static)
+endif()
 
 target_link_libraries(
 	qide
