@@ -13,7 +13,7 @@
 
 #ifdef _WIN32
 #include <dwmapi.h>
-#include <VersionHelpers.h>
+#include <versionhelpers.h>
 #endif
 
 #include "QideProjectWizard.hpp"

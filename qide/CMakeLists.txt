@@ -1,4 +1,9 @@
-find_package(OpenSSL REQUIRED)
+if(NOT WIN32 OR NOT MINGW)
+	find_package(OpenSSL) # this doesn't work with MinGW cross compiles
+else()
+	set(Qt5_USE_STATIC_LIBS ON) # make deployment with mingw easier
+endif()
+
 find_package(Qt5 COMPONENTS Core Network Widgets REQUIRED)
 #find_package(LibZip REQUIRED)
 
@@ -67,10 +72,10 @@ set_target_properties(
 	AUTOUIC ON
 )
 
-#target_include_directories(
-    #qide PUBLIC
-	#${LIBZIP_INCLUDE_DIR}
-#)
+target_include_directories(
+	qide PRIVATE
+	${OPENSSL_INCLUDE_DIR}
+)
 
 target_link_libraries(
 	qide
@@ -78,14 +83,14 @@ target_link_libraries(
 	fmt rapidfuzz::rapidfuzz
 	#${LIBZIP_LIBRARY}
 	gmqcclib
-	OpenSSL::SSL OpenSSL::Crypto
+	${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY}
 	Qt5::Core Qt5::Widgets Qt5::Network
 )
 
 if(WIN32)
 	target_link_libraries(
 		qide
-		Dwmapi
+		dwmapi
 	)
 
     #add_custom_command(TARGET qide POST_BUILD

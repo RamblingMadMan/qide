@@ -66,7 +66,7 @@ install(
 	RUNTIME DESTINATION bin
 )
 
-if(WIN32)
+if(WIN32 AND NOT MINGW)
 	install(FILES $<TARGET_RUNTIME_DLLS:qide> DESTINATION bin)
 endif()
 

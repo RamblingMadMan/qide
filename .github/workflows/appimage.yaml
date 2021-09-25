@@ -1,4 +1,4 @@
-name: QIDE AppImage
+name: AppImage AutoBuild
 
 on:
   push:
