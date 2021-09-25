@@ -123,7 +123,7 @@ QideSetupQuake::QideSetupQuake(QWidget *parent)
 
 		for(const auto &subDir : subDirs){
 			if(id1Dir.cd(subDir)){
-				quakePath = id1Dir.path();
+				quakePath = dir;
 				break;
 			}
 		}
