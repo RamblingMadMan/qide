@@ -130,6 +130,14 @@ for runDir in ${QT_RUNTIME_DIRS[@]}; do
     cp $QT_INSTALL_DIR/plugins/$runDir/*.dll qide-w64/$runDir
 done
 
+GCC_LIBRARIES=(libgcc_s_seh-1.dll libstdc++-6.dll)
+
+for lib in ${GCC_LIBRARIES[@]}; do
+    cp /usr/lib/gcc/x86_64-w64-mingw32/9.3-posix/$lib qide-w64
+done
+
+cp /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll qide-w64
+
 zip -r qide-w64.zip qide-w64
 
 mv qide-w64.zip $OLD_CWD

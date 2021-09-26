@@ -82,10 +82,6 @@ target_include_directories(
 	${OPENSSL_INCLUDE_DIR}
 )
 
-if(WIN32 AND MINGW)
-	target_link_libraries(qide -static)
-endif()
-
 target_link_libraries(
 	qide
 	qide-base
@@ -101,9 +97,4 @@ if(WIN32)
 		qide
 		dwmapi
 	)
-
-    #add_custom_command(TARGET qide POST_BUILD
-	#	COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:qide> $<TARGET_FILE_DIR:qide>
-	#	COMMAND_EXPAND_LISTS
-	#)
 endif()
