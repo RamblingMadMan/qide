@@ -105,7 +105,7 @@ namespace qide::shaders{
 		L("void main(){")
 		L("	float lum = 2.0/3.0;")
 		L("	float t = -nearPoint.y / (farPoint.y - nearPoint.y);")
-		L(" colorOut = vec4(vec3(lum), 1.0 * float(t >= 0));")
+		L(" colorOut = vec4(vec3(lum * float(t >= 0)), 1.0);")
 		L("}")
 	;
 #undef L

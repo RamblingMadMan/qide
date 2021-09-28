@@ -6,6 +6,7 @@
 #include <QKeyEvent>
 #include <QHBoxLayout>
 #include <QTimer>
+#include <QOpenGLContext>
 
 #include "qide/RendererGL.hpp"
 
@@ -17,8 +18,8 @@
  *  @{
  */
 
-QideMapEditorWindow::QideMapEditorWindow(QWindow *parent)
-	: QOpenGLWindow(QOpenGLWindow::NoPartialUpdate, parent)
+QideMapEditorWindow::QideMapEditorWindow(QWidget *parent)
+	: QOpenGLWidget(parent)
 	, m_cam(qide::Camera::Perspective{}, 3.14f, 16.f / 9.f, 0.001f, 500.f)
 	, m_r(nullptr)
 	, m_start(Clock::now())
@@ -26,6 +27,7 @@ QideMapEditorWindow::QideMapEditorWindow(QWindow *parent)
 	, m_lastMousePos()
 	, m_movement(0.f, 0.f, 0.f)
 {
+	setUpdateBehavior(PartialUpdate);
 }
 
 QideMapEditorWindow::~QideMapEditorWindow(){}
@@ -49,6 +51,8 @@ void QideMapEditorWindow::resizeGL(int w, int h){
 }
 
 void QideMapEditorWindow::paintGL(){
+	QOpenGLWidget::paintGL();
+
 	auto frameEnd = Clock::now();
 	auto frameDt = frameEnd - m_frameStart;
 
@@ -60,8 +64,6 @@ void QideMapEditorWindow::paintGL(){
 		update();
 		return;
 	}
-
-	QOpenGLWindow::paintGL();
 
 	m_frameStart = frameEnd;
 
@@ -126,7 +128,7 @@ void QideMapEditorWindow::mousePressEvent(QMouseEvent *event){
 
 	if(event->button() == Qt::MouseButton::RightButton){
 		//grabMouse();
-		setKeyboardGrabEnabled(true);
+		//grabKeyboard();
 		m_lastMousePos = event->localPos();
 	}
 }
@@ -136,7 +138,7 @@ void QideMapEditorWindow::mouseReleaseEvent(QMouseEvent *event){
 
 	if(event->button() == Qt::MouseButton::RightButton){
 		//releaseMouse();
-		setKeyboardGrabEnabled(false);
+		//releaseKeyboard();
 	}
 }
 
@@ -151,6 +153,9 @@ void QideMapEditorWindow::keyPressEvent(QKeyEvent *event){
 
 		case Qt::Key_A: m_movement.x -= 1.f; break;
 		case Qt::Key_D: m_movement.x += 1.f; break;
+
+		case Qt::Key_Space: m_movement.y += 1.f; break;
+		case Qt::Key_Control: m_movement.y -= 1.f; break;
 
 		default: break;
 	}
@@ -167,6 +172,9 @@ void QideMapEditorWindow::keyReleaseEvent(QKeyEvent *event){
 
 		case Qt::Key_A: m_movement.x += 1.f; break;
 		case Qt::Key_D: m_movement.x -= 1.f; break;
+
+		case Qt::Key_Space: m_movement.y -= 1.f; break;
+		case Qt::Key_Control: m_movement.y += 1.f; break;
 
 		default: break;
 	}
@@ -185,14 +193,13 @@ QideMapEditor::QideMapEditor(QWidget *parent)
 {
 	auto window = new QideMapEditorWindow;
 
-	auto windowCont = QWidget::createWindowContainer(window, this);
-
-	windowCont->setContentsMargins(0, 0, 0, 0);
-	windowCont->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-	windowCont->setEnabled(false);
+	window->setAttribute(Qt::WA_TranslucentBackground, false);
+	window->setContentsMargins(0, 0, 0, 0);
+	window->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	//window->setEnabled(false);
 
 	auto lay = new QHBoxLayout(this);
-	lay->addWidget(windowCont);
+	lay->addWidget(window);
 	lay->setContentsMargins(0, 0, 0, 0);
 
 	setContentsMargins(0, 0, 0, 0);

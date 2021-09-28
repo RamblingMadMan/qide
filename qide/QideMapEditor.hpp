@@ -6,7 +6,7 @@
 
 #include <QTime>
 #include <QWidget>
-#include <QOpenGLWindow>
+#include <QOpenGLWidget>
 
 #include "qide/Camera.hpp"
 
@@ -14,13 +14,13 @@ namespace qide{
 	class RendererGL43;
 }
 
-class QideMapEditorWindow: public QOpenGLWindow{
+class QideMapEditorWindow: public QOpenGLWidget{
 	Q_OBJECT
 
 	public:
 		using Clock = std::chrono::high_resolution_clock;
 
-		explicit QideMapEditorWindow(QWindow *parent = nullptr);
+		explicit QideMapEditorWindow(QWidget *parent = nullptr);
 
 		~QideMapEditorWindow();
 

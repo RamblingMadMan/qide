@@ -35,18 +35,20 @@ set(
 	QCHighlighter.cpp
 	QCCompleter.hpp
 	QCCompleter.cpp
+	QCVM.hpp
+	QCVM.cpp
 	QCMap.hpp
 	QCMap.cpp
 	QCEdit.hpp
 	QCEdit.cpp
+	QidePakExplorer.hpp
+	QidePakExplorer.cpp
 	QideEditor.hpp
 	QideEditor.cpp
 	QideMapEditor.hpp
 	QideMapEditor.cpp
 	QideCompiler.hpp
 	QideCompiler.cpp
-	QCVM.hpp
-	QCVM.cpp
 	QideGame.hpp
 	QideGame.cpp
 	QideSetup.hpp
@@ -80,13 +82,14 @@ endif()
 target_include_directories(
 	qide PRIVATE
 	${OPENSSL_INCLUDE_DIR}
+	${PHYSFS_INCLUDE_DIRS}
 )
 
 target_link_libraries(
 	qide
 	qide-base
 	fmt rapidfuzz::rapidfuzz
-	#${LIBZIP_LIBRARY}
+	physfs-static
 	gmqcclib
 	${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY}
 	Qt5::Core Qt5::Widgets Qt5::Network

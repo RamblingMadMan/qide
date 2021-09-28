@@ -30,6 +30,7 @@
 #include "QCVM.hpp"
 #include "QCByteCode.hpp"
 #include "QCEdit.hpp"
+#include "QidePakExplorer.hpp"
 #include "QideEditor.hpp"
 #include "QideMapEditor.hpp"
 #include "QideGame.hpp"
@@ -37,6 +38,8 @@
 #include "QideWindow.hpp"
 #include "QideProjectWizard.hpp"
 #include "QideFileWizard.hpp"
+
+#include "QuakeColors.hpp"
 
 #ifdef _WIN32
 #include <dwmapi.h>
@@ -53,25 +56,52 @@ void setWidgetDarkMode(QWidget *widget){
 #endif
 }
 
+// TODO: make this class more generic (add/remove tabs)
 QideTabsWidget::QideTabsWidget(QWidget *parent)
 	: QWidget(parent)
 	, m_codeTab(new QPushButton("Code"))
 	, m_mapTab(new QPushButton("Map"))
 	, m_playTab(new QPushButton("Play"))
 	, m_selected(m_codeTab)
-{
+{	
+	setContentsMargins(0, 0, 0, 0);
+
+	const auto quakeDarkGreyHex = quakeDarkGrey.name(QColor::HexRgb);
+	const auto quakeOrangeHex = quakeOrange.name(QColor::HexRgb);
+	const auto quakeDarkBrownHex = quakeDarkBrown.name(QColor::HexRgb);
+
+	setStyleSheet(QString(
+		"QPushButton {"
+			"margin-right: 0;"
+			"padding: 10px 10px 10px 10px;"
+			"background-color: %1;"
+			"border-radius: 0;"
+		"}"
+
+		"QPushButton:hover {"
+			"background-color: %2;"
+		"}"
+
+		"QPushButton:pressed {"
+			"background-color: %3;"
+		"}"
+	).arg(quakeDarkGreyHex, quakeOrangeHex, quakeDarkBrownHex));
+
 	auto lay = new QVBoxLayout(this);
 
-	auto codeImg = QImage(":/img/ui/code.svg");
-	auto mapImg = QImage(":/img/ui/map.svg");
-	auto playImg = QImage(":/img/ui/play-circle.svg");
-	codeImg.invertPixels();
-	mapImg.invertPixels();
-	playImg.invertPixels();
+	lay->setContentsMargins(0, 0, 0, 0);
 
-	m_codeTab->setIcon(QIcon(QPixmap::fromImage(codeImg)));
-	m_mapTab->setIcon(QIcon(QPixmap::fromImage(mapImg)));
-	m_playTab->setIcon(QIcon(QPixmap::fromImage(playImg)));
+	QPushButton *btns[] = { m_codeTab, m_mapTab, m_playTab };
+	QImage imgs[] = { QImage(":/img/ui/code.svg"), QImage(":/img/ui/map.svg"), QImage(":/img/ui/play-circle.svg") };
+
+	for(std::size_t i = 0; i < std::size(btns); i++){
+		auto btn = btns[i];
+		auto img = &imgs[i];
+		img->invertPixels();
+		btn->setIcon(QIcon(QPixmap::fromImage(*img)));
+		btn->setContentsMargins(0, 0, 0, 0);
+		lay->addWidget(btn);
+	}
 
 	lay->addWidget(m_codeTab);
 	lay->addWidget(m_mapTab);
@@ -87,6 +117,7 @@ QideVMDock::QideVMDock(QWidget *parent)
 	auto fnView = new QListView;
 	m_model = new QStringListModel;
 
+	fnView->setContentsMargins(0, 0, 0, 0);
 	fnView->setModel(m_model);
 
 	setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
@@ -134,20 +165,21 @@ static void recurseAddDir(QDir d, QStringList& list) {
 	QStringList qsl = d.entryList(QDir::NoDotAndDotDot | QDir::Dirs | QDir::Files);
 
 	foreach(QString file, qsl){
-		QFileInfo finfo(QString("%1/%2").arg(d.path()).arg(file));
+		QFileInfo finfo(QString("%1/%2").arg(d.path(), file));
 
 		if(finfo.isSymLink())
 			return;
 
 		if(finfo.isDir()){
-
-			QString dirname = finfo.fileName();
+			//QString dirname = finfo.fileName();
 			QDir sd(finfo.filePath());
 
 			recurseAddDir(sd, list);
 
-		}else
+		}
+		else{
 			list << QDir::toNativeSeparators(finfo.filePath());
+		}
 	}
 }
 
@@ -160,6 +192,8 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	, m_game(new QideGame(this))
 	, m_comp(new QideCompiler(this))
 {
+	setContentsMargins(0, 0, 0, 0);
+
 	auto menuBar = new QMenuBar(this);
 	auto fileMenu = new QMenu("File", this);
 	auto editMenu = new QMenu("Edit", this);
@@ -214,7 +248,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 
 			baseDir.mkdir(name);
 
-			QDir projDir = QString("%1/%2").arg(baseDir.path()).arg(name);
+			QDir projDir = QString("%1/%2").arg(baseDir.path(), name);
 
 			auto templateDir = QDir(QString(":/templates/%1").arg(templ));
 
@@ -258,8 +292,6 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 
 	//connect(m_editor->qcEdit(), &QPlainTextEdit::undoAvailable, &m_undoAction, &QAction::setEnabled);
 	//connect(m_editor->qcEdit(), &QPlainTextEdit::redoAvailable, &m_redoAction, &QAction::setEnabled);
-
-	auto fsModel = this->m_editor->fsModel();
 
 	connect(m_editor->qcEdit(), &QCEdit::hasChangesChanged, saveAction, [this, saveAction]{ saveAction->setEnabled(m_editor->qcEdit()->hasChanges()); });
 
@@ -334,6 +366,16 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	addToolBar(Qt::TopToolBarArea, docToolbar);
 	addToolBar(Qt::TopToolBarArea, runToolBar);
 
+	auto pakDock = new QDockWidget(this);
+	auto pakExplorer = new QidePakExplorer(pakDock);
+
+	pakExplorer->setContentsMargins(0, 0, 0, 0);
+
+	pakDock->setTitleBarWidget(new QLabel("Pak Explorer"));
+	pakDock->setWidget(pakExplorer);
+	pakDock->setContentsMargins(0, 0, 0, 0);
+
+	addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, pakDock);
 	addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, m_vmDock);
 
 	//m_codeTab->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -341,15 +383,13 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 
 	//m_mapEditor->setEnabled(false);
 
-	auto p = palette();
-
 	auto stackLay = new QStackedLayout;
-	stackLay->setStackingMode(QStackedLayout::StackOne);
+	stackLay->setStackingMode(QStackedLayout::StackAll);
 	stackLay->setContentsMargins(0, 0, 0, 0);
 
-	stackLay->insertWidget(0, m_editor);
+	stackLay->insertWidget(2, m_editor);
 	stackLay->insertWidget(1, m_mapEditor);
-	stackLay->insertWidget(2, m_game);
+	stackLay->insertWidget(0, m_game);
 
 	m_game->hide();
 	m_mapEditor->hide();
@@ -360,17 +400,15 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 		bool showMap = m_mapEditor->isVisible();
 
 		m_editor->show();
-		stackLay->setCurrentIndex(0);
-
 		m_editor->raise();
 
+		m_game->hide();
+
+		stackLay->setCurrentWidget(m_editor);
+
 		if(showMap){
-			//mapEditW->setEnabled(false);
-			//m_mapEditor->show();
-			//m_mapEditor->stackUnder(m_editor);
-			m_editor->setOpacity(0.25);
-			//m_editor->show();
-			//m_editor->raise();
+			m_mapEditor->show();
+			m_editor->setOpacity(0.925);
 		}
 		else{
 			m_editor->setOpacity(1.0);
@@ -378,14 +416,20 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	});
 
 	connect(m_tabs->mapTab(), &QPushButton::pressed, [=]{
-		//mapEditW->setEnabled(true);
+		m_editor->hide();
+		m_game->hide();
 		m_mapEditor->show();
-		stackLay->setCurrentIndex(1);
+		m_mapEditor->raise();
+
+		stackLay->setCurrentWidget(m_mapEditor);
 	});
 
 	connect(m_tabs->playTab(), &QPushButton::pressed, [=]{
+		m_mapEditor->hide();
+		m_editor->hide();
 		m_game->show();
-		stackLay->setCurrentIndex(2);
+
+		stackLay->setCurrentWidget(m_game);
 
 		if(!m_game->isRunning()){
 			m_game->launch();
@@ -393,15 +437,13 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	});
 
 	auto mainWidget = new QWidget(this);
-	auto mainLay = new QHBoxLayout(mainWidget);
+	mainWidget->setContentsMargins(0, 0, 0, 0);
 
-	mainLay->addWidget(m_tabs);
+	auto mainLay = new QHBoxLayout(mainWidget);
+	mainLay->setContentsMargins(0, 0, 0, 0);
 	mainLay->setAlignment(m_tabs, Qt::AlignTop);
 
-	//sceneView->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
-	//sceneView->setResizeAnchor(QGraphicsView::AnchorViewCenter);
-	//sceneView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
+	mainLay->addWidget(m_tabs);
 	mainLay->addLayout(stackLay);
 
 	setCentralWidget(mainWidget);

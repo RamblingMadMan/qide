@@ -31,6 +31,7 @@ QideEditor::QideEditor(QWidget *parent)
 	, m_treeView(new QTreeView(m_splitter))
 	, m_fsModel(new QideFSModel(this))
 {
+	setAttribute(Qt::WA_TranslucentBackground);
 	setContentsMargins(0, 0, 0, 0);
 
 	m_lay->setContentsMargins(0, 0, 0, 0);

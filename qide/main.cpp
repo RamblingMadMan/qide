@@ -1,4 +1,4 @@
-#include <QColor>
+﻿#include <QColor>
 #include <QApplication>
 #include <QDebug>
 #include <QSettings>
@@ -6,6 +6,8 @@
 #include <QFontDatabase>
 #include <QSurfaceFormat>
 #include <QStyleFactory>
+
+#include "physfs.h"
 
 #include "fmt/format.h"
 
@@ -104,27 +106,42 @@ int main(int argc, char *argv[]){
 	QFontDatabase::addApplicationFont(":ttf/SourceSans3-Semibold.ttf");
 	QFontDatabase::addApplicationFont(":ttf/SourceSans3-SemiboldIt.ttf");
 
-	QFont fontHack("Source Sans 3", 11);
+	QFont fontSans("Source Sans 3", 11);
 
-	QApplication::setFont(fontHack);
+	QApplication::setFont(fontSans);
 
 	QideWindow *window = nullptr;
 
 	QSettings settings;
 
+	const auto appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+
+	const auto appDataPathStr = appDataPath.toUtf8().toStdString();
+
+	PHYSFS_init(argv[0]);
+
+	std::atexit([]{ PHYSFS_deinit(); });
+
+	PHYSFS_setWriteDir(appDataPathStr.c_str());
+
+	PHYSFS_mkdir("/id1");
+
 	const auto id1Dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/id1";
 
 	const auto pak0Path = id1Dir + "/pak0.pak";
+	const auto pak0PathStr = pak0Path.toUtf8().toStdString();
 
 	if(!QFileInfo::exists(pak0Path) || !QFileInfo(pak0Path).isFile() || !settings.value("fteqwPath").isValid()){
 		auto wizard = new QideSetup;
 		wizard->show();
 
-		QObject::connect(wizard, &QideSetup::finished, [wizard](int result){
+		QObject::connect(wizard, &QideSetup::finished, [wizard, pak0PathStr](int result){
 			if(result != QDialog::Accepted){
 				qApp->quit();
 				return;
 			}
+
+			PHYSFS_mount(pak0PathStr.c_str(), "/id1/pak0", 1);
 
 			auto window = new QideWindow;
 			window->show();
@@ -132,6 +149,7 @@ int main(int argc, char *argv[]){
 		});
 	}
 	else{
+		PHYSFS_mount(pak0PathStr.c_str(), "/id1/pak0", 1);
 		auto window = new QideWindow;
 		window->show();
 	}

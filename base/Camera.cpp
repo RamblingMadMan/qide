@@ -37,13 +37,25 @@ Camera::Camera(Perspective, float fovy, float aspect, float nearz, float farz)
 
 const Mat4 &Camera::view() const noexcept{
 	if(m_dirty){
-		m_angles = glm::mod(m_angles, 2.f * float(3.1415f));
+		/*
+		const auto pi2 = 2.f * M_PIf32;
+
+		for(int axis = 0; axis < 3; axis++){
+			if(m_angles[axis] <= -pi2){
+				m_angles[axis] = std::fmod(m_angles[axis], -pi2);
+			}
+			else if(m_angles[axis] >= pi2){
+				m_angles.x = std::fmod(m_angles[axis], pi2);
+			}
+		}
+		//m_angles = glm::mod(m_angles, 2.f * float(3.1415f));
+		*/
 
 		auto pitch = glm::angleAxis(m_angles.x, Vec3(1.f, 0.f, 0.f));
 		auto yaw   = glm::angleAxis(m_angles.y, Vec3(0.f, 1.f, 0.f));
-		auto roll  = glm::angleAxis(m_angles.z, Vec3(0.f, 0.f, 1.f));
+		//auto roll  = glm::angleAxis(m_angles.z, Vec3(0.f, 0.f, 1.f));
 
-		auto orientation = glm::normalize(pitch * yaw * roll);
+		auto orientation = glm::normalize(pitch * yaw);
 		auto rot = glm::mat4_cast(orientation);
 		auto trans = glm::translate(glm::mat4(1.f), -m_pos);
 		m_view = rot * trans;

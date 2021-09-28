@@ -226,7 +226,7 @@ bool QCEdit::saveFile(){
 
 	// TODO: write to temporary file then backup old file and move
 	QFile outFile(m_filePath);
-	if(!outFile.open(QFile::WriteOnly)){
+	if(!outFile.open(QFile::ReadWrite)){
 		qDebug() << "Error opening" << m_filePath << "for write";
 		return false;
 	}

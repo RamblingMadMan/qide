@@ -223,6 +223,9 @@ void RendererGL43::present(const Camera &cam){
 		m_cubeGroup->setNumInstances(1);
 	}
 
+	GLint currentFb;
+	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &currentFb);
+
 	glViewport(0, 0, m_w, m_h);
 
 	glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
@@ -288,10 +291,10 @@ void RendererGL43::present(const Camera &cam){
 	}
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fb->glHandle());
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, currentFb);
 
-	glClearColor(0.f, 0.f, 0.f, 1.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	//glClearColor(0.f, 0.f, 0.f, 1.f);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glBlitFramebuffer(0, 0, m_w, m_h, 0, 0, m_w, m_h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
