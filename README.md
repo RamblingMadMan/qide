@@ -120,8 +120,10 @@ Now there should be a folder `build/qide` with the compiled executable inside.
 
 # Screenshots
 
-<p align="center"><img src="res/screenshot-wizard.png" width="1024" alt="Screenshot of wizard"></p>
-<p align="center"><img src="res/screenshot.png" width="1024" alt="Screenshot of main interface"></p>
+<p align="center"><img src="res/qide2.png" width="1024" alt="Screenshot of setup wizard"></p>
+<p align="center"><img src="res/qide1.png" width="1024" alt="Screenshot of main interface"></p>
+<p align="center"><img src="res/qide3.png" width="1024" alt="Screenshot of new project wizard"></p>
+<p align="center"><img src="res/qide4.png" width="1024" alt="Screenshot of new file wizard"></p>
 
 <p><br></p>
 

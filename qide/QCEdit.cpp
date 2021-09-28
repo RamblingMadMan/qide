@@ -282,7 +282,8 @@ void QCEdit::reparse(){
 }
 
 void QCEdit::setDefaultFont(){
-	QFont fnt("Monoid", 10);
+	QFont fnt("Monoid");
+	fnt.setPointSizeF(9.5);
 	fnt.setStyleHint(QFont::Monospace);
 	fnt.setFixedPitch(true);
 
