@@ -32,11 +32,13 @@ The project currently targets compatibility with the 2021 re-release.
 | :---: | :----- | :----- |
 |  ✅  | Automatic setup | Automatically find Quake (or use built-in shareware) and download [FTEQW](https://fte.triptohell.info/) if needed. |
 |  ✅  | Integrated compiler | [Modified version of GMQCC](https://github.com/RamblingMadMan/gmqcc) built-in. |
-|  ✅  | Separate work and data directories | QIDE keeps your source and Quake directories clean. |
+|  ❓  | Pak Explorer | View, add, remove and modify files within paks. |
+|  ✅  | Separate work and data directories | QIDE keeps your project and Quake directories clean. |
 |  ✅  | Launch from editor | Launch Quake with your mod enabled, directly from the editor. |
-|  ❓  | Syntax/Semantic Highlighting | Highlight QuakeC files. |
+|  ❓  | Syntax/Semantic highlighting | Make your QuakeC source look pretty. |
+|  ❓  | Auto-complete | Auto-complete QuakeC expressions. |
 |  ❓  | In-built map editor | Edit maps with pausable live gameplay. |
-|  ❌  | QuakeC debugging | Debug your mods in real-time. |
+|  ❌  | QuakeC debugging | Debug your code in real-time. |
 |  ❌  | QuakeC VM | Test out simple QuakeC snippets and integrate them with native code. |
 
 <p><br></p>
