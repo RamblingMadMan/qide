@@ -34,6 +34,10 @@ namespace qide{
 	using Nat32 = std::uint32_t;
 	using Nat64 = std::uint64_t;
 
+	struct Version{
+		Nat16 major, minor, patch;
+	};
+
 	using Int8 = std::int8_t;
 	using Int16 = std::int16_t;
 	using Int32 = std::int32_t;

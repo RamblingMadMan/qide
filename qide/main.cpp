@@ -1,7 +1,9 @@
-﻿#include <QColor>
-#include <QApplication>
+﻿#include <QApplication>
+#include <QLibrary>
+#include <QColor>
 #include <QDebug>
 #include <QSettings>
+#include <QDirIterator>
 #include <QStandardPaths>
 #include <QFontDatabase>
 #include <QSurfaceFormat>
@@ -28,6 +30,8 @@ int main(int argc, char *argv[]){
 	QApplication::setApplicationVersion("0.0.0");
 
 	QApplication qapp(argc, argv);
+
+	QDir execDir = QFileInfo(argv[0]).absoluteDir();
 
 	QSurfaceFormat surfaceFmt;
 	surfaceFmt.setVersion(4, 3);
@@ -117,6 +121,27 @@ int main(int argc, char *argv[]){
 	const auto appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 
 	const auto appDataPathStr = appDataPath.toUtf8().toStdString();
+
+	QVector<QString> gameSearchPaths = {
+		execDir.path() + "/games",
+		appDataPath + "/games"
+	};
+
+	QList<QLibrary*> games;
+
+	foreach(const QString &path, gameSearchPaths){
+		QDirIterator dirIt{QDir(path)};
+		while(dirIt.hasNext()){
+			auto entry = dirIt.next();
+			auto info = QFileInfo(entry);
+
+			if(!info.isFile()) continue;
+
+			qDebug() << "Game:" << entry;
+
+			games.append(new QLibrary(entry, &qapp));
+		}
+	}
 
 	PHYSFS_init(argv[0]);
 

@@ -230,7 +230,7 @@ void RendererGL43::present(const Camera &cam){
 
 	glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
 	glClearDepthf(0.f);
-	glDepthFunc(GL_GREATER);
+	glDepthFunc(GL_GEQUAL);
 	glDepthRangef(1.f, 0.f);
 
 	glFrontFace(GL_CCW);
@@ -252,10 +252,12 @@ void RendererGL43::present(const Camera &cam){
 	glClearColor(bgBrightness, bgBrightness, bgBrightness, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	auto camPos = cam.position();
 	auto viewProj = cam.projection() * cam.view();
 	auto invView = glm::inverse(cam.view());
 	auto invProj = glm::inverse(cam.projection());
 
+	/*
 	if(m_drawAxis){
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
@@ -263,9 +265,11 @@ void RendererGL43::present(const Camera &cam){
 
 		auto prog = m_shaders[2]->glHandle();
 
+		auto camPosLoc = glGetUniformLocation(prog, "camPos");
 		auto axisViewProjLoc = glGetUniformLocation(prog, "viewProj");
 		auto axisInvViewLoc = glGetUniformLocation(prog, "invView");
 		auto axisInvProjLoc = glGetUniformLocation(prog, "invProj");
+		glProgramUniform3fv(prog, camPosLoc, 1, glm::value_ptr(camPos));
 		glProgramUniformMatrix4fv(prog, axisViewProjLoc, 1, false, glm::value_ptr(viewProj));
 		glProgramUniformMatrix4fv(prog, axisInvViewLoc, 1, false, glm::value_ptr(invView));
 		glProgramUniformMatrix4fv(prog, axisInvProjLoc, 1, false, glm::value_ptr(invProj));
@@ -273,15 +277,18 @@ void RendererGL43::present(const Camera &cam){
 		m_pipelineAxis->use();
 
 		m_axisGroup->draw();
-
-		glEnable(GL_CULL_FACE);
-		glEnable(GL_DEPTH_TEST);
-		glDepthMask(GL_TRUE);
 	}
+	*/
+
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
 
 	auto prog = m_shaders[0]->glHandle();
 
+	auto camPosLoc = glGetUniformLocation(prog, "camPos");
 	auto viewProjLoc = glGetUniformLocation(prog, "viewProj");
+	glProgramUniform3fv(prog, camPosLoc, 1, glm::value_ptr(camPos));
 	glProgramUniformMatrix4fv(prog, viewProjLoc, 1, false, glm::value_ptr(viewProj));
 
 	m_pipelineFullbright->use();

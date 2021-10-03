@@ -23,6 +23,7 @@ set(
 	QIDE_HEADERS
 	${QIDE_INCLUDE_DIR}/qide/types.hpp
 	${QIDE_INCLUDE_DIR}/qide/shapes.hpp
+	${QIDE_INCLUDE_DIR}/qide/Game.hpp
 	${QIDE_INCLUDE_DIR}/qide/Camera.hpp
 	${QIDE_INCLUDE_DIR}/qide/Renderer.hpp
 	${QIDE_INCLUDE_DIR}/qide/RendererGL.hpp
@@ -66,6 +67,13 @@ install(
 	ARCHIVE DESTINATION lib
 	LIBRARY DESTINATION lib
 	RUNTIME DESTINATION bin
+)
+
+install(
+	TARGETS qide-quake
+	ARCHIVE DESTINATION lib/qide
+	LIBRARY DESTINATION lib/qide
+	RUNTIME DESTINATION bin/qide
 )
 
 install(FILES ${QIDE_HEADERS} DESTINATION include/qide)

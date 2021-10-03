@@ -64,6 +64,14 @@ set(
 
 add_executable(qide ${QIDE_SOURCES})
 
+add_custom_command(
+	TARGET qide
+	PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy
+		$<TARGET_FILE:qide-quake>
+		$<TARGET_FILE_DIR:qide>/games/$<TARGET_FILE_NAME:qide-quake>
+)
+
 set_target_properties(
 	qide PROPERTIES
 	CXX_STANDARD 17

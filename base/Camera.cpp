@@ -53,9 +53,9 @@ const Mat4 &Camera::view() const noexcept{
 
 		auto pitch = glm::angleAxis(m_angles.x, Vec3(1.f, 0.f, 0.f));
 		auto yaw   = glm::angleAxis(m_angles.y, Vec3(0.f, 1.f, 0.f));
-		//auto roll  = glm::angleAxis(m_angles.z, Vec3(0.f, 0.f, 1.f));
+		auto roll  = glm::angleAxis(m_angles.z, Vec3(0.f, 0.f, 1.f));
 
-		auto orientation = glm::normalize(pitch * yaw);
+		auto orientation = glm::normalize(pitch * yaw * roll);
 		auto rot = glm::mat4_cast(orientation);
 		auto trans = glm::translate(glm::mat4(1.f), -m_pos);
 		m_view = rot * trans;
