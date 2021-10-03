@@ -55,9 +55,9 @@ int QCParser::parse(const QCToken *beg, const QCToken *const end){
 	while(beg != end){
 		auto res = m_parseFn(beg, end);
 
-		if(auto expr = std::get_if<QCExpr>(&res)){
-			m_locMap[expr->begin()->location()] = m_results.size();
-			beg = expr->end();
+		if(auto expr = std::get_if<QCExpr*>(&res)){
+			m_locMap[(*expr)->begin()->location()] = m_results.size();
+			beg = (*expr)->end();
 			m_results.push_back(*expr);
 		}
 		else{
@@ -72,7 +72,7 @@ int QCParser::parse(const QCToken *beg, const QCToken *const end){
 	return res;
 }
 
-std::variant<bool, QCExpr> QCParser::parseDecl(QCType ty, const QCToken *exprStart, const QCToken *beg, const QCToken *end){
+std::variant<bool, QCExpr*> QCParser::parseDecl(QCType ty, const QCToken *exprStart, const QCToken *beg, const QCToken *end){
 	beg = skipCommentsAndSpaces(beg, end);
 
 	if(beg == end){
@@ -116,7 +116,7 @@ std::variant<bool, QCExpr> QCParser::parseDecl(QCType ty, const QCToken *exprSta
 	}
 }
 
-std::variant<bool, QCExpr> QCParser::parseToplevel(const QCToken *beg, const QCToken *end){
+std::variant<bool, QCExpr*> QCParser::parseToplevel(const QCToken *beg, const QCToken *end){
 	beg = skipKinds(beg, end, { QCToken::Term, QCToken::Comment, QCToken::Space, QCToken::NewLine }); // find first non-empty statement
 
 	auto it = beg;

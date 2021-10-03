@@ -20,33 +20,28 @@ class QCExpr: public QObject{
 
 		Q_ENUM(Kind)
 
-		QCExpr()
-			: QObject()
+		explicit QCExpr(QObject *parent_ = nullptr)
+			: QObject(parent_)
 			, m_kind(Unknown)
 			, m_tokStart(nullptr)
 			, m_tokEnd(nullptr)
 		{}
 
-		QCExpr(const QCExpr &other)
-			: QObject()
-			, m_kind(other.m_kind)
-			, m_tokStart(other.m_tokStart)
-			, m_tokEnd(other.m_tokEnd)
-			, m_values(other.m_values)
-		{}
-
-		static QCExpr makeEOF(const QCToken *eof){ return QCExpr(EndOfFile, eof, eof); }
-
-		static QCExpr makeVarDef(QCType ty, QString name, const QCToken *tokStart, const QCToken *tokEnd){
-			return QCExpr(ty, name, tokStart, tokEnd);
+		void setKind(Kind kind_){
+			m_kind = kind_;
 		}
 
-		QCExpr &operator=(const QCExpr &other){
-			m_kind = other.m_kind;
-			m_tokStart = other.m_tokStart;
-			m_tokEnd = other.m_tokEnd;
-			m_values = other.m_values;
-			return *this;
+		void setTokRange(const QCToken *start, const QCToken *end_){
+			m_tokStart = start;
+			m_tokEnd = end_;
+		}
+
+		static QCExpr *makeEOF(const QCToken *eof, QObject *parent = nullptr){
+			return new QCExpr(EndOfFile, eof, eof, parent);
+		}
+
+		static QCExpr *makeVarDef(QCType ty, QString name, const QCToken *tokStart, const QCToken *tokEnd, QObject *parent = nullptr){
+			return new QCExpr(ty, name, tokStart, tokEnd, parent);
 		}
 
 		Kind kind() const noexcept{ return m_kind; }
@@ -59,11 +54,11 @@ class QCExpr: public QObject{
 		}
 
 	private:
-		QCExpr(Kind kind_, const QCToken *tokStart, const QCToken *tokEnd)
-			: QObject(), m_kind(kind_), m_tokStart(tokStart), m_tokEnd(tokEnd){}
+		QCExpr(Kind kind_, const QCToken *tokStart, const QCToken *tokEnd, QObject *parent)
+			: QObject(parent), m_kind(kind_), m_tokStart(tokStart), m_tokEnd(tokEnd){}
 
-		QCExpr(QCType ty_, QString name_, const QCToken *tokStart, const QCToken *tokEnd)
-			: QObject(), m_kind(VarDef), m_tokStart(tokStart), m_tokEnd(tokEnd)
+		QCExpr(QCType ty_, QString name_, const QCToken *tokStart, const QCToken *tokEnd, QObject *parent)
+			: QObject(parent), m_kind(VarDef), m_tokStart(tokStart), m_tokEnd(tokEnd)
 		{
 			m_values.push_back(QVariant::fromValue(ty_));
 			m_values.push_back(name_);
@@ -73,7 +68,5 @@ class QCExpr: public QObject{
 		const QCToken *m_tokStart, *m_tokEnd;
 		QVector<QVariant> m_values;
 };
-
-Q_DECLARE_METATYPE(QCExpr)
 
 #endif // !QIDE_QCEXPR_HPP

@@ -130,7 +130,15 @@ QCToken QCLexer::lexNormal(StrIter it, StrIter end){
 		auto view = QStringView(tokStart, it);
 		auto ty = QCType::fromStr(view);
 
-		tokKind = ty ? QCToken::Type : QCToken::Id;
+		if(ty){
+			tokKind = QCToken::Type;
+		}
+		else if(qcKeywords.contains(view)){
+			tokKind = QCToken::Keyword;
+		}
+		else{
+			tokKind = QCToken::Id;
+		}
 	}
 	else if(it->isPunct() || it->isSymbol()){
 		if(*it == QChar('/')){

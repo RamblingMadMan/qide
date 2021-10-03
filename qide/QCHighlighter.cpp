@@ -9,12 +9,15 @@
 #include "QCParser.hpp"
 #include "QCType.hpp"
 
+#include "QuakeColors.hpp"
+
 QCHighlighter::QCHighlighter(QObject *parent)
 	: QSyntaxHighlighter(parent)
 	, m_lexer(new QCLexer(this))
 	, m_parser(new QCParser(this))
 {
 	m_tokenFmt[QCToken::Id].setForeground(QColor(Qt::white).darker(66));
+	m_tokenFmt[QCToken::Op].setForeground(quakeYello.darker(66));
 	m_tokenFmt[QCToken::Type].setForeground(QColor(224, 109, 0));
 	m_tokenFmt[QCToken::Keyword].setForeground(QColor(99, 173, 242));
 	m_tokenFmt[QCToken::Number].setForeground(QColor(228, 255, 26));

@@ -16,7 +16,7 @@ class QCParser: public QObject{
 	Q_OBJECT
 
 	Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
-	Q_PROPERTY(QVector<QCExpr> results READ results NOTIFY resultsChanged)
+	Q_PROPERTY(QVector<QCExpr*> results READ results NOTIFY resultsChanged)
 
 	public:
 		using Location = QCToken::Location;
@@ -30,12 +30,12 @@ class QCParser: public QObject{
 
 		const QString &title() const noexcept{ return m_title; }
 
-		const QVector<QCExpr> &results() const noexcept{ return m_results; }
+		const QVector<QCExpr*> &results() const noexcept{ return m_results; }
 
 		const QCExpr *atLocation(Location loc) const{
 			auto res = m_locMap.find(loc);
 			if(res != m_locMap.end()){
-				return &m_results[res.value()];
+				return m_results[res.value()];
 			}
 			else{
 				return nullptr;
@@ -50,13 +50,13 @@ class QCParser: public QObject{
 		void resultsChanged();
 
 	private:
-		using ParseResult = std::variant<bool, QCExpr>;
+		using ParseResult = std::variant<bool, QCExpr*>;
 
 		ParseResult parseDecl(QCType ty, const QCToken *exprStart, const QCToken *beg, const QCToken *end);
 		ParseResult parseToplevel(const QCToken *beg, const QCToken *end);
 
 		QString m_title;
-		QVector<QCExpr> m_results;
+		QVector<QCExpr*> m_results;
 
 		std::function<ParseResult(const QCToken *beg, const QCToken *end)> m_parseFn;
 		QMap<Location, int> m_locMap;
