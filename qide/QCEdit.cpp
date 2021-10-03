@@ -7,6 +7,7 @@
 #include <QPalette>
 #include <QShortcut>
 #include <QDateTime>
+#include <QTemporaryFile>
 
 #include "QCLexer.hpp"
 #include "QCParser.hpp"
@@ -218,27 +219,54 @@ bool QCEdit::loadFile(const QString &path){
 }
 
 bool QCEdit::saveFile(){
-	if(!hasChanges()){
-		return true;
-	}
+	//if(!hasChanges()) return true;
 
 	qDebug() << "Saving" << m_filePath;
 
-	// TODO: write to temporary file then backup old file and move
-	QFile outFile(m_filePath);
-	if(!outFile.open(QFile::ReadWrite)){
-		qDebug() << "Error opening" << m_filePath << "for write";
-		return false;
+	QTemporaryFile oldFileTmp("qide-oldXXXXXX");
+
+	if(QFileInfo::exists(m_filePath)){
+		if(!oldFileTmp.open()){
+			qDebug() << "Could not open temporary file";
+			return false;
+		}
+
+		QFile oldFile(m_filePath);
+		if(!oldFile.open(QFile::ReadOnly)){
+			qDebug() << "Error opening" << m_filePath << "for read";
+			return false;
+		}
+
+		oldFileTmp.write(oldFile.readAll());
+
+		if(!QFile::remove(m_filePath)){
+			qDebug() << "Could not remove" << m_filePath;
+			return false;
+		}
 	}
 
 	auto src = toPlainText().toUtf8();
 
-	if(outFile.write(src) != src.size()){
-		qDebug() << "Failed to write" << m_filePath;
+	QFile outFile(m_filePath);
+	if(!outFile.open(QFile::WriteOnly)){
+		qDebug() << "Error opening" << m_filePath << "for write";
+
+		if(oldFileTmp.isOpen()){
+			oldFileTmp.copy(m_filePath);
+		}
+
 		return false;
 	}
 
-	outFile.close();
+	if(outFile.write(src) != src.size()){
+		qDebug() << "Failed to write" << m_filePath;
+
+		if(oldFileTmp.isOpen()){
+			oldFileTmp.copy(m_filePath);
+		}
+
+		return false;
+	}
 
 	m_hasChanges = false;
 	emit hasChangesChanged();

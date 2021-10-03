@@ -20,5 +20,9 @@
         <file>ttf/Monoid-Italic.ttf</file>
         <file>ttf/Monoid-Regular.ttf</file>
         <file>ttf/Monoid-Retina.ttf</file>
+        <file>ttf/Quake.ttf</file>
+        <file>ttf/Quake2.ttf</file>
+        <file>ttf/dpquake.ttf</file>
+        <file>ttf/Quake1.ttf</file>
     </qresource>
 </RCC>

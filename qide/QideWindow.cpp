@@ -38,6 +38,7 @@
 #include "QideWindow.hpp"
 #include "QideProjectWizard.hpp"
 #include "QideFileWizard.hpp"
+#include "QideSettings.hpp"
 
 #include "QuakeColors.hpp"
 
@@ -191,6 +192,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	, m_mapEditor(new QideMapEditor(this))
 	, m_game(new QideGame(this))
 	, m_comp(new QideCompiler(this))
+	, m_settings(nullptr)
 {
 	setContentsMargins(0, 0, 0, 0);
 
@@ -208,6 +210,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	auto redoImg = QImage(":/img/ui/undo.svg").mirrored(true, false);
 	auto playImg = QImage(":/img/ui/play-circle.svg");
 	auto buildImg = QImage(":/img/ui/code-download.svg");
+	auto settingsImg = QImage(":/img/ui/settings.svg");
 	plusImg.invertPixels();
 	folderImg.invertPixels();
 	newFileImg.invertPixels();
@@ -217,6 +220,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	redoImg.invertPixels();
 	playImg.invertPixels();
 	buildImg.invertPixels();
+	settingsImg.invertPixels();
 
 	auto newProjAction = new QAction(QIcon(QPixmap::fromImage(plusImg)), "New Project", this);
 	auto openProjAction = new QAction(QIcon(QPixmap::fromImage(folderImg)), "Open Project", this);
@@ -226,6 +230,15 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 
 	auto saveAllAction = new QAction(QIcon(QPixmap::fromImage(saveImg)), "Save All", this);
 	saveAllAction->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_S);
+
+	auto settingsAction = new QAction(QIcon(QPixmap::fromImage(settingsImg)), "Settings", this);
+
+	connect(settingsAction, &QAction::triggered, this, [this]{
+		delete m_settings;
+
+		m_settings = new QideSettings;
+		m_settings->show();
+	});
 
 	auto quitAction = new QAction(QIcon(QPixmap::fromImage(quitImg)), "Quit", this);
 
@@ -341,6 +354,8 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	// edit menu
 	editMenu->addAction(m_undoAction);
 	editMenu->addAction(m_redoAction);
+	editMenu->addSeparator();
+	editMenu->addAction(settingsAction);
 
 	// menu bar
 	menuBar->addMenu(fileMenu);

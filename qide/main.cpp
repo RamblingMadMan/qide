@@ -84,17 +84,29 @@ int main(int argc, char *argv[]){
 
 	qapp.setPalette(darkPalette);
 
+	auto tryAddFont = [](const QString &name){
+		if(QFontDatabase::addApplicationFont(QString(":ttf/%1").arg(name)) == -1){
+			qDebug() << "Could not load font" << QString("%1").arg(name);
+		}
+	};
+
 	// Hack font
-	QFontDatabase::addApplicationFont(":ttf/Hack-Regular.ttf");
-	QFontDatabase::addApplicationFont(":ttf/Hack-Bold.ttf");
-	QFontDatabase::addApplicationFont(":ttf/Hack-Italic.ttf");
-	QFontDatabase::addApplicationFont(":ttf/Hack-BoldItalic.ttf");
+	tryAddFont("Hack-Regular.ttf");
+	tryAddFont("Hack-Bold.ttf");
+	tryAddFont("Hack-Italic.ttf");
+	tryAddFont("Hack-BoldItalic.ttf");
 
 	// Monoid font
-	QFontDatabase::addApplicationFont(":ttf/Monoid-Regular.ttf");
-	QFontDatabase::addApplicationFont(":ttf/Monoid-Bold.ttf");
-	QFontDatabase::addApplicationFont(":ttf/Monoid-Italic.ttf");
-	QFontDatabase::addApplicationFont(":ttf/Monoid-Retina.ttf");
+	tryAddFont("Monoid-Regular.ttf");
+	tryAddFont("Monoid-Bold.ttf");
+	tryAddFont("Monoid-Italic.ttf");
+	tryAddFont("Monoid-Retina.ttf");
+
+	// Quake font
+	tryAddFont("dpquake.ttf");
+	tryAddFont("Quake.ttf");
+	tryAddFont("Quake1.ttf");
+	tryAddFont("Quake2.ttf");
 
 	// Source sans font
 	QFontDatabase::addApplicationFont(":ttf/SourceSans3-Black.ttf");
@@ -110,9 +122,11 @@ int main(int argc, char *argv[]){
 	QFontDatabase::addApplicationFont(":ttf/SourceSans3-Semibold.ttf");
 	QFontDatabase::addApplicationFont(":ttf/SourceSans3-SemiboldIt.ttf");
 
+	QFont fontQuake("Quake1", 8);
+
 	QFont fontSans("Source Sans 3", 11);
 
-	QApplication::setFont(fontSans);
+	QApplication::setFont(fontQuake);
 
 	QideWindow *window = nullptr;
 

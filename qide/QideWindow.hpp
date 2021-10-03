@@ -19,6 +19,7 @@ class QideMapEditor;
 class QideGame;
 class QideCompiler;
 class QideTabsWidget;
+class QideSettings;
 
 class QideTabsWidget: public QWidget{
 	Q_OBJECT
@@ -114,6 +115,7 @@ class QideWindow: public QMainWindow{
 		QideMapEditor *m_mapEditor;
 		QideGame *m_game;
 		QideCompiler *m_comp;
+		QideSettings *m_settings;
 
 		QAction *m_undoAction, *m_redoAction;
 
