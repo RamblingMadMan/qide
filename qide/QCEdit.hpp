@@ -78,6 +78,7 @@ class QCEdit: public QPlainTextEdit{
 	public slots:
 		void showCompleter();
 		void hideCompleter();
+		void reparse();
 
 	signals:
 		void filePathChanged();
@@ -99,8 +100,6 @@ class QCEdit: public QPlainTextEdit{
 		void resizeEvent(QResizeEvent *event) override;
 
 	private:
-		void reparse();
-
 		QCLexer *m_lexer;
 		QCParser *m_parser;
 		QCHighlighter *m_highlighter;

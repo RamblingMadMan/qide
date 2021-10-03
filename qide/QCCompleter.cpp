@@ -92,6 +92,12 @@ void QCCompleter::completeAtCursor(bool forceShow){
 	}
 
 	auto textCursor = m_qcEdit->textCursor();
+	auto beforeCursor = textCursor;
+	beforeCursor.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor);
+
+	if(beforeCursor.selectedText() == " "){
+		return;
+	}
 
 	auto tok = m_qcEdit->lexer()->closest(QCToken::Location{ textCursor.blockNumber(), textCursor.columnNumber() });
 
@@ -148,43 +154,55 @@ void QCCompleter::keyPressEvent(QKeyEvent *ev){
 	}
 
 	int idx = m_listView.currentIndex().row();
+
 	switch(ev->key()){
 		case Qt::Key_Up:{
+			ev->accept();
 			idx = std::max(0, idx - 1);
 			m_listView.setCurrentIndex(m_model.index(idx));
-			ev->accept();
 			break;
 		}
 
 		case Qt::Key_Down:{
+			ev->accept();
 			idx = std::min(m_model.rowCount() - 1, idx + 1);
 			m_listView.setCurrentIndex(m_model.index(idx));
-			ev->accept();
 			break;
 		}
 
 		case Qt::Key_Escape:{
-			hide();
 			ev->accept();
+			hide();
+			break;
+		}
+
+		case Qt::Key_Space:{
+			ev->ignore();
+			hide();
 			break;
 		}
 
 		case Qt::Key_Return:
 		case Qt::Key_Enter:{
+			ev->accept();
 			auto val = m_model.data(m_model.index(idx)).toString();
 
 			auto textCursor = m_qcEdit->textCursor();
 
 			auto tok = m_qcEdit->lexer()->closest(QCToken::Location{ textCursor.blockNumber(), textCursor.columnNumber() });
 
-			textCursor.movePosition(QTextCursor::MoveOperation::StartOfLine, QTextCursor::MoveAnchor, tok->location().col);
+			qDebug() << "Cursor pos:" << textCursor.columnNumber() << "Token pos:" << tok->location().col;
+
+			textCursor.movePosition(QTextCursor::MoveOperation::StartOfLine);
+			textCursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveAnchor, tok->location().col);
 			textCursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::KeepAnchor, tok->str().size());
 
 			textCursor.removeSelectedText();
 			textCursor.insertText(val);
 
+			m_qcEdit->reparse();
+
 			hide();
-			ev->accept();
 			break;
 		}
 
