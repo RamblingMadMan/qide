@@ -4,6 +4,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 
+#include "QideWindow.hpp"
 #include "QideFileWizard.hpp"
 
 QideFileWizardInfo::QideFileWizardInfo(QWidget *parent_)
@@ -34,6 +35,9 @@ QideFileWizardInfo::QideFileWizardInfo(QWidget *parent_)
 QideFileWizard::QideFileWizard(QWidget *parent_)
 	: QWizard(parent_)
 {
+	setWizardStyle(QWizard::ModernStyle);
+	setWidgetDarkMode(this);
+
 	auto infoPage = new QideFileWizardInfo(this);
 
 	addPage(infoPage);
