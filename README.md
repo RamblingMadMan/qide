@@ -37,6 +37,7 @@ The project currently targets compatibility with the 2021 re-release.
 |  ✅  | Launch from editor | Launch Quake with your mod enabled, directly from the editor. |
 |  ❓  | Syntax/Semantic highlighting | Make your QuakeC source look pretty. |
 |  ❓  | Auto-complete | Auto-complete QuakeC expressions. |
+|  ❌  | Code search | Search for expressions across multiple files. |
 |  ❓  | In-built map editor | Edit maps with pausable live gameplay. |
 |  ❌  | QuakeC debugging | Debug your code in real-time. |
 |  ❌  | QuakeC VM | Test out simple QuakeC snippets and integrate them with native code. |
