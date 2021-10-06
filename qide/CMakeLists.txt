@@ -35,6 +35,8 @@ set(
 	QCHighlighter.cpp
 	QCCompleter.hpp
 	QCCompleter.cpp
+	QCProgs.hpp
+	QCProgs.cpp
 	QCVM.hpp
 	QCVM.cpp
 	QCMap.hpp

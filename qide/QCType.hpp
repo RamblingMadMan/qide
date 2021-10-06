@@ -66,16 +66,16 @@ class QCType: public QObject{
 		}
 
 		static std::optional<QCType> fromStr(QStringView str){
-			if(str.isEmpty() || str == u".") return std::nullopt;
+			if(str.isEmpty() || str == QStringLiteral(".")) return std::nullopt;
 
-			else if(str.startsWith(u".")) return QCType(Field, fromStr(str.right(str.size() - 1)));
+			else if(str.startsWith(QStringLiteral("."))) return QCType(Field, fromStr(str.right(str.size() - 1)));
 
-			else if(str == u"void") return Void;
-			else if(str == u"int") return Int;
-			else if(str == u"float") return Float;
-			else if(str == u"vector") return Vector;
-			else if(str == u"string") return String;
-			else if(str == u"entity") return Entity;
+			else if(str == QStringLiteral("void")) return Void;
+			else if(str == QStringLiteral("int")) return Int;
+			else if(str == QStringLiteral("float")) return Float;
+			else if(str == QStringLiteral("vector")) return Vector;
+			else if(str == QStringLiteral("string")) return String;
+			else if(str == QStringLiteral("entity")) return Entity;
 
 			else return std::nullopt;
 		}

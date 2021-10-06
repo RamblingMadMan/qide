@@ -122,18 +122,30 @@ int main(int argc, char *argv[]){
 	QFontDatabase::addApplicationFont(":ttf/SourceSans3-Semibold.ttf");
 	QFontDatabase::addApplicationFont(":ttf/SourceSans3-SemiboldIt.ttf");
 
-	QFont fontQuake("Quake1", 8);
+	QSettings config;
 
-	QFont fontSans("Source Sans 3", 11);
+	auto curFont = config.value("interface/font");
+	auto codeFont = config.value("editor/font");
 
-	QApplication::setFont(fontQuake);
+	if(curFont.isValid()){
+		QApplication::setFont(curFont.value<QFont>());
+	}
+	else{
+		QFont fontSans("Source Sans 3", 11);
+		config.setValue("interface/font", fontSans);
+		QApplication::setFont(fontSans);
+	}
+
+	if(!codeFont.isValid()){
+		QFont fontHack("Hack", 10);
+		fontHack.setStyleHint(QFont::Monospace);
+		fontHack.setFixedPitch(true);
+		config.setValue("editor/font", fontHack);
+	}
 
 	QideWindow *window = nullptr;
 
-	QSettings settings;
-
 	const auto appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-
 	const auto appDataPathStr = appDataPath.toUtf8().toStdString();
 
 	QVector<QString> gameSearchPaths = {
@@ -158,11 +170,9 @@ int main(int argc, char *argv[]){
 	}
 
 	PHYSFS_init(argv[0]);
-
 	std::atexit([]{ PHYSFS_deinit(); });
 
 	PHYSFS_setWriteDir(appDataPathStr.c_str());
-
 	PHYSFS_mkdir("/id1");
 
 	const auto id1Dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/id1";
@@ -170,7 +180,7 @@ int main(int argc, char *argv[]){
 	const auto pak0Path = id1Dir + "/pak0.pak";
 	const auto pak0PathStr = pak0Path.toUtf8().toStdString();
 
-	if(!QFileInfo::exists(pak0Path) || !QFileInfo(pak0Path).isFile() || !settings.value("fteqwPath").isValid()){
+	if(!QFileInfo::exists(pak0Path) || !QFileInfo(pak0Path).isFile() || !config.value("fteqwPath").isValid()){
 		auto wizard = new QideSetup;
 		wizard->show();
 

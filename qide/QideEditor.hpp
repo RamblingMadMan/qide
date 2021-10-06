@@ -5,7 +5,7 @@
 #include <QTreeView>
 #include <QFileSystemModel>
 
-class QHBoxLayout;
+class QLayout;
 class QShortcut;
 
 class QCEdit;
@@ -52,14 +52,16 @@ class QideEditor: public QWidget{
 
 	public slots:
 		void showCompleter();
-		void hideCompleter();	
+		void hideCompleter();
+
+		void setFont(const QFont &fnt);
 
 	signals:
 		void rootDirChanged();
 		void fileBufferChanged(const QString &filePath);
 
 	private:
-		QHBoxLayout *m_lay;
+		QLayout *m_lay;
 		QSplitter *m_splitter;
 		QCEdit *m_qcEdit;
 		QTreeView *m_treeView;

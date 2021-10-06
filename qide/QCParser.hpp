@@ -42,6 +42,8 @@ class QCParser: public QObject{
 			}
 		}
 
+		QList<QString> globalVarNames() const{ return m_globalVars.keys(); }
+
 	public slots:
 		void reset();
 
@@ -52,13 +54,16 @@ class QCParser: public QObject{
 	private:
 		using ParseResult = std::variant<bool, QCExpr*>;
 
+		void resetParseFn();
+
 		ParseResult parseDecl(QCType ty, const QCToken *exprStart, const QCToken *beg, const QCToken *end);
 		ParseResult parseToplevel(const QCToken *beg, const QCToken *end);
 
 		QString m_title;
 		QVector<QCExpr*> m_results;
+		QMap<QString, QCExpr*> m_globalVars;
 
-		std::function<ParseResult(const QCToken *beg, const QCToken *end)> m_parseFn;
+		std::function<ParseResult(const QCToken *beg, const QCToken *end)> m_oldParseFn, m_parseFn;
 		QMap<Location, int> m_locMap;
 };
 

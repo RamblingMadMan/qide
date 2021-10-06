@@ -1,9 +1,8 @@
 #include "fmt/format.h"
 
 #include <QDebug>
+#include <QSettings>
 #include <QPainter>
-#include <QUndoStack>
-#include <QPlainTextDocumentLayout>
 #include <QPalette>
 #include <QShortcut>
 #include <QDateTime>
@@ -54,6 +53,13 @@ QCEdit::QCEdit(QWidget *parent)
 	connect(this, &QCEdit::updateRequest, this, &QCEdit::updateLineNumberArea);
 	connect(this, &QCEdit::cursorPositionChanged, this, &QCEdit::highlightCurrentLine);
 	connect(this, &QPlainTextEdit::textChanged, this, [this]{ reparse(); m_hasChanges = true; }); // TODO: check if undos available instead of text changes
+	connect(m_parser, &QCParser::resultsChanged, this, [this]{
+		QStringList completerChoices;
+		completerChoices.append(qcKeywords);
+		completerChoices.append(qcBasicTypes);
+		completerChoices.append(m_parser->globalVarNames());
+		m_completer->setChoices(completerChoices);
+	});
 
 	updateLineNumberAreaWidth(0);
 	highlightCurrentLine();
@@ -61,9 +67,9 @@ QCEdit::QCEdit(QWidget *parent)
 	QStringList completerChoices;
 	completerChoices.append(qcKeywords);
 	completerChoices.append(qcBasicTypes);
+	m_completer->setChoices(completerChoices);
 
 	m_completer->setQcEdit(this);
-	m_completer->setChoices(completerChoices);
 }
 
 int QCEdit::lineNumberAreaWidth(){
@@ -310,10 +316,9 @@ void QCEdit::reparse(){
 }
 
 void QCEdit::setDefaultFont(){
-	QFont fnt("Monoid");
-	fnt.setPointSizeF(9.5);
-	fnt.setStyleHint(QFont::Monospace);
-	fnt.setFixedPitch(true);
+	QSettings config;
+
+	auto fnt = config.value("editor/font").value<QFont>();
 
 	QFontMetricsF fntMetrics(fnt);
 	auto stopWidth = 4 * fntMetrics.width(' ');

@@ -148,8 +148,18 @@ void QCCompleter::completeAtCursor(bool forceShow){
 }
 
 void QCCompleter::keyPressEvent(QKeyEvent *ev){
-	if(isHidden()){
+	if(ev->key() >= Qt::Key_A && ev->key() <= Qt::Key_Z){
 		ev->ignore();
+		completeAtCursor(true);
+		return;
+	}
+	else if(isHidden()){
+		ev->ignore();
+		return;
+	}
+	else if(ev->key() >= Qt::Key_0 && ev->key() <= Qt::Key_9){
+		ev->ignore();
+		completeAtCursor(true);
 		return;
 	}
 
@@ -176,6 +186,7 @@ void QCCompleter::keyPressEvent(QKeyEvent *ev){
 			break;
 		}
 
+		case Qt::Key_Semicolon:
 		case Qt::Key_Space:{
 			ev->ignore();
 			hide();

@@ -13,12 +13,19 @@ class QCExpr: public QObject{
 		using Location = QCToken::Location;
 
 		enum Kind{
-			VarDef, Ref,
-			EndOfFile, Unknown,
-			count
+			VarDef,
+			Ref,
+			EndOfFile,
+			Unknown,
+			KindCount
 		};
 
 		Q_ENUM(Kind)
+
+		struct VarInfo{
+			QCType type;
+			QString name;
+		};
 
 		explicit QCExpr(QObject *parent_ = nullptr)
 			: QObject(parent_)
@@ -51,6 +58,15 @@ class QCExpr: public QObject{
 
 		QStringView str() const noexcept{
 			return QStringView(m_tokStart->str().cbegin(), (m_tokEnd - 1)->str().cend());
+		}
+
+		QString name() const noexcept{
+			if(m_kind == VarDef){
+				return m_values[1].toString();
+			}
+			else{
+				return "";
+			}
 		}
 
 	private:

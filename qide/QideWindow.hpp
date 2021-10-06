@@ -8,7 +8,7 @@
 #include <QDir>
 #include <QGraphicsView>
 
-class QPushButton;
+class QToolButton;
 class QStringListModel;
 
 class QTabWidget;
@@ -24,27 +24,27 @@ class QideSettings;
 class QideTabsWidget: public QWidget{
 	Q_OBJECT
 
-	Q_PROPERTY(QPushButton* codeTab READ codeTab)
-	Q_PROPERTY(QPushButton* mapTab READ mapTab)
-	Q_PROPERTY(QPushButton* playTab READ playTab)
-	Q_PROPERTY(QPushButton* selectedTab READ selectedTab NOTIFY selectedTabChanged)
+	Q_PROPERTY(QToolButton* codeTab READ codeTab)
+	Q_PROPERTY(QToolButton* mapTab READ mapTab)
+	Q_PROPERTY(QToolButton* playTab READ playTab)
+	Q_PROPERTY(QToolButton* selectedTab READ selectedTab NOTIFY selectedTabChanged)
 
 	public:
 		explicit QideTabsWidget(QWidget *parent = nullptr);
 
-		QPushButton *codeTab() noexcept{ return m_codeTab; }
-		QPushButton *mapTab() noexcept{ return m_mapTab; }
-		QPushButton *playTab() noexcept{ return m_playTab; }
-		QPushButton *selectedTab() noexcept{ return m_selected; }
+		QToolButton *codeTab() noexcept{ return m_codeTab; }
+		QToolButton *mapTab() noexcept{ return m_mapTab; }
+		QToolButton *playTab() noexcept{ return m_playTab; }
+		QToolButton *selectedTab() noexcept{ return m_selected; }
 
 	signals:
 		void selectedTabChanged();
 
 	private:
-		QPushButton *m_codeTab = nullptr;
-		QPushButton *m_mapTab = nullptr;
-		QPushButton *m_playTab = nullptr;
-		QPushButton *m_selected = nullptr;
+		QToolButton *m_codeTab = nullptr;
+		QToolButton *m_mapTab = nullptr;
+		QToolButton *m_playTab = nullptr;
+		QToolButton *m_selected = nullptr;
 };
 
 class QideVMDock: public QDockWidget{

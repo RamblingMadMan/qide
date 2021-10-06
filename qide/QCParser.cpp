@@ -25,6 +25,12 @@ QCParser::QCParser(QObject *parent): QObject(parent){}
 void QCParser::reset(){
 	m_results.clear();
 	m_locMap.clear();
+	m_globalVars.clear();
+	resetParseFn();
+}
+
+void QCParser::resetParseFn(){
+	m_oldParseFn = std::move(m_parseFn);
 	m_parseFn = [this](auto&&...args){ return parseToplevel(std::forward<decltype(args)>(args)...); };
 }
 
@@ -56,6 +62,10 @@ int QCParser::parse(const QCToken *beg, const QCToken *const end){
 		auto res = m_parseFn(beg, end);
 
 		if(auto expr = std::get_if<QCExpr*>(&res)){
+			if((*expr)->kind() == QCExpr::VarDef){
+				m_globalVars.insert((*expr)->name(), *expr);
+			}
+
 			m_locMap[(*expr)->begin()->location()] = m_results.size();
 			beg = (*expr)->end();
 			m_results.push_back(*expr);
@@ -76,7 +86,7 @@ std::variant<bool, QCExpr*> QCParser::parseDecl(QCType ty, const QCToken *exprSt
 	beg = skipCommentsAndSpaces(beg, end);
 
 	if(beg == end){
-		m_parseFn = [=](auto &&... args){ return parseDecl(ty, exprStart, std::forward<decltype(args)>(args)...); };
+		m_parseFn = [=](auto beg_, auto end_){ return parseDecl(ty, exprStart, beg_, end_); };
 		return true;
 	}
 
@@ -91,7 +101,7 @@ std::variant<bool, QCExpr*> QCParser::parseDecl(QCType ty, const QCToken *exprSt
 
 	++it;
 
-	auto parseNamedDef = [ty, exprStart, name](const QCToken *beg_, const QCToken *end_) -> ParseResult{
+	auto parseNamedDef = [this, ty, exprStart, name](const QCToken *beg_, const QCToken *end_) -> ParseResult{
 		beg_ = skipKinds(beg_, end_, { QCToken::Comment });
 
 		if(beg_ == end_){
@@ -102,6 +112,73 @@ std::variant<bool, QCExpr*> QCParser::parseDecl(QCType ty, const QCToken *exprSt
 
 		if(it->kind() == QCToken::Term){
 			return QCExpr::makeVarDef(ty, name, exprStart, ++it);
+		}
+		else if(it->str() == QStringLiteral(",")){
+			// I mean; what the actual fuck is this lambda nesting``.
+			auto parseDeclList =
+					[this, ty, exprStart, id{QString()}, afterId{false}, skipComma{false}]
+					(auto beg_, auto end_) mutable -> ParseResult
+			{
+				auto start = skipCommentsAndSpaces(beg_, end_);
+
+				if(start == end_){
+					return true;
+				}
+
+				if(afterId){
+					if(start->str() == QStringLiteral(";")){
+						resetParseFn();
+						return m_parseFn(++start, end_);
+					}
+					else if(start->str() == QStringLiteral(",")){
+						afterId = false;
+						skipComma = false;
+					}
+				}
+
+				if(!skipComma){
+					if(start->str() != QStringLiteral(",")){
+						qDebug() << "[ERROR] Unexpected token" << start->str() << "in var declaration";
+						return false;
+					}
+
+					start = skipCommentsAndSpaces(++start, end_);
+					skipComma = true;
+				}
+
+				if(start == end_){
+					return true;
+				}
+
+				auto it = start;
+
+				if(afterId){
+					if(it->str() == QStringLiteral(",")){
+						afterId = false;
+						skipComma = false;
+						return m_parseFn(it, end_);
+					}
+					else{
+						qDebug() << "[ERROR] Expected comma or semi-colon after" << id << ", got" << it->kind() << it->str();
+						return false;
+					}
+				}
+				else if(it->kind() != QCToken::Id){
+					qDebug() << "[ERROR] Expected identifier, got" << it->kind() << it->str();
+					return false;
+				}
+
+				id = it->str().toString();
+
+				skipComma = false;
+				afterId = true;
+
+				return QCExpr::makeVarDef(ty, id, start, ++it);
+			};
+
+			m_parseFn = std::move(parseDeclList);
+
+			return QCExpr::makeVarDef(ty, name, exprStart, it);
 		}
 
 		return false;
@@ -130,7 +207,7 @@ std::variant<bool, QCExpr*> QCParser::parseToplevel(const QCToken *beg, const QC
 	else if(it->str() == QString(".")){
 		auto continueFn = [=](const QCToken *beg_, const QCToken *end_) -> ParseResult{
 			if(beg_->kind() != QCToken::Type){
-				fmt::print(stderr, "[ERROR] Invalid type '{}'\n", beg_->str().toString().toStdString());
+				qDebug() << "[ERROR] Invalid type " << beg_->str();
 				return false;
 			}
 
@@ -142,7 +219,7 @@ std::variant<bool, QCExpr*> QCParser::parseToplevel(const QCToken *beg, const QC
 					*QCType::fromStr(start->str())
 				),
 				beg,
-				++beg_,
+				start + 1,
 				end_
 			);
 		};

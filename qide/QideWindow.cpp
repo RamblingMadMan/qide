@@ -18,6 +18,7 @@
 #include <QStackedWidget>
 #include <QLabel>
 #include <QPushButton>
+#include <QToolButton>
 #include <QProgressBar>
 #include <QFileDialog>
 #include <QMenuBar>
@@ -57,14 +58,14 @@ void setWidgetDarkMode(QWidget *widget){
 #endif
 }
 
-// TODO: make this class more generic (add/remove tabs)
+// TODO: make this class more generic (add/move/delete tabs)
 QideTabsWidget::QideTabsWidget(QWidget *parent)
 	: QWidget(parent)
-	, m_codeTab(new QPushButton("Code"))
-	, m_mapTab(new QPushButton("Map"))
-	, m_playTab(new QPushButton("Play"))
+	, m_codeTab(new QToolButton(this))
+	, m_mapTab(new QToolButton(this))
+	, m_playTab(new QToolButton(this))
 	, m_selected(m_codeTab)
-{	
+{
 	setContentsMargins(0, 0, 0, 0);
 
 	const auto quakeDarkGreyHex = quakeDarkGrey.name(QColor::HexRgb);
@@ -72,33 +73,41 @@ QideTabsWidget::QideTabsWidget(QWidget *parent)
 	const auto quakeDarkBrownHex = quakeDarkBrown.name(QColor::HexRgb);
 
 	setStyleSheet(QString(
-		"QPushButton {"
-			"margin-right: 0;"
-			"padding: 10px 10px 10px 10px;"
-			"background-color: %1;"
-			"border-radius: 0;"
-		"}"
+			"QToolButton {"
+				"margin: auto 0 auto 0;"
+				"padding: 10px 10px 10px 10px;"
+				"background-color: %1;"
+				"border-radius: 0;"
+			"}"
 
-		"QPushButton:hover {"
-			"background-color: %2;"
-		"}"
+			"QToolButton:hover {"
+				"background-color: %2;"
+			"}"
 
-		"QPushButton:pressed {"
-			"background-color: %3;"
-		"}"
-	).arg(quakeDarkGreyHex, quakeOrangeHex, quakeDarkBrownHex));
+			"QToolButton:pressed {"
+				"background-color: %3;"
+			"}"
+		).arg(
+			quakeDarkGreyHex, // inactive
+			quakeOrangeHex, // hovered
+			quakeDarkBrownHex // pressed
+		)
+	);
 
 	auto lay = new QVBoxLayout(this);
 
 	lay->setContentsMargins(0, 0, 0, 0);
 
-	QPushButton *btns[] = { m_codeTab, m_mapTab, m_playTab };
+	QToolButton *btns[] = { m_codeTab, m_mapTab, m_playTab };
 	QImage imgs[] = { QImage(":/img/ui/code.svg"), QImage(":/img/ui/map.svg"), QImage(":/img/ui/play-circle.svg") };
+	QString strs[] = { "Code", "Map", "Play" };
 
 	for(std::size_t i = 0; i < std::size(btns); i++){
 		auto btn = btns[i];
 		auto img = &imgs[i];
 		img->invertPixels();
+		btn->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+		btn->setText(strs[i]);
 		btn->setIcon(QIcon(QPixmap::fromImage(*img)));
 		btn->setContentsMargins(0, 0, 0, 0);
 		lay->addWidget(btn);
@@ -411,7 +420,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 
 	stackLay->setCurrentIndex(0);
 
-	connect(m_tabs->codeTab(), &QPushButton::pressed, [=]{
+	connect(m_tabs->codeTab(), &QToolButton::pressed, [=]{
 		bool showMap = m_mapEditor->isVisible();
 
 		m_editor->show();
@@ -430,7 +439,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 		}
 	});
 
-	connect(m_tabs->mapTab(), &QPushButton::pressed, [=]{
+	connect(m_tabs->mapTab(), &QToolButton::pressed, [=]{
 		m_editor->hide();
 		m_game->hide();
 		m_mapEditor->show();
@@ -439,7 +448,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 		stackLay->setCurrentWidget(m_mapEditor);
 	});
 
-	connect(m_tabs->playTab(), &QPushButton::pressed, [=]{
+	connect(m_tabs->playTab(), &QToolButton::pressed, [=]{
 		m_mapEditor->hide();
 		m_editor->hide();
 		m_game->show();
