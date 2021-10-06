@@ -48,14 +48,14 @@ The project currently targets compatibility with the 2021 re-release.
 
 There are currently no versioned releases of QIDE and it is in active development with many things changing and possibly breaking.
 
-That said, for the keen and able (use linux) there are automatically built AppImages available.
+That said, for the keen and able; there are automatically built "autobuild" executables available.
 
 <p><br></p>
 
 ## Autobuilds
 
 Automatic builds are available for linux in AppImage format and windows in a self-contained zip.
-These builds are a work in progress themselves, but will be up-to-date functionality wise.
+These builds are a work in progress, but will be stay up-to-date with the latest features.
 
 [Download the latest Autobuild here](https://github.com/RamblingMadMan/qide/releases/tag/autobuild)
 
