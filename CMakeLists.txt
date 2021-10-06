@@ -36,7 +36,7 @@ set(
 function(add_physfs)
 	set(PHYSFS_BUILD_SHARED OFF CACHE BOOL "")
 	set(PHYSFS_BUILD_TEST OFF CACHE BOOL "")
-	add_subdirectory(physfs-3.0.2 EXCLUDE_FROM_ALL)
+	add_subdirectory(deps/physfs EXCLUDE_FROM_ALL)
 endfunction()
 
 function(add_glbinding)
@@ -48,7 +48,7 @@ endfunction()
 add_physfs()
 add_glbinding()
 
-set(PHYSFS_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/physfs-3.0.2/src)
+set(PHYSFS_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/deps/physfs/src)
 
 add_subdirectory(deps/fmt EXCLUDE_FROM_ALL)
 add_subdirectory(deps/rapidfuzz-cpp EXCLUDE_FROM_ALL)
