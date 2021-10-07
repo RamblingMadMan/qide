@@ -107,10 +107,13 @@ QideTabsWidget::QideTabsWidget(QWidget *parent)
 		auto btn = btns[i];
 		auto img = &imgs[i];
 		img->invertPixels();
+
 		btn->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 		btn->setText(strs[i]);
 		btn->setIcon(QIcon(QPixmap::fromImage(*img)));
 		btn->setContentsMargins(0, 0, 0, 0);
+		btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
 		lay->addWidget(btn);
 	}
 
