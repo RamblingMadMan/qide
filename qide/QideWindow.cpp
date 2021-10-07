@@ -523,7 +523,7 @@ void QideWindow::readProjSettings(){
 		for(auto it = fileBufsVars.begin(); it != fileBufsVars.end(); ++it){
 			auto fileBuf = new QTextDocument;
 			fileBuf->setDefaultFont(m_editor->qcEdit()->font());
-			//fileBuf->setDocumentLayout(new QPlainTextDocumentLayout(fileBuf));
+			fileBuf->setDocumentLayout(new QPlainTextDocumentLayout(fileBuf));
 			fileBuf->setPlainText(it.value().toString());
 			projFileBufs.insert(it.key(), fileBuf);
 		}

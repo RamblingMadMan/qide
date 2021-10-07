@@ -7,8 +7,6 @@
 #include <QShortcut>
 #include <QDateTime>
 #include <QTemporaryFile>
-#include <QScrollBar>
-#include <QAbstractTextDocumentLayout>
 
 #include "QCLexer.hpp"
 #include "QCParser.hpp"
@@ -20,19 +18,20 @@
 
 LineNumberArea::LineNumberArea(QCEdit *plainEdit_)
 	: QWidget(plainEdit_)
-	, m_edit(plainEdit_){}
+	, m_plainEdit(plainEdit_){}
 
 QSize LineNumberArea::sizeHint() const{
-	return QSize(m_edit->lineNumberAreaWidth(), 0);
+	return QSize(m_plainEdit->lineNumberAreaWidth(), 0);
 }
 
 void LineNumberArea::paintEvent(QPaintEvent *event){
-	m_edit->lineNumberAreaPaintEvent(event);
+	m_plainEdit->lineNumberAreaPaintEvent(event);
 }
 
 QCFileBuffer::QCFileBuffer(QObject *parent)
 	: QTextDocument(parent)
 {
+	setDocumentLayout(new QPlainTextDocumentLayout(this));
 }
 
 QCFileBuffer::QCFileBuffer(const QString &contents_, QObject *parent)
@@ -42,7 +41,7 @@ QCFileBuffer::QCFileBuffer(const QString &contents_, QObject *parent)
 }
 
 QCEdit::QCEdit(QWidget *parent)
-	: QTextEdit(parent)
+	: QPlainTextEdit(parent)
 	, m_lexer(new QCLexer(this))
 	, m_parser(new QCParser(this))
 	, m_highlighter(new QCHighlighter(this))
@@ -59,10 +58,10 @@ QCEdit::QCEdit(QWidget *parent)
 
 	setDefaultFont();
 
-	connect(this->document(), SIGNAL(blockCountChanged()), this, SLOT(updateLineNumberAreaWidth()));
-	//connect(this, &QCEdit::updateRequest, this, &QCEdit::updateLineNumberArea);
+	connect(this, &QCEdit::blockCountChanged, this, &QCEdit::updateLineNumberAreaWidth);
+	connect(this, &QCEdit::updateRequest, this, &QCEdit::updateLineNumberArea);
 	connect(this, &QCEdit::cursorPositionChanged, this, &QCEdit::highlightCurrentLine);
-	connect(this, &QTextEdit::textChanged, this, [this]{ reparse(); m_hasChanges = true; }); // TODO: check if undos available instead of text changes
+	connect(this, &QPlainTextEdit::textChanged, this, [this]{ reparse(); m_hasChanges = true; }); // TODO: check if undos available instead of text changes
 	connect(m_parser, &QCParser::resultsChanged, this, [this]{
 		QStringList completerChoices;
 		completerChoices.append(qcKeywords);
@@ -84,7 +83,7 @@ QCEdit::QCEdit(QWidget *parent)
 
 int QCEdit::lineNumberAreaWidth(){
 	int digits = 1;
-	int max = qMax(1, document()->blockCount());
+	int max = qMax(1, blockCount());
 	while(max >= 10){
 		max /= 10;
 		++digits;
@@ -121,7 +120,7 @@ void QCEdit::updateLineNumberArea(const QRect &rect, int dy){
 }
 
 void QCEdit::resizeEvent(QResizeEvent *e){
-	QTextEdit::resizeEvent(e);
+	QPlainTextEdit::resizeEvent(e);
 
 	QRect cr = contentsRect();
 	m_lineNumArea.setGeometry(QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
@@ -146,35 +145,14 @@ void QCEdit::highlightCurrentLine(){
 	setExtraSelections(extraSelections);
 }
 
-int QCEdit::getFirstVisibleBlock(){
-	QTextCursor curs = QTextCursor(this->document());
-	curs.movePosition(QTextCursor::Start);
-	for(int i=0; i < this->document()->blockCount(); ++i)
-	{
-		QTextBlock block = curs.block();
-
-		QRect r1 = this->viewport()->geometry();
-		QRect r2 = this->document()->documentLayout()->blockBoundingRect(block).translated(
-					this->viewport()->geometry().x(), this->viewport()->geometry().y() - (
-						this->verticalScrollBar()->sliderPosition()
-						) ).toRect();
-
-		if (r1.contains(r2, true)) { return i; }
-
-		curs.movePosition(QTextCursor::NextBlock);
-	}
-
-	return 0;
-}
-
 void QCEdit::lineNumberAreaPaintEvent(QPaintEvent *event){
 	QPainter painter(&m_lineNumArea);
 	painter.fillRect(event->rect(), QColor(Qt::darkGray).lighter(40));
 
-	QTextBlock block = document()->findBlockByNumber(getFirstVisibleBlock());
+	QTextBlock block = firstVisibleBlock();
 	int blockNum = block.blockNumber();
-	int top = viewport()->geometry().top(); // qRound(blockBoundingGeometry(block).translated(contentOffset()).top())
-	int bottom = top + (int)document()->documentLayout()->blockBoundingRect(block).height();
+	int top = qRound(blockBoundingGeometry(block).translated(contentOffset()).top());
+	int bottom = top + qRound(blockBoundingRect(block).height());
 
 	while(block.isValid() && top <= event->rect().bottom()){
 		if(block.isVisible() && bottom >= event->rect().top()){
@@ -188,7 +166,7 @@ void QCEdit::lineNumberAreaPaintEvent(QPaintEvent *event){
 
 		block = block.next();
 		top = bottom;
-		bottom = top + qRound(document()->documentLayout()->blockBoundingRect(block).height());
+		bottom = top + qRound(blockBoundingRect(block).height());
 		++blockNum;
 	}
 }
@@ -225,7 +203,7 @@ bool QCEdit::loadFile(const QString &path){
 
 		fileBuf = new QTextDocument(fileContents);
 		fileBuf->setDefaultFont(font());
-		//fileBuf->setDocumentLayout(new QPlainTextDocumentLayout(fileBuf));
+		fileBuf->setDocumentLayout(new QPlainTextDocumentLayout(fileBuf));
 		fileBuf->setMetaInformation(QTextDocument::DocumentTitle, filePath);
 
 		m_fileBufs.insert(filePath, fileBuf);
