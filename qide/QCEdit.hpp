@@ -2,7 +2,7 @@
 #define QIDE_QCEDIT_HPP
 
 #include <QDir>
-#include <QPlainTextEdit>
+#include <QTextEdit>
 #include <QDateTime>
 
 class QUndoStack;
@@ -27,7 +27,7 @@ class LineNumberArea : public QWidget{
 		void paintEvent(QPaintEvent *event);
 
 	private:
-		QCEdit *m_plainEdit;
+		QCEdit *m_edit;
 };
 
 class QCFileBuffer: public QTextDocument{
@@ -41,7 +41,7 @@ class QCFileBuffer: public QTextDocument{
 		bool restoreState(const QVariant &state);		
 };
 
-class QCEdit: public QPlainTextEdit{
+class QCEdit: public QTextEdit{ // QTextEdit for ligature support
 	Q_OBJECT
 
 	Q_PROPERTY(QString filePath READ filePath NOTIFY filePathChanged)
@@ -63,8 +63,6 @@ class QCEdit: public QPlainTextEdit{
 		QCCompleter *completer() noexcept{ return m_completer; }
 		const QHash<QString, QTextDocument*> &fileBuffers() const noexcept{ return m_fileBufs; }
 		bool hasChanges() const noexcept{ return m_hasChanges; }
-
-		void lineNumberAreaPaintEvent(QPaintEvent *event);
 		int lineNumberAreaWidth();
 
 		void setFileBuffers(const QHash<QString, QTextDocument*> &bufs){
@@ -97,9 +95,12 @@ class QCEdit: public QPlainTextEdit{
 		void updateLineNumberArea(const QRect &rect, int dy);
 
 	protected:
+		void lineNumberAreaPaintEvent(QPaintEvent *event);
 		void resizeEvent(QResizeEvent *event) override;
 
 	private:
+		int getFirstVisibleBlock();
+
 		QCLexer *m_lexer;
 		QCParser *m_parser;
 		QCHighlighter *m_highlighter;
@@ -110,6 +111,8 @@ class QCEdit: public QPlainTextEdit{
 		bool m_hasChanges = false;
 
 		void setDefaultFont();
+
+		friend class LineNumberArea;
 };
 
 #endif // QIDE_QCEDITOR_HPP

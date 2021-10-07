@@ -14,6 +14,7 @@ class QStringListModel;
 class QTabWidget;
 
 class QCVM;
+class QideVMDock;
 class QideEditor;
 class QideMapEditor;
 class QideGame;
@@ -45,38 +46,6 @@ class QideTabsWidget: public QWidget{
 		QToolButton *m_mapTab = nullptr;
 		QToolButton *m_playTab = nullptr;
 		QToolButton *m_selected = nullptr;
-};
-
-class QideVMDock: public QDockWidget{
-	Q_OBJECT
-
-	Q_PROPERTY(QCVM* vm READ vm WRITE setVm NOTIFY vmChanged)
-	Q_PROPERTY(QStringList fns READ fns NOTIFY fnsChanged)
-
-	public:
-		explicit QideVMDock(QWidget *parent = nullptr);
-
-		explicit QideVMDock(QCVM *vm_, QWidget *parent = nullptr)
-			: QideVMDock(parent)
-		{
-			setVm(vm_);
-		}
-
-		QCVM *vm() noexcept{ return m_vm; }
-		QStringList fns() const;
-
-		void setVm(QCVM *vm_);
-
-	public slots:
-		void updateFnList();
-
-	signals:
-		void vmChanged();
-		void fnsChanged();
-
-	private:
-		QCVM *m_vm;
-		QStringListModel *m_model;
 };
 
 void setWidgetDarkMode(QWidget *widget);

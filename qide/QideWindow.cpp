@@ -31,6 +31,7 @@
 #include "QCVM.hpp"
 #include "QCByteCode.hpp"
 #include "QCEdit.hpp"
+#include "QideVMDock.hpp"
 #include "QidePakExplorer.hpp"
 #include "QideEditor.hpp"
 #include "QideMapEditor.hpp"
@@ -118,57 +119,6 @@ QideTabsWidget::QideTabsWidget(QWidget *parent)
 	lay->addWidget(m_playTab);
 
 	setSizePolicy(QSizePolicy::Policy::Fixed, QSizePolicy::Policy::Fixed);
-}
-
-QideVMDock::QideVMDock(QWidget *parent)
-	: QDockWidget("QuakeC VM", parent)
-	, m_vm(nullptr)
-{
-	auto fnView = new QListView;
-	m_model = new QStringListModel;
-
-	fnView->setContentsMargins(0, 0, 0, 0);
-	fnView->setModel(m_model);
-
-	setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
-	setWidget(fnView);
-}
-
-QStringList QideVMDock::fns() const{
-	return m_model->stringList();
-}
-
-void QideVMDock::setVm(QCVM *vm_){
-	if(m_vm == vm_) return;
-
-	connect(vm_, &QCVM::byteCodeChanged, this, &QideVMDock::updateFnList);
-	vm_->setParent(this);
-
-	disconnect(m_vm, &QCVM::byteCodeChanged, this, &QideVMDock::updateFnList);
-	delete m_vm;
-	m_vm = vm_;
-
-	emit vmChanged();
-
-	updateFnList();
-}
-
-void QideVMDock::updateFnList(){
-	qDebug() << "Updating function list";
-
-	auto fnList = m_vm->fns();
-
-	QStringList strs;
-	strs.reserve(fnList.size());
-
-	for(auto &&fn : fnList){
-		strs.push_back(fn->name());
-	}
-
-	m_model->setHeaderData(0, Qt::Orientation::Horizontal, "Functions");
-	m_model->setStringList(strs);
-
-	emit fnsChanged();
 }
 
 static void recurseAddDir(QDir d, QStringList& list) {
@@ -336,7 +286,6 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 				if(file.open(QFile::ReadOnly)){
 					auto bc = file.readAll();
 					m_vmDock->vm()->byteCode()->setByteCode(bc);
-					m_vmDock->updateFnList();
 				}
 			}
 		}
@@ -373,6 +322,7 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 
 	// tool bar buttons
 	auto docToolbar = new QToolBar(this);
+
 	docToolbar->addAction(openProjAction);
 	docToolbar->addSeparator();
 	docToolbar->addAction(newFileAction);
@@ -399,8 +349,12 @@ QideWindow::QideWindow(Ctor, QWidget *parent)
 	pakDock->setWidget(pakExplorer);
 	pakDock->setContentsMargins(0, 0, 0, 0);
 
+	auto vmDock = new QDockWidget(this);
+	vmDock->setTitleBarWidget(new QLabel("QuakeC VM"));
+	vmDock->setWidget(m_vmDock);
+
 	addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, pakDock);
-	addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, m_vmDock);
+	addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, vmDock);
 
 	//m_codeTab->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	//m_playTab->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -569,7 +523,7 @@ void QideWindow::readProjSettings(){
 		for(auto it = fileBufsVars.begin(); it != fileBufsVars.end(); ++it){
 			auto fileBuf = new QTextDocument;
 			fileBuf->setDefaultFont(m_editor->qcEdit()->font());
-			fileBuf->setDocumentLayout(new QPlainTextDocumentLayout(fileBuf));
+			//fileBuf->setDocumentLayout(new QPlainTextDocumentLayout(fileBuf));
 			fileBuf->setPlainText(it.value().toString());
 			projFileBufs.insert(it.key(), fileBuf);
 		}

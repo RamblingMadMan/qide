@@ -57,6 +57,8 @@ class QideEditor: public QWidget{
 		void setFont(const QFont &fnt);
 
 	signals:
+		void opacityChanged(qreal a);
+
 		void rootDirChanged();
 		void fileBufferChanged(const QString &filePath);
 

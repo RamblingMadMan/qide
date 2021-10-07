@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QDebug>
 #include <QMultiMap>
+#include <QKeyEvent>
 
 #include "QCLexer.hpp"
 #include "QCCompleter.hpp"
@@ -56,7 +57,7 @@ QStringList QCCompleter::complete(const QString &tok){
 
 void QCCompleter::setQcEdit(QCEdit *qcEdit_){
 	if(m_qcEdit){
-		disconnect(m_qcEdit, &QPlainTextEdit::textChanged, this, nullptr);
+		disconnect(m_qcEdit, &QTextEdit::textChanged, this, nullptr);
 		disconnect(m_qcEdit, SIGNAL(cursorPositionChanged()), this, SLOT(completeAtCursor()));
 	}
 
@@ -65,7 +66,7 @@ void QCCompleter::setQcEdit(QCEdit *qcEdit_){
 
 	if(qcEdit_){
 		m_listView.setFont(qcEdit_->font());
-		connect(qcEdit_, &QPlainTextEdit::textChanged, this, [this]{ completeAtCursor(true); });
+		connect(qcEdit_, &QTextEdit::textChanged, this, [this]{ completeAtCursor(true); });
 		connect(qcEdit_, SIGNAL(cursorPositionChanged()), this, SLOT(completeAtCursor()));
 	}
 

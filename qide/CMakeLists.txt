@@ -43,6 +43,8 @@ set(
 	QCMap.cpp
 	QCEdit.hpp
 	QCEdit.cpp
+	QideSearchBar.hpp
+	QideSearchBar.cpp
 	QidePakExplorer.hpp
 	QidePakExplorer.cpp
 	QideEditor.hpp
@@ -61,6 +63,8 @@ set(
 	QideFileWizard.cpp
 	QideSettings.hpp
 	QideSettings.cpp
+	QideVMDock.hpp
+	QideVMDock.cpp
 	QideWindow.hpp
 	QideWindow.cpp
 	${QIDE_RESOURCES}

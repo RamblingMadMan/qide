@@ -9,6 +9,7 @@
 
 #include "QCEdit.hpp"
 #include "QCCompleter.hpp"
+#include "QideSearchBar.hpp"
 #include "QideEditor.hpp"
 
 #include "QuakeColors.hpp"
@@ -37,9 +38,42 @@ QideEditor::QideEditor(QWidget *parent)
 	setAttribute(Qt::WA_TranslucentBackground);
 	setContentsMargins(0, 0, 0, 0);
 
+	setStyleSheet(
+		QString("background-color: %1;").arg(quakeDarkGrey.name(QColor::HexRgb))
+	);
+
+	m_treeView->setStyleSheet("border-radius: 0;");
+
+	auto editWidget = new QWidget(m_splitter);
+	editWidget->setContentsMargins(0, 0, 0, 0);
+
+	auto editLay = new QVBoxLayout(editWidget);
+	editLay->setMargin(0);
+	editLay->setSpacing(0);
+	editLay->setContentsMargins(0, 0, 0, 0);
+
+	auto searchBar = new QideSearchBar(this);
+
+	connect(searchBar, &QideSearchBar::textChanged, [this]{
+		// TODO: update results and show drop down
+	});
+
+	connect(this, &QideEditor::opacityChanged, searchBar, [searchBar](qreal a){
+		auto barColor = quakeDarkGrey.darker(150);
+		barColor.setAlpha(a);
+
+		searchBar->setStyleSheet(
+			QString("background-color: %1;").arg(barColor.name(QColor::HexRgb))
+		);
+	});
+
+	editLay->addWidget(searchBar);
+	editLay->addWidget(m_qcEdit);
+	editWidget->setLayout(editLay);
+
 	m_splitter->setContentsMargins(0, 0, 0, 0);
 	m_splitter->addWidget(m_treeView);
-	m_splitter->addWidget(m_qcEdit);
+	m_splitter->addWidget(editWidget);
 
 	m_qcEdit->setContentsMargins(0, 0, 0, 0);
 
@@ -63,58 +97,7 @@ QideEditor::QideEditor(QWidget *parent)
 		}
 	);
 
-	// Search bar
-	auto searchBar = new QToolBar(this);
-	searchBar->setContentsMargins(0, 0, 0, 0);
-
-	searchBar->setStyleSheet(
-		"QToolBar {"
-			"padding: 0 0 0 0;"
-		"}"
-
-		"QLineEdit {"
-			"padding: 0 0 0 5px;"
-			"border-radius: 0;"
-		"}"
-	);
-
-	auto searchEntry = new QLineEdit(searchBar);
-	searchEntry->setContentsMargins(0, 0, 0, 0);
-	searchEntry->setPlaceholderText("Search...");
-
-	auto searchIcon = QImage(":/img/ui/search.svg");
-	searchIcon.invertPixels();
-
-	auto searchAction = new QAction(searchBar);
-	searchAction->setIcon(QIcon(QPixmap::fromImage(searchIcon)));
-	searchAction->setToolTip("Search");
-
-	connect(searchEntry, &QLineEdit::textChanged, [=]{
-		if(searchEntry->text().isEmpty()){
-			searchAction->setEnabled(false);
-		}
-		else{
-			searchAction->setEnabled(true);
-		}
-	});
-
-	connect(searchEntry, &QLineEdit::returnPressed, [=]{
-		if(searchAction->isEnabled()){
-			searchAction->trigger();
-		}
-	});
-
-	connect(searchAction, &QAction::triggered, [this]{
-		// TODO: search m_qcEdit
-	});
-
-	searchAction->setEnabled(false);
-
-	searchBar->addWidget(searchEntry);
-	searchBar->addAction(searchAction);
-
 	m_lay->setContentsMargins(0, 0, 0, 0);
-	m_lay->addWidget(searchBar);
 	m_lay->addWidget(m_splitter);
 
 	setOpacity(1.0);
@@ -169,6 +152,8 @@ void QideEditor::setOpacity(qreal a){
 	}
 
 	m_qcEdit->completer()->setPalette(completerP);
+
+	emit opacityChanged(a);
 }
 
 void QideEditor::showCompleter(){

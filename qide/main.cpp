@@ -60,6 +60,33 @@ int main(int argc, char *argv[]){
 
 	qapp.setStyle(QStyleFactory::create("fusion"));
 
+	qapp.setStyleSheet(
+		"QToolBar{"
+			"border-radius: 0;"
+		"}"
+		"QPushButton{"
+			"border-radius: 0;"
+		"}"
+		"QToolButton{"
+			"border-radius: 0;"
+		"}"
+		"QComboBox{"
+			"border-radius: 0;"
+		"}"
+		"QFontComboBox::down-arrow{"
+			"border-radius: 0;"
+		"}"
+		"QPlainTextEdit{"
+			"border-radius: 0;"
+		"}"
+		"QLineEdit{"
+			"border-radius: 0;"
+		"}"
+		"QListView{"
+			"border-radius: 0;"
+		"}"
+	);
+
 	QPalette darkPalette;
 	darkPalette.setColor(QPalette::Window, quakeDarkGrey.darker());
 	darkPalette.setColor(QPalette::WindowText, Qt::white);

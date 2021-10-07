@@ -16,14 +16,15 @@ QidePakExplorer::QidePakExplorer(QWidget *parent_)
 	, m_model(new QStringListModel(this))
 	, m_view(new QListView(this))
 {
+	m_view->setContentsMargins(0, 0, 0, 0);
 	m_view->setModel(m_model);
 
 	auto lay = new QVBoxLayout(this);
+	lay->setSpacing(2);
+	lay->setMargin(0);
 	lay->addWidget(m_dirs);
 	lay->addWidget(m_paks);
 	lay->addWidget(m_view);
-
-	setLayout(lay);
 
 	refresh();
 }

@@ -45,7 +45,6 @@ void QideMapEditorWindow::initializeGL(){
 }
 
 void QideMapEditorWindow::resizeGL(int w, int h){
-	qDebug() << "Resize" << w << "x" << h;
 	m_cam.setProjMat(qide::Camera::Perspective{}, 3.14f, float(w) / float(h), 0.001f, 500.f);
 	m_r->resize(w, h);
 }

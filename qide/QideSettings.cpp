@@ -17,6 +17,8 @@
 #include "QideSettings.hpp"
 #include "QideWindow.hpp"
 
+#include "QuakeColors.hpp"
+
 QideSettings::QideSettings(QWidget *parent)
 	: QWidget(parent)
 {
@@ -24,6 +26,22 @@ QideSettings::QideSettings(QWidget *parent)
 	setWidgetDarkMode(this);
 
 	setAttribute(Qt::WA_ShowModal);
+
+	const auto quakeDarkGreyHex = quakeDarkGrey.name(QColor::HexRgb);
+	const auto quakeOrangeHex = quakeOrange.name(QColor::HexRgb);
+	const auto quakeDarkBrownHex = quakeDarkBrown.name(QColor::HexRgb);
+
+	setStyleSheet(QString(
+		"QToolButton{"
+			"background-color: %1;"
+		"}"
+		"QToolButton:hover{"
+			"background-color: %2;"
+		"}"
+		"QToolButton:pressed{"
+			"background-color: %3;"
+		"}"
+	).arg(quakeDarkGreyHex, quakeOrangeHex, quakeDarkBrownHex));
 
 	auto oldInterfaceFont = QApplication::font();
 	auto oldEditorFont = QSettings().value("editor/font").value<QFont>();
