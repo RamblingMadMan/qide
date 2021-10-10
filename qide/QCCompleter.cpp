@@ -5,7 +5,6 @@
 #include <QApplication>
 #include <QDebug>
 #include <QMultiMap>
-#include <QKeyEvent>
 
 #include "QCLexer.hpp"
 #include "QCCompleter.hpp"
